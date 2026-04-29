@@ -211,10 +211,10 @@ function Topbar({ activePage, date, setDate, query, setQuery, selectedGroup, gro
   );
 }
 
-function GroupForm({ addGroup, onSaved }) {
-  const [name, setName] = useState("");
-  const [weekdays, setWeekdays] = useState([]);
-  const [lessonStart, setLessonStart] = useState("");
+function GroupForm({ initialData, onSubmit, onSaved }) {
+  const [name, setName] = useState(initialData?.name || "");
+  const [weekdays, setWeekdays] = useState(initialData?.weekdays || []);
+  const [lessonStart, setLessonStart] = useState(initialData?.lessonStart || "");
   const [timeError, setTimeError] = useState("");
   const [saving, setSaving] = useState(false);
   const lessonEnd = addLessonDuration(lessonStart);
@@ -236,10 +236,12 @@ function GroupForm({ addGroup, onSaved }) {
     setTimeError("");
     setSaving(true);
     try {
-      await addGroup({ name, weekdays, lessonStart, lessonEnd });
-      setName("");
-      setWeekdays([]);
-      setLessonStart("");
+      await onSubmit({ name, weekdays, lessonStart, lessonEnd });
+      if (!initialData) {
+        setName("");
+        setWeekdays([]);
+        setLessonStart("");
+      }
       onSaved?.();
     } catch (error) {
       setTimeError(
@@ -260,7 +262,7 @@ function GroupForm({ addGroup, onSaved }) {
     <form className="entry-form" onSubmit={submit}>
       <div className="entry-form-head">
         <Plus size={18} />
-        <strong>Guruh qo'shish</strong>
+        <strong>{initialData ? "Guruhni tahrirlash" : "Guruh qo'shish"}</strong>
       </div>
       <label>
         <span>Guruh nomi</span>
@@ -298,19 +300,19 @@ function GroupForm({ addGroup, onSaved }) {
       {timeError && <p className="form-error">{timeError}</p>}
       <button className="primary-button" type="submit" disabled={saving}>
         <Plus size={16} />
-        {saving ? "Saqlanmoqda..." : "Qo'shish"}
+        {saving ? "Saqlanmoqda..." : initialData ? "Saqlash" : "Qo'shish"}
       </button>
     </form>
   );
 }
 
-function StudentForm({ groups, addStudent, selectedGroup, onSaved }) {
+function StudentForm({ groups, initialData, onSubmit, selectedGroup, onSaved }) {
   const [form, setForm] = useState({
-    name: "",
-    group: selectedGroup || groups[0]?.name || "",
-    homeworkScore: 0,
-    attendanceScore: 0,
-    activityScore: 0
+    name: initialData?.name || "",
+    group: initialData?.group || selectedGroup || groups[0]?.name || "",
+    homeworkScore: initialData?.homeworkScore || 0,
+    attendanceScore: initialData?.attendanceScore || 0,
+    activityScore: initialData?.activityScore || 0
   });
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -326,8 +328,10 @@ function StudentForm({ groups, addStudent, selectedGroup, onSaved }) {
     setError("");
     setSaving(true);
     try {
-      await addStudent(form);
-      setForm((current) => ({ ...current, name: "", homeworkScore: 0, attendanceScore: 0, activityScore: 0 }));
+      await onSubmit(form);
+      if (!initialData) {
+        setForm((current) => ({ ...current, name: "", homeworkScore: 0, attendanceScore: 0, activityScore: 0 }));
+      }
       onSaved?.();
     } catch (submitError) {
       setError(
@@ -348,7 +352,7 @@ function StudentForm({ groups, addStudent, selectedGroup, onSaved }) {
     <form className="entry-form" onSubmit={submit}>
       <div className="entry-form-head">
         <UserPlus size={18} />
-        <strong>O'quvchi qo'shish</strong>
+        <strong>{initialData ? "O'quvchini tahrirlash" : "O'quvchi qo'shish"}</strong>
       </div>
       <label>
         <span>Ism familiya</span>
@@ -376,7 +380,7 @@ function StudentForm({ groups, addStudent, selectedGroup, onSaved }) {
       {error && <p className="form-error">{error}</p>}
       <button className="primary-button" type="submit" disabled={!groups.length || saving}>
         <UserPlus size={16} />
-        {saving ? "Saqlanmoqda..." : "Qo'shish"}
+        {saving ? "Saqlanmoqda..." : initialData ? "Saqlash" : "Qo'shish"}
       </button>
     </form>
   );
@@ -492,7 +496,7 @@ function ProgressLine({ label, value, tone }) {
   );
 }
 
-function StudentCard({ student, onDelete, index, date, records, settings, saveLessonRecords }) {
+function StudentCard({ student, onDelete, onEdit, index, date, records, settings, saveLessonRecords }) {
   const todayRecord = records?.find((r) => r.studentId === student.id && r.date === date);
   const hw = todayRecord ? todayRecord.homework : 0;
   const att = todayRecord ? todayRecord.attendance : 0;
@@ -566,10 +570,16 @@ function StudentCard({ student, onDelete, index, date, records, settings, saveLe
           );
         })}
       </div>
-      <button className="danger-button student-delete" type="button" onClick={() => onDelete(student)}>
-        <Trash2 size={15} />
-        O'chirish
-      </button>
+      <div className="student-actions" style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
+        <button className="secondary-button" type="button" onClick={() => onEdit?.(student)} style={{ flex: 1, padding: "8px", fontSize: "13px" }}>
+          <Settings size={15} />
+          Tahrirlash
+        </button>
+        <button className="danger-button" type="button" onClick={() => onDelete(student)} style={{ flex: 1, padding: "8px", fontSize: "13px" }}>
+          <Trash2 size={15} />
+          O'chirish
+        </button>
+      </div>
     </article>
   );
 }
@@ -702,18 +712,20 @@ function LessonEntryPanel({ group, students, records, date, settings, saveLesson
               </div>
             ))}
           </div>
-          {message && <p className={cx("lesson-message", message.startsWith("Saqlanmadi") && "lesson-message-error")}>{message}</p>}
-          <button className="primary-button save-button" type="submit" disabled={saving}>
-            <CheckCircle2 size={17} />
-            {saving ? "Saqlanmoqda..." : "Dars natijasini saqlash"}
-          </button>
+          <div style={{ position: "sticky", bottom: "16px", zIndex: 10, marginTop: "16px", padding: "12px", background: "#ffffff", borderRadius: "12px", boxShadow: "0 4px 20px rgba(0,0,0,0.08)", border: "1px solid #e2e8f0" }}>
+            {message && <p className={cx("lesson-message", message.startsWith("Saqlanmadi") && "lesson-message-error")} style={{ marginTop: 0, marginBottom: "12px" }}>{message}</p>}
+            <button className="primary-button save-button" type="submit" disabled={saving || !isLessonDay} style={{ width: "100%", justifyContent: "center" }}>
+              <CheckCircle2 size={17} />
+              {saving ? "Saqlanmoqda..." : "Dars natijasini saqlash"}
+            </button>
+          </div>
         </form>
       )}
     </section>
   );
 }
 
-function DashboardPage({ students, records, settings, selectedGroup, currentGroup, currentTime, date, query, onDeleteStudent, saveLessonRecords }) {
+function DashboardPage({ students, records, settings, selectedGroup, currentGroup, currentTime, date, query, onEditStudent, onDeleteStudent, saveLessonRecords }) {
   const groupStudents = useMemo(() => students.filter((student) => student.group === selectedGroup), [students, selectedGroup]);
   const ranked = useMemo(() => {
     const filtered = groupStudents.filter((student) => student.name.toLowerCase().includes(query.toLowerCase()));
@@ -796,6 +808,7 @@ function DashboardPage({ students, records, settings, selectedGroup, currentGrou
                 key={student.id}
                 student={student}
                 index={index}
+                onEdit={onEditStudent}
                 onDelete={onDeleteStudent}
                 date={date}
                 records={records}
@@ -810,9 +823,10 @@ function DashboardPage({ students, records, settings, selectedGroup, currentGrou
   );
 }
 
-function GroupsPage({ groups, students, records, settings, date, query, addGroup, addStudent, saveLessonRecords, deleteStudent, selectedGroup }) {
+function GroupsPage({ groups, students, records, settings, date, query, addGroup, updateGroup, deleteGroup, addStudent, updateStudent, saveLessonRecords, deleteStudent, selectedGroup }) {
   const [activeGroup, setActiveGroup] = useState(groups[0]?.name || "");
   const [modal, setModal] = useState("");
+  const [editingStudent, setEditingStudent] = useState(null);
   useEffect(() => {
     if (!activeGroup && (selectedGroup || groups[0]?.name)) {
       setActiveGroup(selectedGroup || groups[0]?.name || "");
@@ -894,7 +908,17 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
           <section className="panel group-overview">
             <div>
               <span className="eyebrow">Tanlangan guruh</span>
-              <h3>{activeGroupObject.name}</h3>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px" }}>
+                <h3 style={{ margin: 0 }}>{activeGroupObject.name}</h3>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button className="secondary-button" style={{ padding: "6px 12px", fontSize: "13px" }} onClick={() => setModal("edit-group")}>
+                    Tahrirlash
+                  </button>
+                  <button className="danger-button" style={{ padding: "6px 12px", fontSize: "13px" }} onClick={() => { if(window.confirm("Rostdan ham guruhni o'chirasizmi? O'quvchilar tarixi ham o'chib ketishi mumkin.")) deleteGroup(activeGroupObject.id) }}>
+                    O'chirish
+                  </button>
+                </div>
+              </div>
             </div>
             <div className="group-metrics">
               <div>
@@ -963,9 +987,14 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
                     <strong>{student.coins}</strong>
                     <span>total coin</span>
                   </div>
-                  <button className="danger-icon-button" type="button" onClick={() => deleteStudent(student)}>
-                    <Trash2 size={16} />
-                  </button>
+                  <div className="leader-actions" style={{ display: "flex", gap: "4px" }}>
+                    <button className="secondary-icon-button" type="button" onClick={() => { setEditingStudent(student); setModal("edit-student"); }}>
+                      <Settings size={16} />
+                    </button>
+                    <button className="danger-icon-button" type="button" onClick={() => deleteStudent(student)}>
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -976,13 +1005,25 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
 
       {modal === "group" && (
         <Modal title="Guruh qo'shish" onClose={() => setModal("")}>
-          <GroupForm addGroup={addGroup} onSaved={() => setModal("")} />
+          <GroupForm onSubmit={addGroup} onSaved={() => setModal("")} />
+        </Modal>
+      )}
+
+      {modal === "edit-group" && activeGroupObject && (
+        <Modal title="Guruhni tahrirlash" onClose={() => setModal("")}>
+          <GroupForm initialData={activeGroupObject} onSubmit={(values) => updateGroup(activeGroupObject.id, values)} onSaved={() => setModal("")} />
         </Modal>
       )}
 
       {modal === "student" && (
         <Modal title="O'quvchi qo'shish" onClose={() => setModal("")}>
-          <StudentForm groups={groups} selectedGroup={activeGroup} addStudent={addStudent} onSaved={() => setModal("")} />
+          <StudentForm groups={groups} selectedGroup={activeGroup} onSubmit={addStudent} onSaved={() => setModal("")} />
+        </Modal>
+      )}
+
+      {modal === "edit-student" && editingStudent && (
+        <Modal title="O'quvchini tahrirlash" onClose={() => { setModal(""); setEditingStudent(null); }}>
+          <StudentForm groups={groups} initialData={editingStudent} onSubmit={(values) => updateStudent(editingStudent.id, values)} onSaved={() => { setModal(""); setEditingStudent(null); }} />
         </Modal>
       )}
     </div>
@@ -1087,7 +1128,7 @@ function SettingInput({ label, value, onChange, step = "1" }) {
   );
 }
 
-function AuthPage({ login, register, normalizePhone }) {
+function AuthPage({ login, normalizePhone, resetPassword }) {
   const [mode, setMode] = useState("login");
   const [form, setForm] = useState({ name: "", phone: "", password: "" });
   const [error, setError] = useState("");
@@ -1102,8 +1143,8 @@ function AuthPage({ login, register, normalizePhone }) {
     setError("");
     setSaving(true);
     try {
-      if (mode === "register") {
-        await register(form);
+      if (mode === "forgot") {
+        await resetPassword(form);
       } else {
         await login(form);
       }
@@ -1151,23 +1192,35 @@ function AuthPage({ login, register, normalizePhone }) {
             </div>
           </label>
 
-          <label>
-            <span>Parol</span>
-            <input
-              type="password"
-              minLength="6"
-              value={form.password}
-              onChange={(event) => update("password", event.target.value)}
-              placeholder="Kamida 6 ta belgi"
-              required
-            />
-          </label>
+          {mode === "login" && (
+            <label>
+              <span>Parol</span>
+              <input
+                type="password"
+                minLength="6"
+                value={form.password}
+                onChange={(event) => update("password", event.target.value)}
+                placeholder="Kamida 6 ta belgi"
+                required
+              />
+            </label>
+          )}
 
           {error && <p className="form-error">{error}</p>}
 
           <button className="primary-button auth-submit" type="submit" disabled={saving}>
-            {saving ? "Tekshirilmoqda..." : mode === "register" ? "Ro'yxatdan o'tish" : "Kirish"}
+            {saving ? "Tekshirilmoqda..." : mode === "forgot" ? "Parolni tiklash" : "Kirish"}
           </button>
+
+          {mode === "login" ? (
+            <button type="button" className="text-button" style={{ marginTop: "12px", background: "none", border: "none", color: "#64748b", cursor: "pointer", width: "100%" }} onClick={() => setMode("forgot")}>
+              Parolni unutdingizmi?
+            </button>
+          ) : (
+            <button type="button" className="text-button" style={{ marginTop: "12px", background: "none", border: "none", color: "#64748b", cursor: "pointer", width: "100%" }} onClick={() => setMode("login")}>
+              Orqaga qaytish
+            </button>
+          )}
         </form>
       </section>
     </main>
@@ -1175,7 +1228,7 @@ function AuthPage({ login, register, normalizePhone }) {
 }
 
 function DashboardApp({ teacher, logout }) {
-  const { students, groups, records, settings, loading, error, isDemo, addGroup, addStudent, saveLessonRecords, deleteStudent, saveSettings, updateStudent } =
+  const { students, groups, records, settings, loading, error, isDemo, addGroup, updateGroup, deleteGroup, addStudent, updateStudent, saveLessonRecords, deleteStudent, saveSettings } =
     useDashboardData();
   const [activePage, setActivePage] = useState("dashboard");
   const [date, setDate] = useState(dayjs().format("YYYY-MM-DD"));
@@ -1190,6 +1243,8 @@ function DashboardApp({ teacher, logout }) {
   const automaticGroup = currentGroup?.name || "";
   const [manualGroup, setManualGroup] = useState("");
   const selectedGroup = manualGroup || automaticGroup;
+  const [editingStudent, setEditingStudent] = useState(null);
+  
   async function handleDeleteStudent(student) {
     if (!window.confirm(`${student.name} o'chirilsinmi? Bu o'quvchining dars tarixi ham o'chadi.`)) return;
     await deleteStudent(student.id);
@@ -1226,6 +1281,7 @@ function DashboardApp({ teacher, logout }) {
               currentTime={currentTime}
               date={date}
               query={query}
+              onEditStudent={setEditingStudent}
               onDeleteStudent={handleDeleteStudent}
               saveLessonRecords={saveLessonRecords}
             />
@@ -1239,7 +1295,10 @@ function DashboardApp({ teacher, logout }) {
               date={date}
               query={query}
               addGroup={addGroup}
+              updateGroup={updateGroup}
+              deleteGroup={deleteGroup}
               addStudent={addStudent}
+              updateStudent={updateStudent}
               saveLessonRecords={saveLessonRecords}
               deleteStudent={handleDeleteStudent}
               selectedGroup={selectedGroup}
@@ -1248,12 +1307,18 @@ function DashboardApp({ teacher, logout }) {
           {!loading && activePage === "settings" && <SettingsPage settings={settings} saveSettings={saveSettings} />}
         </main>
       </div>
+
+      {editingStudent && (
+        <Modal title="O'quvchini tahrirlash" onClose={() => setEditingStudent(null)}>
+          <StudentForm groups={groups} initialData={editingStudent} onSubmit={(values) => updateStudent(editingStudent.id, values)} onSaved={() => setEditingStudent(null)} />
+        </Modal>
+      )}
     </div>
   );
 }
 
 export default function App() {
-  const { teacher, loading, login, register, logout, normalizePhone } = useTeacherAuth();
+  const { teacher, loading, login, resetPassword, logout, normalizePhone } = useTeacherAuth();
 
   if (loading) {
     return (
@@ -1264,7 +1329,7 @@ export default function App() {
   }
 
   if (!teacher) {
-    return <AuthPage login={login} register={register} normalizePhone={normalizePhone} />;
+    return <AuthPage login={login} resetPassword={resetPassword} normalizePhone={normalizePhone} />;
   }
 
   return <DashboardApp teacher={teacher} logout={logout} />;
