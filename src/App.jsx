@@ -106,6 +106,18 @@ function percent(value) {
   return Math.max(0, Math.min(100, Number(value || 0)));
 }
 
+function numberInputValue(value) {
+  return value === "" || value == null ? "" : value;
+}
+
+function parseNumberInput(value) {
+  return value === "" ? "" : Number(value);
+}
+
+function parsePercentInput(value) {
+  return value === "" ? "" : Math.max(0, Math.min(100, Number(value)));
+}
+
 function isValidLessonTime(time) {
   if (!time) return false;
   const [hour, minute] = time.split(":").map(Number);
@@ -356,7 +368,7 @@ function StudentForm({ groups, addStudent, selectedGroup, onSaved }) {
         {scoreFields.map((field) => (
           <label key={field.key}>
             <span>{field.short}</span>
-            <input type="number" min="0" max="100" value={form[field.key]} onChange={(event) => update(field.key, Number(event.target.value))} />
+            <input type="number" min="0" max="100" value={numberInputValue(form[field.key])} onChange={(event) => update(field.key, parsePercentInput(event.target.value))} />
           </label>
         ))}
       </div>
@@ -470,8 +482,8 @@ function StudentCard({ student, onUpdate, onDelete, index }) {
                 type="number"
                 min="0"
                 max="100"
-                value={student[field.key]}
-                onChange={(event) => onUpdate(student.id, { [field.key]: Number(event.target.value) })}
+                value={numberInputValue(student[field.key])}
+                onChange={(event) => onUpdate(student.id, { [field.key]: parsePercentInput(event.target.value) })}
                 aria-label={field.label}
               />
             </label>
@@ -543,7 +555,7 @@ function LessonEntryPanel({ group, students, records, date, settings, saveLesson
   }, [students, records, date]);
 
   function update(studentId, key, value) {
-    const cleanValue = Math.max(0, Math.min(100, Number(value || 0)));
+    const cleanValue = parsePercentInput(value);
     setEntries((current) => ({
       ...current,
       [studentId]: {
@@ -606,7 +618,7 @@ function LessonEntryPanel({ group, students, records, date, settings, saveLesson
                     type="number"
                     min="0"
                     max="100"
-                    value={entries[student.id]?.[field.key] ?? 0}
+                    value={numberInputValue(entries[student.id]?.[field.key])}
                     onChange={(event) => update(student.id, field.key, event.target.value)}
                     aria-label={`${student.name} ${field.label}`}
                   />
@@ -918,7 +930,19 @@ function SettingsPage({ settings, saveSettings }) {
   const [draft, setDraft] = useState(settings);
 
   function update(key, value) {
-    setDraft((current) => ({ ...current, [key]: Number(value) }));
+    setDraft((current) => ({ ...current, [key]: parseNumberInput(value) }));
+  }
+
+  function saveDraft() {
+    saveSettings({
+      ...draft,
+      homeworkCoin: Number(draft.homeworkCoin || 0),
+      attendanceCoin: Number(draft.attendanceCoin || 0),
+      activityCoin: Number(draft.activityCoin || 0),
+      homeworkWeight: Number(draft.homeworkWeight || 0),
+      attendanceWeight: Number(draft.attendanceWeight || 0),
+      activityWeight: Number(draft.activityWeight || 0)
+    });
   }
 
   return (
@@ -942,7 +966,7 @@ function SettingsPage({ settings, saveSettings }) {
           <SettingInput step="0.1" label="Davomat og'irligi" value={draft.attendanceWeight} onChange={(value) => update("attendanceWeight", value)} />
           <SettingInput step="0.1" label="Aktivlik og'irligi" value={draft.activityWeight} onChange={(value) => update("activityWeight", value)} />
         </div>
-        <button className="primary-button save-button" onClick={() => saveSettings(draft)}>
+        <button className="primary-button save-button" onClick={saveDraft}>
           <Settings size={17} />
           Saqlash
         </button>
@@ -955,7 +979,7 @@ function SettingInput({ label, value, onChange, step = "1" }) {
   return (
     <label className="setting-field">
       <span>{label}</span>
-      <input type="number" step={step} value={value} onChange={(event) => onChange(event.target.value)} />
+      <input type="number" step={step} value={numberInputValue(value)} onChange={(event) => onChange(event.target.value)} />
     </label>
   );
 }
