@@ -492,7 +492,26 @@ function ProgressLine({ label, value, tone }) {
   );
 }
 
-function StudentCard({ student, onUpdate, onDelete, index }) {
+function StudentCard({ student, onDelete, index, date, records, settings, saveLessonRecords }) {
+  const todayRecord = records?.find((r) => r.studentId === student.id && r.date === date);
+  const hw = todayRecord ? todayRecord.homework : 0;
+  const att = todayRecord ? todayRecord.attendance : 0;
+  const act = todayRecord ? todayRecord.activity : 0;
+  const todayCoins = todayRecord ? (todayRecord.coinsEarned ?? 0) : 0;
+
+  async function handleQuickUpdate(key, value) {
+    const updatedStudent = {
+      ...student,
+      homeworkScore: hw,
+      attendanceScore: att,
+      activityScore: act,
+      [key]: value
+    };
+    if (saveLessonRecords) {
+      await saveLessonRecords({ date, settings, students: [updatedStudent] });
+    }
+  }
+
   return (
     <article className={cx("student-card", index < 3 && "student-card-top")}>
       <div className="student-head">
@@ -505,7 +524,7 @@ function StudentCard({ student, onUpdate, onDelete, index }) {
         </div>
         <div className="coin-badge">
           <Coins size={15} />
-          {student.coins}
+          {todayCoins}
         </div>
       </div>
 
@@ -515,9 +534,9 @@ function StudentCard({ student, onUpdate, onDelete, index }) {
       </div>
 
       <div className="student-progress">
-        <ProgressLine label="Uy vazifa" value={student.homeworkScore} tone="tone-homework" />
-        <ProgressLine label="Yuqori natija" value={student.attendanceScore} tone="tone-result" />
-        <ProgressLine label="Aktivlik" value={student.activityScore} tone="tone-activity" />
+        <ProgressLine label="Uy vazifa" value={hw} tone="tone-homework" />
+        <ProgressLine label="Yuqori natija" value={att} tone="tone-result" />
+        <ProgressLine label="Aktivlik" value={act} tone="tone-activity" />
       </div>
 
       <div className="rank-chips">
@@ -528,6 +547,7 @@ function StudentCard({ student, onUpdate, onDelete, index }) {
       <div className="quick-edit">
         {scoreFields.map((field) => {
           const Icon = field.icon;
+          const val = field.key === "homeworkScore" ? hw : field.key === "attendanceScore" ? att : act;
           return (
             <label key={field.key}>
               <span>
@@ -538,8 +558,8 @@ function StudentCard({ student, onUpdate, onDelete, index }) {
                 type="number"
                 min="0"
                 max="100"
-                value={numberInputValue(student[field.key])}
-                onChange={(event) => onUpdate(student.id, { [field.key]: parsePercentInput(event.target.value) })}
+                value={numberInputValue(val)}
+                onChange={(event) => handleQuickUpdate(field.key, parsePercentInput(event.target.value))}
                 aria-label={field.label}
               />
             </label>
@@ -584,9 +604,9 @@ function LessonEntryPanel({ group, students, records, date, settings, saveLesson
     students.forEach((student) => {
       const record = records.find((item) => item.studentId === student.id && item.date === date);
       nextEntries[student.id] = {
-        homeworkScore: record?.homework ?? student.homeworkScore ?? 0,
-        attendanceScore: record?.attendance ?? student.attendanceScore ?? 0,
-        activityScore: record?.activity ?? student.activityScore ?? 0
+        homeworkScore: record ? record.homework : 0,
+        attendanceScore: record ? record.attendance : 0,
+        activityScore: record ? record.activity : 0
       };
     });
     setEntries((current) => {
@@ -693,7 +713,7 @@ function LessonEntryPanel({ group, students, records, date, settings, saveLesson
   );
 }
 
-function DashboardPage({ students, records, settings, selectedGroup, currentGroup, currentTime, date, query, onUpdate, onDeleteStudent }) {
+function DashboardPage({ students, records, settings, selectedGroup, currentGroup, currentTime, date, query, onDeleteStudent, saveLessonRecords }) {
   const groupStudents = useMemo(() => students.filter((student) => student.group === selectedGroup), [students, selectedGroup]);
   const ranked = useMemo(() => {
     const filtered = groupStudents.filter((student) => student.name.toLowerCase().includes(query.toLowerCase()));
@@ -772,7 +792,16 @@ function DashboardPage({ students, records, settings, selectedGroup, currentGrou
         {!!ranked.length && (
           <div className="student-grid">
             {ranked.map((student, index) => (
-              <StudentCard key={student.id} student={student} index={index} onUpdate={onUpdate} onDelete={onDeleteStudent} />
+              <StudentCard
+                key={student.id}
+                student={student}
+                index={index}
+                onDelete={onDeleteStudent}
+                date={date}
+                records={records}
+                settings={settings}
+                saveLessonRecords={saveLessonRecords}
+              />
             ))}
           </div>
         )}
@@ -1205,8 +1234,8 @@ function DashboardApp({ teacher, logout }) {
               currentTime={currentTime}
               date={date}
               query={query}
-              onUpdate={updateStudent}
               onDeleteStudent={handleDeleteStudent}
+              saveLessonRecords={saveLessonRecords}
             />
           )}
           {!loading && activePage === "groups" && (
