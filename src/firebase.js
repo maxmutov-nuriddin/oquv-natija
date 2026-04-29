@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAnalytics, isSupported } from "firebase/analytics";
-import { getAuth, signInAnonymously } from "firebase/auth";
+import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -22,6 +22,5 @@ export const analyticsPromise = app ? isSupported().then((supported) => (support
 
 export async function ensureAdminSession() {
   if (!auth || auth.currentUser) return auth?.currentUser ?? null;
-  const result = await signInAnonymously(auth);
-  return result.user;
+  throw new Error("Login qilinmagan. Avval tizimga kiring.");
 }

@@ -32,6 +32,7 @@ import {
   YAxis
 } from "recharts";
 import { useDashboardData } from "./hooks/useDashboardData";
+import { useTeacherAuth } from "./hooks/useTeacherAuth";
 import { groupForDate, rankStudents } from "./lib/scoring";
 
 const navItems = [
@@ -109,7 +110,7 @@ function isValidLessonTime(time) {
   return hour >= 9 && hour <= 20 && [0, 30].includes(minute) && !(hour === 20 && minute > 0);
 }
 
-function Sidebar({ activePage, setActivePage, isDemo }) {
+function Sidebar({ activePage, setActivePage, isDemo, teacher, logout }) {
   return (
     <aside className="sidebar">
       <div className="brand">
@@ -144,6 +145,14 @@ function Sidebar({ activePage, setActivePage, isDemo }) {
           <strong>{isDemo ? "Demo ma'lumot" : "Firebase live"}</strong>
           <p>O'zgarishlar real-time yangilanadi.</p>
         </div>
+      </div>
+      <div className="teacher-box">
+        <div className="avatar avatar-small">{initials(teacher?.name || "O")}</div>
+        <div>
+          <strong>{teacher?.name || "O'qituvchi"}</strong>
+          <p>{teacher?.phone}</p>
+        </div>
+        <button type="button" onClick={logout}>Chiqish</button>
       </div>
     </aside>
   );
@@ -725,8 +734,103 @@ function SettingInput({ label, value, onChange, step = "1" }) {
   );
 }
 
-export default function App() {
-  const { students, groups, records, settings, loading, isDemo, addGroup, addStudent, saveSettings, updateStudent } = useDashboardData();
+function AuthPage({ login, register, normalizePhone }) {
+  const [mode, setMode] = useState("login");
+  const [form, setForm] = useState({ name: "", phone: "", password: "" });
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  function update(key, value) {
+    setForm((current) => ({ ...current, [key]: key === "phone" ? normalizePhone(value) : value }));
+  }
+
+  async function submit(event) {
+    event.preventDefault();
+    setError("");
+    setSaving(true);
+    try {
+      if (mode === "register") {
+        await register(form);
+      } else {
+        await login(form);
+      }
+    } catch (submitError) {
+      setError(submitError.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <main className="auth-page">
+      <section className="auth-card">
+        <div className="auth-brand">
+          <div className="brand-mark">
+            <Award size={24} />
+          </div>
+          <div>
+            <h1>O'quv natija</h1>
+            <p>O'qituvchi dashboardiga kirish</p>
+          </div>
+        </div>
+
+        <div className="auth-tabs">
+          <button className={cx(mode === "login" && "auth-tab-active")} onClick={() => setMode("login")} type="button">
+            Login
+          </button>
+          <button className={cx(mode === "register" && "auth-tab-active")} onClick={() => setMode("register")} type="button">
+            Register
+          </button>
+        </div>
+
+        <form className="auth-form" onSubmit={submit}>
+          {mode === "register" && (
+            <label>
+              <span>O'qituvchi ismi</span>
+              <input value={form.name} onChange={(event) => update("name", event.target.value)} placeholder="Masalan: Nuriddin" required />
+            </label>
+          )}
+
+          <label>
+            <span>Telefon raqam</span>
+            <div className="phone-field">
+              <b>+998</b>
+              <input
+                inputMode="numeric"
+                maxLength="9"
+                value={form.phone}
+                onChange={(event) => update("phone", event.target.value)}
+                placeholder="901234567"
+                required
+              />
+            </div>
+          </label>
+
+          <label>
+            <span>Parol</span>
+            <input
+              type="password"
+              minLength="6"
+              value={form.password}
+              onChange={(event) => update("password", event.target.value)}
+              placeholder="Kamida 6 ta belgi"
+              required
+            />
+          </label>
+
+          {error && <p className="form-error">{error}</p>}
+
+          <button className="primary-button auth-submit" type="submit" disabled={saving}>
+            {saving ? "Tekshirilmoqda..." : mode === "register" ? "Ro'yxatdan o'tish" : "Kirish"}
+          </button>
+        </form>
+      </section>
+    </main>
+  );
+}
+
+function DashboardApp({ teacher, logout }) {
+  const { students, groups, records, settings, loading, error, isDemo, addGroup, addStudent, saveSettings, updateStudent } = useDashboardData();
   const [activePage, setActivePage] = useState("dashboard");
   const [date, setDate] = useState(dayjs().format("YYYY-MM-DD"));
   const [query, setQuery] = useState("");
@@ -737,7 +841,7 @@ export default function App() {
   return (
     <div className="app-bg">
       <div className="app-shell">
-        <Sidebar activePage={activePage} setActivePage={setActivePage} isDemo={isDemo} />
+        <Sidebar activePage={activePage} setActivePage={setActivePage} isDemo={isDemo} teacher={teacher} logout={logout} />
         <main className="main-content">
           <Topbar
             activePage={activePage}
@@ -754,6 +858,7 @@ export default function App() {
           />
 
           {loading && <div className="panel loading-panel">Firebase ma'lumotlari yuklanmoqda...</div>}
+          {error && <div className="panel error-panel">{error}</div>}
           {!loading && activePage === "dashboard" && (
             <DashboardPage
               students={students}
@@ -783,4 +888,22 @@ export default function App() {
       </div>
     </div>
   );
+}
+
+export default function App() {
+  const { teacher, loading, login, register, logout, normalizePhone } = useTeacherAuth();
+
+  if (loading) {
+    return (
+      <div className="auth-page">
+        <div className="auth-card">Yuklanmoqda...</div>
+      </div>
+    );
+  }
+
+  if (!teacher) {
+    return <AuthPage login={login} register={register} normalizePhone={normalizePhone} />;
+  }
+
+  return <DashboardApp teacher={teacher} logout={logout} />;
 }

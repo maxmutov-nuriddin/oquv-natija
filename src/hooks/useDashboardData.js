@@ -9,7 +9,8 @@ const initialData = {
   records: [],
   settings: defaultSettings,
   isDemo: !hasFirebaseConfig,
-  loading: false
+  loading: false,
+  error: ""
 };
 
 function mapDocs(snapshot) {
@@ -24,34 +25,88 @@ export function useDashboardData() {
 
     let unsubscribers = [];
     let mounted = true;
-    setData((current) => ({ ...current, loading: true, isDemo: false }));
+    const pending = new Set(["students", "groups", "records", "settings"]);
+    const markReady = (key) => {
+      pending.delete(key);
+      if (pending.size === 0 && mounted) {
+        setData((current) => ({ ...current, loading: false }));
+      }
+    };
+    const handleSnapshotError = (key, error) => {
+      markReady(key);
+      setData((current) => ({
+        ...current,
+        loading: false,
+        error:
+          error?.code === "permission-denied"
+            ? "Firestore ruxsat bermadi. Rules sozlamasida students/groups/records/settings o'qishga ruxsat kerak."
+            : `Firebase ma'lumotlarini o'qishda xato: ${error?.message || "noma'lum xato"}`
+      }));
+    };
+    const timeout = window.setTimeout(() => {
+      if (mounted && pending.size > 0) {
+        setData((current) => ({
+          ...current,
+          loading: false,
+          error: "Firebase javobi uzoq keldi. Internet yoki Firestore rules/index sozlamasini tekshiring."
+        }));
+      }
+    }, 7000);
+
+    setData((current) => ({ ...current, loading: true, error: "", isDemo: false }));
 
     ensureAdminSession()
       .then(() => {
         if (!mounted) return;
         unsubscribers = [
-          onSnapshot(collection(db, "students"), (snapshot) => {
-            setData((current) => ({ ...current, students: mapDocs(snapshot), loading: false }));
-          }),
-          onSnapshot(collection(db, "groups"), (snapshot) => {
-            setData((current) => ({ ...current, groups: mapDocs(snapshot), loading: false }));
-          }),
-          onSnapshot(collection(db, "records"), (snapshot) => {
-            setData((current) => ({ ...current, records: mapDocs(snapshot), loading: false }));
-          }),
-          onSnapshot(doc(db, "settings", "reward-system"), (snapshot) => {
-            setData((current) => ({
-              ...current,
-              settings: snapshot.exists() ? { ...defaultSettings, ...snapshot.data() } : defaultSettings,
-              loading: false
-            }));
-          })
+          onSnapshot(
+            collection(db, "students"),
+            (snapshot) => {
+              setData((current) => ({ ...current, students: mapDocs(snapshot) }));
+              markReady("students");
+            },
+            (error) => handleSnapshotError("students", error)
+          ),
+          onSnapshot(
+            collection(db, "groups"),
+            (snapshot) => {
+              setData((current) => ({ ...current, groups: mapDocs(snapshot) }));
+              markReady("groups");
+            },
+            (error) => handleSnapshotError("groups", error)
+          ),
+          onSnapshot(
+            collection(db, "records"),
+            (snapshot) => {
+              setData((current) => ({ ...current, records: mapDocs(snapshot) }));
+              markReady("records");
+            },
+            (error) => handleSnapshotError("records", error)
+          ),
+          onSnapshot(
+            doc(db, "settings", "reward-system"),
+            (snapshot) => {
+              setData((current) => ({
+                ...current,
+                settings: snapshot.exists() ? { ...defaultSettings, ...snapshot.data() } : defaultSettings
+              }));
+              markReady("settings");
+            },
+            (error) => handleSnapshotError("settings", error)
+          )
         ];
       })
-      .catch(() => setData(initialData));
+      .catch((error) =>
+        setData((current) => ({
+          ...current,
+          loading: false,
+          error: error?.message || "Firebase login holatini tekshirishda xato."
+        }))
+      );
 
     return () => {
       mounted = false;
+      window.clearTimeout(timeout);
       unsubscribers.forEach((unsubscribe) => unsubscribe());
     };
   }, []);
