@@ -1355,3 +1355,4 @@ export default function App() {
 
   return <DashboardApp teacher={teacher} logout={logout} />;
 }
+
