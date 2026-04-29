@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
-import { addDoc, collection, doc, onSnapshot, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { addDoc, collection, deleteDoc, doc, onSnapshot, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { db, ensureAdminSession, hasFirebaseConfig } from "../firebase";
 import { defaultSettings } from "../data/demoData";
+import { calculateCoins } from "../lib/scoring";
 
 const initialData = {
   students: [],
@@ -19,6 +20,11 @@ function mapDocs(snapshot) {
 
 export function useDashboardData() {
   const [data, setData] = useState(initialData);
+  const recordsRef = useRef([]);
+
+  useEffect(() => {
+    recordsRef.current = data.records;
+  }, [data.records]);
 
   useEffect(() => {
     if (!hasFirebaseConfig || !db) return undefined;
@@ -161,11 +167,91 @@ export function useDashboardData() {
           )
         }));
       },
+      async saveLessonRecords({ date, students, settings }) {
+        const rows = students.map((student) => {
+          const record = {
+            studentId: student.id,
+            date,
+            homework: Number(student.homeworkScore || 0),
+            attendance: Number(student.attendanceScore || 0),
+            activity: Number(student.activityScore || 0)
+          };
+          return {
+            student,
+            record: {
+              ...record,
+              coinsEarned: calculateCoins(record, settings)
+            }
+          };
+        });
+
+        setData((current) => {
+          const nextRecords = [...current.records];
+          rows.forEach(({ record }) => {
+            const recordId = `${record.studentId}-${record.date}`;
+            const index = nextRecords.findIndex((item) => item.id === recordId);
+            const nextRecord = { id: recordId, ...record };
+            if (index >= 0) nextRecords[index] = nextRecord;
+            else nextRecords.push(nextRecord);
+          });
+
+          return {
+            ...current,
+            records: nextRecords,
+            students: current.students.map((student) => {
+              const row = rows.find((item) => item.student.id === student.id);
+              return row
+                ? {
+                    ...student,
+                    homeworkScore: row.record.homework,
+                    attendanceScore: row.record.attendance,
+                    activityScore: row.record.activity
+                  }
+                : student;
+            })
+          };
+        });
+
+        if (hasFirebaseConfig && db) {
+          await ensureAdminSession();
+          await Promise.all(
+            rows.flatMap(({ student, record }) => [
+              setDoc(doc(db, "records", `${student.id}-${date}`), record, { merge: true }),
+              updateDoc(doc(db, "students", student.id), {
+                homeworkScore: record.homework,
+                attendanceScore: record.attendance,
+                activityScore: record.activity
+              })
+            ])
+          );
+        }
+      },
       async saveSettings(nextSettings) {
         setData((current) => ({ ...current, settings: nextSettings }));
         if (hasFirebaseConfig && db) {
           await ensureAdminSession();
           await setDoc(doc(db, "settings", "reward-system"), nextSettings, { merge: true });
+        }
+      },
+      async deleteStudent(studentId) {
+        setData((current) => {
+          const student = current.students.find((item) => item.id === studentId);
+          return {
+            ...current,
+            students: current.students.filter((item) => item.id !== studentId),
+            records: current.records.filter((record) => record.studentId !== studentId),
+            groups: student
+              ? current.groups.map((group) =>
+                  group.name === student.group ? { ...group, studentsCount: Math.max(0, Number(group.studentsCount || 0) - 1) } : group
+                )
+              : current.groups
+          };
+        });
+
+        if (hasFirebaseConfig && db) {
+          await ensureAdminSession();
+          const recordIds = recordsRef.current.filter((record) => record.studentId === studentId).map((record) => record.id);
+          await Promise.all([deleteDoc(doc(db, "students", studentId)), ...recordIds.map((recordId) => deleteDoc(doc(db, "records", recordId)))]);
         }
       },
       async updateStudent(studentId, values) {

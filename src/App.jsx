@@ -16,6 +16,7 @@ import {
   Settings,
   SlidersHorizontal,
   Trophy,
+  Trash2,
   UserPlus,
   UserRound,
   Users
@@ -404,7 +405,7 @@ function ProgressLine({ label, value, tone }) {
   );
 }
 
-function StudentCard({ student, onUpdate, index }) {
+function StudentCard({ student, onUpdate, onDelete, index }) {
   return (
     <article className={cx("student-card", index < 3 && "student-card-top")}>
       <div className="student-head">
@@ -458,6 +459,10 @@ function StudentCard({ student, onUpdate, index }) {
           );
         })}
       </div>
+      <button className="danger-button student-delete" type="button" onClick={() => onDelete(student)}>
+        <Trash2 size={15} />
+        O'chirish
+      </button>
     </article>
   );
 }
@@ -479,7 +484,129 @@ function PanelHeader({ icon: Icon, title, subtitle, action }) {
   );
 }
 
-function DashboardPage({ students, records, settings, selectedGroup, date, query, onUpdate }) {
+function LessonEntryPanel({ group, students, records, date, settings, saveLessonRecords }) {
+  const [entries, setEntries] = useState({});
+  const [message, setMessage] = useState("");
+  const [saving, setSaving] = useState(false);
+  const selectedWeekday = dayjs(date).day();
+  const dayLabel = weekDays.find((day) => day.value === selectedWeekday)?.label || "";
+  const isLessonDay = Boolean(group?.weekdays?.includes(selectedWeekday));
+
+  useEffect(() => {
+    const nextEntries = {};
+    students.forEach((student) => {
+      const record = records.find((item) => item.studentId === student.id && item.date === date);
+      nextEntries[student.id] = {
+        homeworkScore: record?.homework ?? student.homeworkScore ?? 0,
+        attendanceScore: record?.attendance ?? student.attendanceScore ?? 0,
+        activityScore: record?.activity ?? student.activityScore ?? 0
+      };
+    });
+    setEntries((current) => {
+      const currentKeys = Object.keys(current);
+      const nextKeys = Object.keys(nextEntries);
+      const sameLength = currentKeys.length === nextKeys.length;
+      const sameValues =
+        sameLength &&
+        nextKeys.every((studentId) => {
+          const currentEntry = current[studentId];
+          const nextEntry = nextEntries[studentId];
+          return (
+            currentEntry &&
+            currentEntry.homeworkScore === nextEntry.homeworkScore &&
+            currentEntry.attendanceScore === nextEntry.attendanceScore &&
+            currentEntry.activityScore === nextEntry.activityScore
+          );
+        });
+
+      return sameValues ? current : nextEntries;
+    });
+  }, [students, records, date]);
+
+  function update(studentId, key, value) {
+    const cleanValue = Math.max(0, Math.min(100, Number(value || 0)));
+    setEntries((current) => ({
+      ...current,
+      [studentId]: {
+        ...current[studentId],
+        [key]: cleanValue
+      }
+    }));
+  }
+
+  async function submit(event) {
+    event.preventDefault();
+    setMessage("");
+    setSaving(true);
+    try {
+      await saveLessonRecords({
+        date,
+        settings,
+        students: students.map((student) => ({
+          ...student,
+          ...entries[student.id]
+        }))
+      });
+      setMessage("Dars natijalari saqlandi.");
+    } catch (error) {
+      setMessage(`Saqlanmadi: ${error?.message || "noma'lum xato"}`);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <section className="panel lesson-panel">
+      <PanelHeader
+        icon={BookOpenCheck}
+        title="Dars baholash"
+        subtitle={`${dayLabel} · ${group?.lessonStart || "--:--"} - ${group?.lessonEnd || "--:--"}`}
+      />
+      {!isLessonDay && (
+        <p className="lesson-warning">Tanlangan sana bu guruhning dars kuni emas. Kerak bo'lsa yuqoridan boshqa sanani tanlang.</p>
+      )}
+      {!students.length && <EmptyState title="O'quvchi yo'q" text="Avval shu guruhga o'quvchi qo'shing." />}
+      {!!students.length && (
+        <form onSubmit={submit}>
+          <div className="lesson-table">
+            <div className="lesson-table-head">
+              <span>O'quvchi</span>
+              <span>Uy vazifa %</span>
+              <span>Davomat %</span>
+              <span>Aktivlik %</span>
+            </div>
+            {students.map((student) => (
+              <div className="lesson-row" key={student.id}>
+                <div className="lesson-student">
+                  <div className="avatar avatar-small">{initials(student.name)}</div>
+                  <strong>{student.name}</strong>
+                </div>
+                {scoreFields.map((field) => (
+                  <input
+                    key={field.key}
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={entries[student.id]?.[field.key] ?? 0}
+                    onChange={(event) => update(student.id, field.key, event.target.value)}
+                    aria-label={`${student.name} ${field.label}`}
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+          {message && <p className={cx("lesson-message", message.startsWith("Saqlanmadi") && "lesson-message-error")}>{message}</p>}
+          <button className="primary-button save-button" type="submit" disabled={saving}>
+            <CheckCircle2 size={17} />
+            {saving ? "Saqlanmoqda..." : "Dars natijasini saqlash"}
+          </button>
+        </form>
+      )}
+    </section>
+  );
+}
+
+function DashboardPage({ students, records, settings, selectedGroup, date, query, onUpdate, onDeleteStudent }) {
   const ranked = useMemo(() => {
     const filtered = students
       .filter((student) => student.group === selectedGroup)
@@ -509,7 +636,7 @@ function DashboardPage({ students, records, settings, selectedGroup, date, query
         <div className="panel chart-panel">
           <PanelHeader icon={BarChart3} title="Guruh statistikasi" subtitle="Coin va final score taqqoslash" />
           <div className="chart-box">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height={280}>
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#dbe3ef" vertical={false} />
                 <XAxis dataKey="name" stroke="#64748b" tickLine={false} axisLine={false} />
@@ -540,7 +667,7 @@ function DashboardPage({ students, records, settings, selectedGroup, date, query
         {!!ranked.length && (
           <div className="student-grid">
             {ranked.map((student, index) => (
-              <StudentCard key={student.id} student={student} index={index} onUpdate={onUpdate} />
+              <StudentCard key={student.id} student={student} index={index} onUpdate={onUpdate} onDelete={onDeleteStudent} />
             ))}
           </div>
         )}
@@ -549,7 +676,7 @@ function DashboardPage({ students, records, settings, selectedGroup, date, query
   );
 }
 
-function GroupsPage({ groups, students, records, settings, date, query, addGroup, addStudent, selectedGroup }) {
+function GroupsPage({ groups, students, records, settings, date, query, addGroup, addStudent, saveLessonRecords, deleteStudent, selectedGroup }) {
   const [activeGroup, setActiveGroup] = useState(groups[0]?.name || "");
   useEffect(() => {
     if (!activeGroup && (selectedGroup || groups[0]?.name)) {
@@ -559,6 +686,9 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
       setActiveGroup(groups[0]?.name || "");
     }
   }, [activeGroup, groups, selectedGroup]);
+
+  const activeGroupObject = useMemo(() => groups.find((group) => group.name === activeGroup), [groups, activeGroup]);
+  const activeGroupStudents = useMemo(() => students.filter((student) => student.group === activeGroup), [students, activeGroup]);
 
   const ranked = useMemo(() => {
     return rankStudents(
@@ -599,6 +729,18 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
         </div>
       </section>
 
+      <div className="group-workspace">
+        {activeGroupObject && (
+          <LessonEntryPanel
+            group={activeGroupObject}
+            students={activeGroupStudents}
+            records={records}
+            date={date}
+            settings={settings}
+            saveLessonRecords={saveLessonRecords}
+          />
+        )}
+
       <section className="panel">
         <PanelHeader
           icon={Trophy}
@@ -612,7 +754,7 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
         {!!ranked.length && (
           <>
             <div className="chart-box chart-box-small">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height={230}>
                 <AreaChart data={monthly}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#dbe3ef" vertical={false} />
                   <XAxis dataKey="name" stroke="#64748b" tickLine={false} axisLine={false} />
@@ -638,12 +780,16 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
                     <strong>{student.coins}</strong>
                     <span>total coin</span>
                   </div>
+                  <button className="danger-icon-button" type="button" onClick={() => deleteStudent(student)}>
+                    <Trash2 size={16} />
+                  </button>
                 </div>
               ))}
             </div>
           </>
         )}
       </section>
+      </div>
     </div>
   );
 }
@@ -830,13 +976,18 @@ function AuthPage({ login, register, normalizePhone }) {
 }
 
 function DashboardApp({ teacher, logout }) {
-  const { students, groups, records, settings, loading, error, isDemo, addGroup, addStudent, saveSettings, updateStudent } = useDashboardData();
+  const { students, groups, records, settings, loading, error, isDemo, addGroup, addStudent, saveLessonRecords, deleteStudent, saveSettings, updateStudent } =
+    useDashboardData();
   const [activePage, setActivePage] = useState("dashboard");
   const [date, setDate] = useState(dayjs().format("YYYY-MM-DD"));
   const [query, setQuery] = useState("");
   const automaticGroup = useMemo(() => groupForDate(groups, date)?.name || groups[0]?.name || "", [groups, date]);
   const [manualGroup, setManualGroup] = useState("");
   const selectedGroup = manualGroup || automaticGroup;
+  async function handleDeleteStudent(student) {
+    if (!window.confirm(`${student.name} o'chirilsinmi? Bu o'quvchining dars tarixi ham o'chadi.`)) return;
+    await deleteStudent(student.id);
+  }
 
   return (
     <div className="app-bg">
@@ -868,6 +1019,7 @@ function DashboardApp({ teacher, logout }) {
               date={date}
               query={query}
               onUpdate={updateStudent}
+              onDeleteStudent={handleDeleteStudent}
             />
           )}
           {!loading && activePage === "groups" && (
@@ -880,6 +1032,8 @@ function DashboardApp({ teacher, logout }) {
               query={query}
               addGroup={addGroup}
               addStudent={addStudent}
+              saveLessonRecords={saveLessonRecords}
+              deleteStudent={handleDeleteStudent}
               selectedGroup={selectedGroup}
             />
           )}
