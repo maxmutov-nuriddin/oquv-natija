@@ -398,6 +398,34 @@ function Modal({ title, children, onClose }) {
   );
 }
 
+function LoadingState({ compact = false }) {
+  return (
+    <section className={cx("panel loading-panel", compact && "loading-panel-compact")}>
+      <div className="loading-head">
+        <div className="loading-spinner" aria-hidden="true" />
+        <div>
+          <span className="eyebrow">Yuklanmoqda</span>
+          <h3>Ma'lumotlar tayyorlanmoqda</h3>
+          <p>Guruhlar, o'quvchilar va natijalar sinxronlanmoqda.</p>
+        </div>
+      </div>
+      <div className="loading-skeleton-grid" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+        {!compact && <span />}
+      </div>
+      {!compact && (
+        <div className="loading-skeleton-wide" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </div>
+      )}
+    </section>
+  );
+}
+
 function EmptyState({ title, text }) {
   return (
     <div className="empty-state">
@@ -1165,7 +1193,7 @@ function DashboardApp({ teacher, logout }) {
             setSelectedGroup={setManualGroup}
           />
 
-          {loading && <div className="panel loading-panel">Firebase ma'lumotlari yuklanmoqda...</div>}
+          {loading && <LoadingState />}
           {error && <div className="panel error-panel">{error}</div>}
           {!loading && activePage === "dashboard" && (
             <DashboardPage
@@ -1209,7 +1237,7 @@ export default function App() {
   if (loading) {
     return (
       <div className="auth-page">
-        <div className="auth-card">Yuklanmoqda...</div>
+        <LoadingState compact />
       </div>
     );
   }
