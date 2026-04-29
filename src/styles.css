@@ -23,12 +23,18 @@
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
   min-width: 320px;
   background: var(--bg);
   color: var(--text);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 button,
@@ -57,7 +63,6 @@ button {
 .sidebar {
   position: sticky;
   top: 0;
-  contain: paint;
   display: flex;
   height: 100vh;
   flex-direction: column;
@@ -280,10 +285,73 @@ button {
   gap: 18px;
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  .page-stack,
+  .groups-layout,
+  .settings-layout {
+    animation: page-enter 180ms ease-out both;
+  }
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0.92;
+    transform: translate3d(0, 6px, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 14px;
+}
+
+.current-lesson {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  background:
+    linear-gradient(135deg, rgba(22, 163, 74, 0.1), transparent 45%),
+    #ffffff;
+}
+
+.current-lesson-empty {
+  background:
+    linear-gradient(135deg, rgba(217, 119, 6, 0.12), transparent 45%),
+    #ffffff;
+}
+
+.current-lesson-icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 8px;
+  background: #dcfce7;
+  color: var(--mint);
+}
+
+.current-lesson-empty .current-lesson-icon {
+  background: #fff7ed;
+  color: var(--gold);
+}
+
+.current-lesson h3 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 950;
+}
+
+.current-lesson p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 14px;
 }
 
 .stat-card,
@@ -301,7 +369,7 @@ button {
 .student-card,
 .group-card,
 .leader-row {
-  contain: layout paint;
+  backface-visibility: hidden;
 }
 
 .stat-card {
@@ -504,13 +572,11 @@ button {
   border-radius: 8px;
   background: #ffffff;
   padding: 16px;
-  content-visibility: auto;
-  contain-intrinsic-size: 210px;
-  transition: transform 160ms ease, border-color 160ms ease;
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
 }
 
 .student-card:hover {
-  transform: translateY(-2px);
+  transform: translate3d(0, -2px, 0);
   border-color: rgba(37, 99, 235, 0.32);
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
 }
@@ -743,7 +809,6 @@ button {
 .group-list-panel {
   position: sticky;
   top: 24px;
-  contain: paint;
   display: grid;
   gap: 16px;
   align-self: start;
@@ -912,11 +977,11 @@ button {
   padding: 16px;
   color: var(--text);
   text-align: left;
-  transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
+  transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
 }
 
 .group-card:hover {
-  transform: translateY(-1px);
+  transform: translate3d(0, -1px, 0);
   border-color: rgba(37, 99, 235, 0.28);
   background: #ffffff;
 }
@@ -1000,11 +1065,10 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  content-visibility: auto;
-  contain-intrinsic-size: 64px;
   border-bottom: 1px solid var(--line-soft);
   background: #ffffff;
   padding: 12px;
+  transition: background-color 160ms ease;
 }
 
 .leader-row:last-child {

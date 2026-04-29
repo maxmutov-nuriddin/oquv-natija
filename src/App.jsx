@@ -7,6 +7,7 @@ import {
   BookOpenCheck,
   CalendarDays,
   CheckCircle2,
+  Clock3,
   Coins,
   Download,
   LayoutDashboard,
@@ -35,7 +36,7 @@ import {
 } from "recharts";
 import { useDashboardData } from "./hooks/useDashboardData";
 import { useTeacherAuth } from "./hooks/useTeacherAuth";
-import { getPeriodLeader, getPreviousMonthRange, getPreviousWeekRange, groupForDate, rankStudents } from "./lib/scoring";
+import { getPeriodLeader, getPreviousMonthRange, getPreviousWeekRange, groupForDateTime, rankStudents } from "./lib/scoring";
 
 const navItems = [
   { id: "dashboard", label: "Bosh sahifa", icon: LayoutDashboard },
@@ -197,7 +198,7 @@ function Topbar({ activePage, date, setDate, query, setQuery, selectedGroup, gro
         <label className="control control-select">
           <Users size={17} />
           <select value={selectedGroup} onChange={(event) => setSelectedGroup(event.target.value)}>
-            {!groups.length && <option value="">Guruh yo'q</option>}
+            <option value="">{groups.length ? "Guruh tanlang" : "Guruh yo'q"}</option>
             {groups.map((group) => (
               <option key={group.id} value={group.name}>
                 {group.name}
@@ -422,6 +423,33 @@ function StatCard({ icon: Icon, label, value, hint, tone = "mint" }) {
   );
 }
 
+function CurrentLessonBanner({ group, date, time }) {
+  const formattedDate = dayjs(date).format("DD MMMM YYYY");
+  const lessonTime = group?.lessonStart && group?.lessonEnd ? `${group.lessonStart} - ${group.lessonEnd}` : time;
+
+  return (
+    <section className={cx("panel current-lesson", !group && "current-lesson-empty")}>
+      <div className="current-lesson-icon">
+        <Clock3 size={22} />
+      </div>
+      <div>
+        <span className="eyebrow">{formattedDate} · {time}</span>
+        {group ? (
+          <>
+            <h3>{group.name}</h3>
+            <p>Shu kun va shu vaqt oralig'ida dars bor: {lessonTime}.</p>
+          </>
+        ) : (
+          <>
+            <h3>Bu vaqtda guruh yo'q</h3>
+            <p>Sizda {formattedDate} kuni soat {time} da guruhingiz yo'q.</p>
+          </>
+        )}
+      </div>
+    </section>
+  );
+}
+
 function ProgressLine({ label, value, tone }) {
   return (
     <div className="progress-line">
@@ -637,7 +665,7 @@ function LessonEntryPanel({ group, students, records, date, settings, saveLesson
   );
 }
 
-function DashboardPage({ students, records, settings, selectedGroup, date, query, onUpdate, onDeleteStudent }) {
+function DashboardPage({ students, records, settings, selectedGroup, currentGroup, currentTime, date, query, onUpdate, onDeleteStudent }) {
   const groupStudents = useMemo(() => students.filter((student) => student.group === selectedGroup), [students, selectedGroup]);
   const ranked = useMemo(() => {
     const filtered = groupStudents.filter((student) => student.name.toLowerCase().includes(query.toLowerCase()));
@@ -662,6 +690,8 @@ function DashboardPage({ students, records, settings, selectedGroup, date, query
 
   return (
     <div className="page-stack">
+      <CurrentLessonBanner group={currentGroup} date={date} time={currentTime} />
+
       <section className="stats-grid">
         <StatCard icon={Users} label="O'quvchilar" value={ranked.length} hint={selectedGroup} />
         <StatCard icon={Coins} label="Jami coin" value={totalCoins} hint="tanlangan guruh" tone="gold" />
@@ -680,8 +710,8 @@ function DashboardPage({ students, records, settings, selectedGroup, date, query
                 <XAxis dataKey="name" stroke="#64748b" tickLine={false} axisLine={false} />
                 <YAxis stroke="#64748b" tickLine={false} axisLine={false} />
                 <Tooltip contentStyle={{ background: "#ffffff", border: "1px solid #dbe3ef", borderRadius: 8, color: "#0f172a" }} />
-                <Bar dataKey="coin" fill="#16a34a" radius={[6, 6, 0, 0]} isAnimationActive={false} />
-                <Bar dataKey="score" fill="#2563eb" radius={[6, 6, 0, 0]} isAnimationActive={false} />
+                <Bar dataKey="coin" fill="#16a34a" radius={[6, 6, 0, 0]} animationDuration={280} />
+                <Bar dataKey="score" fill="#2563eb" radius={[6, 6, 0, 0]} animationDuration={280} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -856,7 +886,7 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
                   <XAxis dataKey="name" stroke="#64748b" tickLine={false} axisLine={false} />
                   <YAxis stroke="#64748b" tickLine={false} axisLine={false} />
                   <Tooltip contentStyle={{ background: "#ffffff", border: "1px solid #dbe3ef", borderRadius: 8, color: "#0f172a" }} />
-                  <Area type="monotone" dataKey="monthly" stroke="#16a34a" fill="#16a34a" fillOpacity={0.14} isAnimationActive={false} />
+                  <Area type="monotone" dataKey="monthly" stroke="#16a34a" fill="#16a34a" fillOpacity={0.14} animationDuration={280} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -1100,8 +1130,15 @@ function DashboardApp({ teacher, logout }) {
     useDashboardData();
   const [activePage, setActivePage] = useState("dashboard");
   const [date, setDate] = useState(dayjs().format("YYYY-MM-DD"));
+  const [currentTime, setCurrentTime] = useState(dayjs().format("HH:mm"));
   const [query, setQuery] = useState("");
-  const automaticGroup = useMemo(() => groupForDate(groups, date)?.name || groups[0]?.name || "", [groups, date]);
+  useEffect(() => {
+    const timer = window.setInterval(() => setCurrentTime(dayjs().format("HH:mm")), 30000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const currentGroup = useMemo(() => groupForDateTime(groups, date, currentTime), [groups, date, currentTime]);
+  const automaticGroup = currentGroup?.name || "";
   const [manualGroup, setManualGroup] = useState("");
   const selectedGroup = manualGroup || automaticGroup;
   async function handleDeleteStudent(student) {
@@ -1136,6 +1173,8 @@ function DashboardApp({ teacher, logout }) {
               records={records}
               settings={settings}
               selectedGroup={selectedGroup}
+              currentGroup={currentGroup}
+              currentTime={currentTime}
               date={date}
               query={query}
               onUpdate={updateStudent}

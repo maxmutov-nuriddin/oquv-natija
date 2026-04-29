@@ -95,3 +95,26 @@ export function groupForDate(groups, date = dayjs()) {
   const weekday = dayjs(date).day();
   return groups.find((group) => Array.isArray(group.weekdays) && group.weekdays.includes(weekday)) || groups[0];
 }
+
+function timeToMinutes(time) {
+  if (!time) return null;
+  const [hour, minute] = String(time).split(":").map(Number);
+  if (!Number.isFinite(hour) || !Number.isFinite(minute)) return null;
+  return hour * 60 + minute;
+}
+
+export function groupForDateTime(groups, date = dayjs(), time = dayjs().format("HH:mm")) {
+  const weekday = dayjs(date).day();
+  const currentMinutes = timeToMinutes(time);
+  if (currentMinutes == null) return null;
+
+  return [...groups]
+    .filter((group) => Array.isArray(group.weekdays) && group.weekdays.includes(weekday))
+    .filter((group) => {
+      const start = timeToMinutes(group.lessonStart);
+      const end = timeToMinutes(group.lessonEnd);
+      if (start == null || end == null) return false;
+      return currentMinutes >= start && currentMinutes < end;
+    })
+    .sort((a, b) => timeToMinutes(a.lessonStart) - timeToMinutes(b.lessonStart))[0] || null;
+}
