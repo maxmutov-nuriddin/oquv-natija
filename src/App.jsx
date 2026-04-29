@@ -1,15 +1,21 @@
 import { useMemo, useState } from "react";
 import dayjs from "dayjs";
 import {
+  Activity,
   Award,
+  BarChart3,
+  BookOpenCheck,
   CalendarDays,
-  ChevronRight,
+  CheckCircle2,
   Coins,
   Download,
   LayoutDashboard,
+  Medal,
   Search,
   Settings,
+  SlidersHorizontal,
   Trophy,
+  UserRound,
   Users
 } from "lucide-react";
 import {
@@ -27,43 +33,19 @@ import { useDashboardData } from "./hooks/useDashboardData";
 import { groupForDate, rankStudents } from "./lib/scoring";
 
 const navItems = [
-  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { id: "groups", label: "Groups", icon: Users },
-  { id: "settings", label: "Settings", icon: Settings }
+  { id: "dashboard", label: "Bosh sahifa", icon: LayoutDashboard },
+  { id: "groups", label: "Guruhlar", icon: Users },
+  { id: "settings", label: "Sozlamalar", icon: Settings }
+];
+
+const scoreFields = [
+  { key: "homeworkScore", label: "Uy vazifa", short: "HW", icon: BookOpenCheck },
+  { key: "attendanceScore", label: "Davomat", short: "DAV", icon: CheckCircle2 },
+  { key: "activityScore", label: "Aktivlik", short: "ACT", icon: Activity }
 ];
 
 function cx(...classes) {
   return classes.filter(Boolean).join(" ");
-}
-
-function rankBadge(rank) {
-  if (rank === 1) return "1-o'rin";
-  if (rank === 2) return "2-o'rin";
-  if (rank === 3) return "3-o'rin";
-  return `${rank}-o'rin`;
-}
-
-function Metric({ label, value, accent = "text-mint" }) {
-  return (
-    <div className="metric-card">
-      <p className="text-xs text-slate-500">{label}</p>
-      <p className={cx("mt-1 text-lg font-bold", accent)}>{value}</p>
-    </div>
-  );
-}
-
-function ProgressLine({ label, value, tone }) {
-  return (
-    <div>
-      <div className="mb-1 flex items-center justify-between text-xs">
-        <span className="text-slate-400">{label}</span>
-        <span className="font-semibold text-slate-200">{value}%</span>
-      </div>
-      <div className="progress-track">
-        <span className={cx("progress-fill", tone)} style={{ width: `${Math.max(0, Math.min(100, value))}%` }} />
-      </div>
-    </div>
-  );
 }
 
 function initials(name) {
@@ -75,57 +57,22 @@ function initials(name) {
     .toUpperCase();
 }
 
-function StudentCard({ student, onUpdate }) {
-  return (
-    <article className="student-card">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
-          <div className="student-avatar">{initials(student.name)}</div>
-          <div className="min-w-0">
-            <h3 className="truncate text-base font-bold text-slate-50">{student.name}</h3>
-            <p className="mt-1 text-sm text-slate-400">{student.group}</p>
-          </div>
-        </div>
-        <div className="coin-chip">
-          <Coins size={15} />
-          {student.coins} coin
-        </div>
-      </div>
+function rankText(rank) {
+  if (rank === 1) return "1-o'rin";
+  if (rank === 2) return "2-o'rin";
+  if (rank === 3) return "3-o'rin";
+  return `${rank}-o'rin`;
+}
 
-      <div className="mt-5 space-y-3">
-        <ProgressLine label="Uy vazifa" value={student.homeworkScore} tone="progress-homework" />
-        <ProgressLine label="Davomat" value={student.attendanceScore} tone="progress-attendance" />
-        <ProgressLine label="Dars aktivligi" value={student.activityScore} tone="progress-activity" />
-      </div>
+function medalLabel(index) {
+  if (index === 0) return "TOP 1";
+  if (index === 1) return "TOP 2";
+  if (index === 2) return "TOP 3";
+  return `#${index + 1}`;
+}
 
-      <div className="mt-5 flex flex-wrap gap-2">
-        <span className="pill">Hafta: {rankBadge(student.weeklyRank)}</span>
-        <span className="pill">Oy: {rankBadge(student.monthlyRank)}</span>
-        <span className="pill">Score: {student.finalScore}%</span>
-      </div>
-
-      <div className="mt-5 grid grid-cols-3 gap-2">
-        {[
-          ["homeworkScore", "HW"],
-          ["attendanceScore", "DAV"],
-          ["activityScore", "ACT"]
-        ].map(([key, label]) => (
-          <label className="score-edit" key={key}>
-            <span>{label}</span>
-            <input
-              type="number"
-              min="0"
-              max="100"
-              value={student[key]}
-              onChange={(event) => onUpdate(student.id, { [key]: Number(event.target.value) })}
-              className="number-input"
-              aria-label={key}
-            />
-          </label>
-        ))}
-      </div>
-    </article>
-  );
+function percent(value) {
+  return Math.max(0, Math.min(100, Number(value || 0)));
 }
 
 function Sidebar({ activePage, setActivePage, isDemo }) {
@@ -133,73 +80,189 @@ function Sidebar({ activePage, setActivePage, isDemo }) {
     <aside className="sidebar">
       <div className="brand">
         <div className="brand-mark">
-          <Award size={23} />
+          <Award size={22} />
         </div>
         <div>
-          <h1 className="text-lg font-black text-white">O'quv natija</h1>
-          <p className="text-xs text-slate-400">Admin boshqaruvi</p>
+          <h1>O'quv natija</h1>
+          <p>Admin dashboard</p>
         </div>
       </div>
 
-      <nav className="mt-8 space-y-2">
+      <nav className="nav-list" aria-label="Dashboard navigation">
         {navItems.map((item) => {
           const Icon = item.icon;
           return (
             <button
               key={item.id}
-              onClick={() => setActivePage(item.id)}
               className={cx("nav-button", activePage === item.id && "nav-button-active")}
+              onClick={() => setActivePage(item.id)}
             >
-              <Icon size={19} />
+              <Icon size={18} />
               <span>{item.label}</span>
             </button>
           );
         })}
       </nav>
 
-      <div className="status-card">
-        <p className="text-sm font-bold text-white">{isDemo ? "Demo mode" : "Firebase live"}</p>
-        <p className="mt-1 text-xs leading-5 text-slate-400">
-          Firebase env sozlansa, Firestore collections real-time o'qiladi.
-        </p>
+      <div className="sidebar-note">
+        <span className={cx("live-dot", isDemo ? "live-dot-demo" : "live-dot-online")} />
+        <div>
+          <strong>{isDemo ? "Demo ma'lumot" : "Firebase live"}</strong>
+          <p>O'zgarishlar real-time yangilanadi.</p>
+        </div>
       </div>
     </aside>
   );
 }
 
-function Header({ date, setDate, query, setQuery, selectedGroup, groups, setSelectedGroup }) {
+function Topbar({ activePage, date, setDate, query, setQuery, selectedGroup, groups, setSelectedGroup }) {
+  const pageTitle = navItems.find((item) => item.id === activePage)?.label || "Dashboard";
+
   return (
-    <header className="header">
-      <div>
-        <p className="flex items-center gap-2 text-sm font-medium text-slate-400">
-          <CalendarDays size={17} /> {dayjs(date).format("DD MMMM YYYY")}
-        </p>
-        <h2 className="mt-1 text-3xl font-black text-white">{selectedGroup || "Barcha guruhlar"}</h2>
+    <header className="topbar">
+      <div className="topbar-title">
+        <span className="eyebrow">Bugungi nazorat</span>
+        <h2>{pageTitle}</h2>
+        <p>{dayjs(date).format("DD MMMM YYYY")} uchun {selectedGroup || "guruh"} ma'lumotlari.</p>
       </div>
-      <div className="header-controls">
-        <label className="search-box">
-          <Search size={18} />
+
+      <div className="control-row">
+        <label className="control control-search">
+          <Search size={17} />
           <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="O'quvchi qidirish" />
         </label>
-        <input className="date-input" type="date" value={date} onChange={(event) => setDate(event.target.value)} />
-        <select className="select-input" value={selectedGroup} onChange={(event) => setSelectedGroup(event.target.value)}>
-          {groups.map((group) => (
-            <option key={group.id} value={group.name}>
-              {group.name}
-            </option>
-          ))}
-        </select>
+
+        <label className="control control-date">
+          <CalendarDays size={17} />
+          <input type="date" value={date} onChange={(event) => setDate(event.target.value)} />
+        </label>
+
+        <label className="control control-select">
+          <Users size={17} />
+          <select value={selectedGroup} onChange={(event) => setSelectedGroup(event.target.value)}>
+            {groups.map((group) => (
+              <option key={group.id} value={group.name}>
+                {group.name}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
     </header>
   );
 }
 
+function StatCard({ icon: Icon, label, value, hint, tone = "mint" }) {
+  return (
+    <article className={cx("stat-card", `stat-${tone}`)}>
+      <div className="stat-icon">
+        <Icon size={20} />
+      </div>
+      <div>
+        <p>{label}</p>
+        <strong>{value}</strong>
+        {hint && <span>{hint}</span>}
+      </div>
+    </article>
+  );
+}
+
+function ProgressLine({ label, value, tone }) {
+  return (
+    <div className="progress-line">
+      <div>
+        <span>{label}</span>
+        <strong>{percent(value)}%</strong>
+      </div>
+      <div className="progress-track">
+        <i className={tone} style={{ width: `${percent(value)}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function StudentCard({ student, onUpdate, index }) {
+  return (
+    <article className={cx("student-card", index < 3 && "student-card-top")}>
+      <div className="student-head">
+        <div className="student-person">
+          <div className="avatar">{initials(student.name)}</div>
+          <div>
+            <h3>{student.name}</h3>
+            <p>{student.group} · {rankText(student.weeklyRank)} hafta</p>
+          </div>
+        </div>
+        <div className="coin-badge">
+          <Coins size={15} />
+          {student.coins}
+        </div>
+      </div>
+
+      <div className="student-score">
+        <span>Final score</span>
+        <strong>{student.finalScore}%</strong>
+      </div>
+
+      <div className="student-progress">
+        <ProgressLine label="Uy vazifa" value={student.homeworkScore} tone="tone-homework" />
+        <ProgressLine label="Davomat" value={student.attendanceScore} tone="tone-attendance" />
+        <ProgressLine label="Aktivlik" value={student.activityScore} tone="tone-activity" />
+      </div>
+
+      <div className="rank-chips">
+        <span>Hafta: {rankText(student.weeklyRank)}</span>
+        <span>Oy: {rankText(student.monthlyRank)}</span>
+      </div>
+
+      <div className="quick-edit">
+        {scoreFields.map((field) => {
+          const Icon = field.icon;
+          return (
+            <label key={field.key}>
+              <span>
+                <Icon size={13} />
+                {field.short}
+              </span>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={student[field.key]}
+                onChange={(event) => onUpdate(student.id, { [field.key]: Number(event.target.value) })}
+                aria-label={field.label}
+              />
+            </label>
+          );
+        })}
+      </div>
+    </article>
+  );
+}
+
+function PanelHeader({ icon: Icon, title, subtitle, action }) {
+  return (
+    <div className="panel-header">
+      <div className="panel-title">
+        <span>
+          <Icon size={18} />
+        </span>
+        <div>
+          <h3>{title}</h3>
+          {subtitle && <p>{subtitle}</p>}
+        </div>
+      </div>
+      {action}
+    </div>
+  );
+}
+
 function DashboardPage({ students, records, settings, selectedGroup, date, query, onUpdate }) {
-  const filtered = students
-    .filter((student) => student.group === selectedGroup)
-    .filter((student) => student.name.toLowerCase().includes(query.toLowerCase()));
-  const ranked = rankStudents(filtered, records, settings, date);
-  const topStudent = ranked.slice().sort((a, b) => b.monthlyCoins - a.monthlyCoins)[0];
+  const ranked = useMemo(() => {
+    const filtered = students
+      .filter((student) => student.group === selectedGroup)
+      .filter((student) => student.name.toLowerCase().includes(query.toLowerCase()));
+    return rankStudents(filtered, records, settings, date);
+  }, [students, selectedGroup, query, records, settings, date]);
 
   const chartData = ranked.map((student) => ({
     name: student.name.split(" ")[0],
@@ -207,54 +270,53 @@ function DashboardPage({ students, records, settings, selectedGroup, date, query
     score: student.finalScore
   }));
   const totalCoins = ranked.reduce((sum, student) => sum + student.coins, 0);
-  const averageScore = ranked.length
-    ? Math.round(ranked.reduce((sum, student) => sum + student.finalScore, 0) / ranked.length)
-    : 0;
+  const averageScore = ranked.length ? Math.round(ranked.reduce((sum, student) => sum + student.finalScore, 0) / ranked.length) : 0;
+  const topStudent = [...ranked].sort((a, b) => b.monthlyCoins - a.monthlyCoins)[0];
 
   return (
-    <div className="space-y-6">
-      <section className="summary-grid">
-        <Metric label="O'quvchilar" value={ranked.length} accent="text-white" />
-        <Metric label="Jami coin" value={totalCoins} accent="text-gold" />
-        <Metric label="O'rtacha score" value={`${averageScore}%`} accent="text-mint" />
-        <Metric label="Haftalik lider" value={ranked[0]?.name.split(" ")[0] || "-"} accent="text-cyan-300" />
+    <div className="page-stack">
+      <section className="stats-grid">
+        <StatCard icon={Users} label="O'quvchilar" value={ranked.length} hint={selectedGroup} />
+        <StatCard icon={Coins} label="Jami coin" value={totalCoins} hint="tanlangan guruh" tone="gold" />
+        <StatCard icon={BarChart3} label="O'rtacha score" value={`${averageScore}%`} hint="final formula" tone="cyan" />
+        <StatCard icon={Trophy} label="Oylik lider" value={topStudent?.name.split(" ")[0] || "-"} hint={`${topStudent?.monthlyCoins || 0} coin`} tone="rose" />
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="panel min-h-[260px]">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h3 className="section-title">Bugungi guruh reytingi</h3>
-              <p className="text-sm text-slate-400">Coin va final score bo'yicha umumiy ko'rinish.</p>
-            </div>
-            <Trophy className="text-gold" />
-          </div>
-          <div className="mt-6 h-52">
+      <section className="dashboard-grid">
+        <div className="panel chart-panel">
+          <PanelHeader icon={BarChart3} title="Guruh statistikasi" subtitle="Coin va final score taqqoslash" />
+          <div className="chart-box">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#253044" />
-                <XAxis dataKey="name" stroke="#94a3b8" />
-                <YAxis stroke="#94a3b8" />
-                <Tooltip contentStyle={{ background: "#101827", border: "1px solid #263244", borderRadius: 8 }} />
-                <Bar dataKey="coin" fill="#38d39f" radius={[6, 6, 0, 0]} />
-                <Bar dataKey="score" fill="#f6c85f" radius={[6, 6, 0, 0]} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#dbe3ef" vertical={false} />
+                <XAxis dataKey="name" stroke="#64748b" tickLine={false} axisLine={false} />
+                <YAxis stroke="#64748b" tickLine={false} axisLine={false} />
+                <Tooltip contentStyle={{ background: "#ffffff", border: "1px solid #dbe3ef", borderRadius: 8, color: "#0f172a" }} />
+                <Bar dataKey="coin" fill="#16a34a" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="score" fill="#2563eb" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        <div className="panel top-panel">
-          <p className="text-sm text-slate-400">Top student of month</p>
-          <h3 className="mt-3 text-3xl font-bold text-white">{topStudent?.name || "Hali ma'lumot yo'q"}</h3>
-          <p className="mt-3 text-5xl font-black text-gold">{topStudent?.monthlyCoins || 0}</p>
-          <p className="mt-2 text-sm text-slate-400">oylik coin</p>
-        </div>
+        <aside className="winner-panel">
+          <div className="winner-icon">
+            <Medal size={28} />
+          </div>
+          <span>Top student of month</span>
+          <h3>{topStudent?.name || "Hali ma'lumot yo'q"}</h3>
+          <strong>{topStudent?.monthlyCoins || 0} coin</strong>
+          <p>Oylik natija bo'yicha eng yuqori ko'rsatkich.</p>
+        </aside>
       </section>
 
-      <section className="student-grid">
-        {ranked.map((student) => (
-          <StudentCard key={student.id} student={student} onUpdate={onUpdate} />
-        ))}
+      <section className="panel">
+        <PanelHeader icon={UserRound} title="O'quvchilar" subtitle="Foizlarni o'zgartirsangiz rank avtomatik yangilanadi" />
+        <div className="student-grid">
+          {ranked.map((student, index) => (
+            <StudentCard key={student.id} student={student} index={index} onUpdate={onUpdate} />
+          ))}
+        </div>
       </section>
     </div>
   );
@@ -262,66 +324,71 @@ function DashboardPage({ students, records, settings, selectedGroup, date, query
 
 function GroupsPage({ groups, students, records, settings, date, query }) {
   const [activeGroup, setActiveGroup] = useState(groups[0]?.name || "");
-  const ranked = rankStudents(
-    students.filter((student) => student.group === activeGroup && student.name.toLowerCase().includes(query.toLowerCase())),
-    records,
-    settings,
-    date
-  );
+  const ranked = useMemo(() => {
+    return rankStudents(
+      students.filter((student) => student.group === activeGroup && student.name.toLowerCase().includes(query.toLowerCase())),
+      records,
+      settings,
+      date
+    );
+  }, [students, activeGroup, query, records, settings, date]);
+
   const monthly = ranked.map((student) => ({ name: student.name.split(" ")[0], monthly: student.monthlyCoins }));
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[290px_1fr]">
-      <section className="panel">
-        <h3 className="section-title">Guruhlar</h3>
-        <div className="mt-5 space-y-2">
-          {groups.map((group) => (
-            <button
-              key={group.id}
-              className={cx("group-button", activeGroup === group.name && "group-button-active")}
-              onClick={() => setActiveGroup(group.name)}
-            >
-              <span>{group.name}</span>
-              <span>{students.filter((student) => student.group === group.name).length}</span>
-            </button>
-          ))}
+    <div className="groups-layout">
+      <section className="panel group-list-panel">
+        <PanelHeader icon={Users} title="Guruhlar" subtitle="Guruhni tanlang" />
+        <div className="group-list">
+          {groups.map((group) => {
+            const count = students.filter((student) => student.group === group.name).length;
+            return (
+              <button key={group.id} className={cx("group-card", activeGroup === group.name && "group-card-active")} onClick={() => setActiveGroup(group.name)}>
+                <div>
+                  <strong>{group.name}</strong>
+                  <span>{count} o'quvchi</span>
+                </div>
+                <Users size={18} />
+              </button>
+            );
+          })}
         </div>
       </section>
 
       <section className="panel">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h3 className="section-title">{activeGroup} ranking</h3>
-            <p className="text-sm text-slate-400">TOP 3 alohida highlight qilinadi.</p>
-          </div>
-          <ExportButton rows={ranked} groupName={activeGroup} />
-        </div>
+        <PanelHeader
+          icon={Trophy}
+          title={`${activeGroup} ranking`}
+          subtitle="Coin bo'yicha tartiblangan haftalik va oylik natijalar"
+          action={<ExportButton rows={ranked} groupName={activeGroup} />}
+        />
 
-        <div className="chart-wrap mt-6 h-56">
+        <div className="chart-box chart-box-small">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={monthly}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#253044" />
-              <XAxis dataKey="name" stroke="#94a3b8" />
-              <YAxis stroke="#94a3b8" />
-              <Tooltip contentStyle={{ background: "#101827", border: "1px solid #263244", borderRadius: 8 }} />
-              <Area type="monotone" dataKey="monthly" stroke="#38d39f" fill="#38d39f" fillOpacity={0.16} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#dbe3ef" vertical={false} />
+              <XAxis dataKey="name" stroke="#64748b" tickLine={false} axisLine={false} />
+              <YAxis stroke="#64748b" tickLine={false} axisLine={false} />
+              <Tooltip contentStyle={{ background: "#ffffff", border: "1px solid #dbe3ef", borderRadius: 8, color: "#0f172a" }} />
+              <Area type="monotone" dataKey="monthly" stroke="#16a34a" fill="#16a34a" fillOpacity={0.14} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
 
-        <div className="mt-6 overflow-hidden rounded-lg border border-line">
+        <div className="leaderboard">
           {ranked.map((student, index) => (
-            <div key={student.id} className={cx("rank-row", index < 3 && "rank-row-top")}>
-              <div className="flex items-center gap-3">
-                <div className="rank-index">{index + 1}</div>
+            <div key={student.id} className={cx("leader-row", index < 3 && "leader-row-top")}>
+              <div className="leader-main">
+                <span className="leader-rank">{medalLabel(index)}</span>
+                <div className="avatar avatar-small">{initials(student.name)}</div>
                 <div>
-                  <p className="font-semibold text-white">{student.name}</p>
-                  <p className="text-xs text-slate-400">Weekly {student.weeklyCoins} coin · Monthly {student.monthlyCoins} coin</p>
+                  <strong>{student.name}</strong>
+                  <p>Weekly {student.weeklyCoins} coin · Monthly {student.monthlyCoins} coin</p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="font-bold text-mint">{student.coins}</p>
-                <p className="text-xs text-slate-400">total coin</p>
+              <div className="leader-score">
+                <strong>{student.coins}</strong>
+                <span>total coin</span>
               </div>
             </div>
           ))}
@@ -379,47 +446,40 @@ function SettingsPage({ settings, saveSettings }) {
   }
 
   return (
-    <section className="panel max-w-4xl">
-      <h3 className="section-title">Admin sozlamalari</h3>
-      <p className="mt-2 text-sm text-slate-400">Reward system va final score formulasi shu yerdan boshqariladi.</p>
+    <div className="settings-layout">
+      <section className="panel">
+        <PanelHeader icon={SlidersHorizontal} title="Reward system" subtitle="Coin qiymatlarini o'zingizga moslang" />
+        <div className="settings-grid">
+          <SettingInput label="Homework coin" value={draft.homeworkCoin} onChange={(value) => update("homeworkCoin", value)} />
+          <SettingInput label="Attendance coin" value={draft.attendanceCoin} onChange={(value) => update("attendanceCoin", value)} />
+          <SettingInput label="Activity coin" value={draft.activityCoin} onChange={(value) => update("activityCoin", value)} />
+        </div>
+      </section>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-3">
-        <SettingInput label="Homework coin" value={draft.homeworkCoin} onChange={(value) => update("homeworkCoin", value)} />
-        <SettingInput label="Attendance coin" value={draft.attendanceCoin} onChange={(value) => update("attendanceCoin", value)} />
-        <SettingInput label="Activity coin" value={draft.activityCoin} onChange={(value) => update("activityCoin", value)} />
-      </div>
-
-      <div className="mt-8 rounded-lg border border-line bg-ink/40 p-5">
-        <h4 className="font-semibold text-white">Formula editor</h4>
-        <p className="mt-2 text-sm text-slate-400">
-          Final Score = (Homework% * {draft.homeworkWeight}) + (Attendance% * {draft.attendanceWeight}) + (Activity% *{" "}
-          {draft.activityWeight})
-        </p>
-        <div className="mt-5 grid gap-4 md:grid-cols-3">
+      <section className="panel formula-panel">
+        <PanelHeader icon={BarChart3} title="Formula editor" subtitle="Final score og'irliklari" />
+        <div className="formula-preview">
+          Final Score = Homework% * {draft.homeworkWeight} + Attendance% * {draft.attendanceWeight} + Activity% * {draft.activityWeight}
+        </div>
+        <div className="settings-grid">
           <SettingInput step="0.1" label="HW weight" value={draft.homeworkWeight} onChange={(value) => update("homeworkWeight", value)} />
-          <SettingInput
-            step="0.1"
-            label="Attendance weight"
-            value={draft.attendanceWeight}
-            onChange={(value) => update("attendanceWeight", value)}
-          />
+          <SettingInput step="0.1" label="Attendance weight" value={draft.attendanceWeight} onChange={(value) => update("attendanceWeight", value)} />
           <SettingInput step="0.1" label="Activity weight" value={draft.activityWeight} onChange={(value) => update("activityWeight", value)} />
         </div>
-      </div>
-
-      <button className="primary-button mt-6" onClick={() => saveSettings(draft)}>
-        <Settings size={17} />
-        Saqlash
-      </button>
-    </section>
+        <button className="primary-button save-button" onClick={() => saveSettings(draft)}>
+          <Settings size={17} />
+          Saqlash
+        </button>
+      </section>
+    </div>
   );
 }
 
 function SettingInput({ label, value, onChange, step = "1" }) {
   return (
-    <label className="block">
-      <span className="text-sm text-slate-400">{label}</span>
-      <input className="setting-input" type="number" step={step} value={value} onChange={(event) => onChange(event.target.value)} />
+    <label className="setting-field">
+      <span>{label}</span>
+      <input type="number" step={step} value={value} onChange={(event) => onChange(event.target.value)} />
     </label>
   );
 }
@@ -434,11 +494,12 @@ export default function App() {
   const selectedGroup = manualGroup || automaticGroup;
 
   return (
-    <div className="min-h-screen bg-ink text-slate-200">
+    <div className="app-bg">
       <div className="app-shell">
         <Sidebar activePage={activePage} setActivePage={setActivePage} isDemo={isDemo} />
         <main className="main-content">
-          <Header
+          <Topbar
+            activePage={activePage}
             date={date}
             setDate={(value) => {
               setDate(value);
@@ -451,7 +512,7 @@ export default function App() {
             setSelectedGroup={setManualGroup}
           />
 
-          {loading && <div className="panel">Firebase ma'lumotlari yuklanmoqda...</div>}
+          {loading && <div className="panel loading-panel">Firebase ma'lumotlari yuklanmoqda...</div>}
           {!loading && activePage === "dashboard" && (
             <DashboardPage
               students={students}
@@ -468,9 +529,6 @@ export default function App() {
           )}
           {!loading && activePage === "settings" && <SettingsPage settings={settings} saveSettings={saveSettings} />}
         </main>
-      </div>
-      <div className="fixed bottom-5 right-5 hidden rounded-full border border-line bg-panel/90 px-4 py-2 text-xs text-slate-400 shadow-glow backdrop-blur md:block">
-        Auto rank · weekly reset view · monthly archive ready <ChevronRight className="ml-1 inline" size={14} />
       </div>
     </div>
   );
