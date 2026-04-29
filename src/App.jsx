@@ -661,8 +661,8 @@ function DashboardPage({ students, records, settings, selectedGroup, date, query
                 <XAxis dataKey="name" stroke="#64748b" tickLine={false} axisLine={false} />
                 <YAxis stroke="#64748b" tickLine={false} axisLine={false} />
                 <Tooltip contentStyle={{ background: "#ffffff", border: "1px solid #dbe3ef", borderRadius: 8, color: "#0f172a" }} />
-                <Bar dataKey="coin" fill="#16a34a" radius={[6, 6, 0, 0]} />
-                <Bar dataKey="score" fill="#2563eb" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="coin" fill="#16a34a" radius={[6, 6, 0, 0]} isAnimationActive={false} />
+                <Bar dataKey="score" fill="#2563eb" radius={[6, 6, 0, 0]} isAnimationActive={false} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -828,7 +828,7 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
                   <XAxis dataKey="name" stroke="#64748b" tickLine={false} axisLine={false} />
                   <YAxis stroke="#64748b" tickLine={false} axisLine={false} />
                   <Tooltip contentStyle={{ background: "#ffffff", border: "1px solid #dbe3ef", borderRadius: 8, color: "#0f172a" }} />
-                  <Area type="monotone" dataKey="monthly" stroke="#16a34a" fill="#16a34a" fillOpacity={0.14} />
+                  <Area type="monotone" dataKey="monthly" stroke="#16a34a" fill="#16a34a" fillOpacity={0.14} isAnimationActive={false} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
