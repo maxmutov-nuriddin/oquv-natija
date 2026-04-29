@@ -1127,14 +1127,6 @@ function AuthPage({ login, register, normalizePhone }) {
           </div>
         </div>
 
-        <div className="auth-tabs">
-          <button className={cx(mode === "login" && "auth-tab-active")} onClick={() => setMode("login")} type="button">
-            Login
-          </button>
-          <button className={cx(mode === "register" && "auth-tab-active")} onClick={() => setMode("register")} type="button">
-            Register
-          </button>
-        </div>
 
         <form className="auth-form" onSubmit={submit}>
           {mode === "register" && (
