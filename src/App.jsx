@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import dayjs from "dayjs";
 import {
   Activity,
@@ -387,7 +388,7 @@ function StudentForm({ groups, initialData, onSubmit, selectedGroup, onSaved }) 
 }
 
 function Modal({ title, children, onClose }) {
-  return (
+  return createPortal(
     <div className="modal-backdrop" onMouseDown={onClose}>
       <section className="modal-panel" role="dialog" aria-modal="true" aria-label={title} onMouseDown={(event) => event.stopPropagation()}>
         <div className="modal-header">
@@ -398,7 +399,8 @@ function Modal({ title, children, onClose }) {
         </div>
         {children}
       </section>
-    </div>
+    </div>,
+    document.body
   );
 }
 
