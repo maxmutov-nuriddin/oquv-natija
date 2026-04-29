@@ -12,6 +12,7 @@ import {
   Coins,
   Download,
   LayoutDashboard,
+  Loader2,
   Medal,
   Plus,
   Search,
@@ -300,7 +301,7 @@ function GroupForm({ initialData, onSubmit, onSaved }) {
       </div>
       {timeError && <p className="form-error">{timeError}</p>}
       <button className="primary-button" type="submit" disabled={saving}>
-        <Plus size={16} />
+        {saving ? <Loader2 size={16} className="spinner" /> : <Plus size={16} />}
         {saving ? "Saqlanmoqda..." : initialData ? "Saqlash" : "Qo'shish"}
       </button>
     </form>
@@ -380,7 +381,7 @@ function StudentForm({ groups, initialData, onSubmit, selectedGroup, onSaved }) 
       </div>
       {error && <p className="form-error">{error}</p>}
       <button className="primary-button" type="submit" disabled={!groups.length || saving}>
-        <UserPlus size={16} />
+        {saving ? <Loader2 size={16} className="spinner" /> : <UserPlus size={16} />}
         {saving ? "Saqlanmoqda..." : initialData ? "Saqlash" : "Qo'shish"}
       </button>
     </form>
@@ -388,6 +389,14 @@ function StudentForm({ groups, initialData, onSubmit, selectedGroup, onSaved }) 
 }
 
 function Modal({ title, children, onClose }) {
+  useEffect(() => {
+    const originalStyle = window.getComputedStyle(document.body).overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalStyle;
+    };
+  }, []);
+
   return createPortal(
     <div className="modal-backdrop" onMouseDown={onClose}>
       <section className="modal-panel" role="dialog" aria-modal="true" aria-label={title} onMouseDown={(event) => event.stopPropagation()}>
@@ -719,7 +728,7 @@ function LessonEntryPanel({ group, students, records, date, settings, saveLesson
           <div style={{ position: "sticky", bottom: "16px", zIndex: 10, marginTop: "16px", padding: "12px", background: "#ffffff", borderRadius: "12px", boxShadow: "0 4px 20px rgba(0,0,0,0.08)", border: "1px solid #e2e8f0" }}>
             {message && <p className={cx("lesson-message", message.startsWith("Saqlanmadi") && "lesson-message-error")} style={{ marginTop: 0, marginBottom: "12px" }}>{message}</p>}
             <button className="primary-button save-button" type="submit" disabled={saving || !isLessonDay} style={{ width: "100%", justifyContent: "center" }}>
-              <CheckCircle2 size={17} />
+              {saving ? <Loader2 size={17} className="spinner" /> : <CheckCircle2 size={17} />}
               {saving ? "Saqlanmoqda..." : "Dars natijasini saqlash"}
             </button>
           </div>
@@ -1219,6 +1228,7 @@ function AuthPage({ login, normalizePhone, resetPassword }) {
           {error && <p className="form-error">{error}</p>}
 
           <button className="primary-button auth-submit" type="submit" disabled={saving}>
+            {saving && <Loader2 size={18} className="spinner" />}
             {saving ? "Tekshirilmoqda..." : mode === "forgot" ? "Parolni tiklash" : "Kirish"}
           </button>
 
