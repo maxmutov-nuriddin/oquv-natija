@@ -686,8 +686,9 @@ button {
 
 .groups-layout {
   display: grid;
-  grid-template-columns: 300px minmax(0, 1fr);
+  grid-template-columns: minmax(320px, 360px) minmax(0, 1fr);
   gap: 18px;
+  align-items: start;
 }
 
 .group-workspace {
@@ -697,19 +698,38 @@ button {
 }
 
 .group-list-panel {
+  position: sticky;
+  top: 24px;
+  display: grid;
+  gap: 16px;
   align-self: start;
 }
 
-.group-actions {
+.groups-side-head {
   display: flex;
-  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.group-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
-  justify-content: flex-end;
+}
+
+.group-actions .primary-button,
+.group-actions .secondary-button {
+  width: 100%;
+  min-height: 44px;
 }
 
 .group-list {
   display: grid;
   gap: 10px;
+  max-height: calc(100vh - 245px);
+  overflow: auto;
+  padding-right: 2px;
 }
 
 .entry-form {
@@ -840,13 +860,21 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   width: 100%;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--surface-soft);
-  padding: 14px;
+  padding: 16px;
   color: var(--text);
   text-align: left;
+  transition: 160ms ease;
+}
+
+.group-card:hover {
+  border-color: rgba(37, 99, 235, 0.28);
+  background: #ffffff;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
 }
 
 .group-card strong,
@@ -862,12 +890,59 @@ button {
   margin-top: 3px;
   color: var(--muted);
   font-size: 12px;
+  line-height: 1.35;
 }
 
 .group-card-active {
   border-color: rgba(37, 99, 235, 0.42);
   background: #eff6ff;
   color: var(--blue);
+  box-shadow: inset 3px 0 0 var(--blue);
+}
+
+.group-overview {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.7fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+}
+
+.group-overview h3 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 950;
+}
+
+.group-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.group-metrics div {
+  min-height: 72px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  padding: 12px;
+}
+
+.group-metrics strong {
+  display: block;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 17px;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.group-metrics span {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .leaderboard {
@@ -1331,6 +1406,15 @@ button {
     grid-template-columns: 1fr;
   }
 
+  .group-list-panel {
+    position: static;
+  }
+
+  .group-list {
+    max-height: none;
+    padding-right: 0;
+  }
+
   .stats-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1379,6 +1463,8 @@ button {
 
   .control-row,
   .stats-grid,
+  .group-overview,
+  .group-metrics,
   .settings-grid,
   .student-grid {
     grid-template-columns: 1fr;

@@ -709,6 +709,15 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
 
   const activeGroupObject = useMemo(() => groups.find((group) => group.name === activeGroup), [groups, activeGroup]);
   const activeGroupStudents = useMemo(() => students.filter((student) => student.group === activeGroup), [students, activeGroup]);
+  const activeLessonTime =
+    activeGroupObject?.lessonStart && activeGroupObject?.lessonEnd ? `${activeGroupObject.lessonStart} - ${activeGroupObject.lessonEnd}` : "Vaqt belgilanmagan";
+  const activeLessonDays =
+    activeGroupObject?.weekdays?.length
+      ? weekDays
+          .filter((day) => activeGroupObject.weekdays.includes(day.value))
+          .map((day) => day.label)
+          .join(", ")
+      : "Kun tanlanmagan";
 
   const ranked = useMemo(() => {
     return rankStudents(
@@ -724,23 +733,27 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
   return (
     <div className="groups-layout">
       <section className="panel group-list-panel">
-        <PanelHeader
-          icon={Users}
-          title="Guruhlar"
-          subtitle="Guruhni tanlang"
-          action={
-            <div className="group-actions">
-              <button className="secondary-button" type="button" onClick={() => setModal("group")}>
-                <Plus size={16} />
-                Guruh
-              </button>
-              <button className="primary-button" type="button" onClick={() => setModal("student")} disabled={!groups.length}>
-                <UserPlus size={16} />
-                O'quvchi
-              </button>
+        <div className="groups-side-head">
+          <div className="panel-title">
+            <span>
+              <Users size={18} />
+            </span>
+            <div>
+              <h3>Guruhlar</h3>
+              <p>{groups.length ? `${groups.length} ta guruh` : "Birinchi guruhni yarating"}</p>
             </div>
-          }
-        />
+          </div>
+        </div>
+        <div className="group-actions">
+          <button className="secondary-button" type="button" onClick={() => setModal("group")}>
+            <Plus size={16} />
+            Guruh
+          </button>
+          <button className="primary-button" type="button" onClick={() => setModal("student")} disabled={!groups.length}>
+            <UserPlus size={16} />
+            O'quvchi
+          </button>
+        </div>
         {!groups.length && <EmptyState title="Guruh yo'q" text="Yangi guruh qo'shish tugmasi orqali birinchi guruhingizni yarating." />}
         {!!groups.length && (
           <div className="group-list">
@@ -762,6 +775,29 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
       </section>
 
       <div className="group-workspace">
+        {activeGroupObject && (
+          <section className="panel group-overview">
+            <div>
+              <span className="eyebrow">Tanlangan guruh</span>
+              <h3>{activeGroupObject.name}</h3>
+            </div>
+            <div className="group-metrics">
+              <div>
+                <strong>{activeGroupStudents.length}</strong>
+                <span>o'quvchi</span>
+              </div>
+              <div>
+                <strong>{activeLessonDays}</strong>
+                <span>dars kunlari</span>
+              </div>
+              <div>
+                <strong>{activeLessonTime}</strong>
+                <span>dars vaqti</span>
+              </div>
+            </div>
+          </section>
+        )}
+
         {activeGroupObject && (
           <LessonEntryPanel
             group={activeGroupObject}
@@ -888,23 +924,23 @@ function SettingsPage({ settings, saveSettings }) {
   return (
     <div className="settings-layout">
       <section className="panel">
-        <PanelHeader icon={SlidersHorizontal} title="Reward system" subtitle="Coin qiymatlarini o'zingizga moslang" />
+        <PanelHeader icon={SlidersHorizontal} title="Mukofot tizimi" subtitle="Coin qiymatlarini o'zingizga moslang" />
         <div className="settings-grid">
-          <SettingInput label="Homework coin" value={draft.homeworkCoin} onChange={(value) => update("homeworkCoin", value)} />
-          <SettingInput label="Attendance coin" value={draft.attendanceCoin} onChange={(value) => update("attendanceCoin", value)} />
-          <SettingInput label="Activity coin" value={draft.activityCoin} onChange={(value) => update("activityCoin", value)} />
+          <SettingInput label="Uy vazifa coini" value={draft.homeworkCoin} onChange={(value) => update("homeworkCoin", value)} />
+          <SettingInput label="Davomat coini" value={draft.attendanceCoin} onChange={(value) => update("attendanceCoin", value)} />
+          <SettingInput label="Aktivlik coini" value={draft.activityCoin} onChange={(value) => update("activityCoin", value)} />
         </div>
       </section>
 
       <section className="panel formula-panel">
-        <PanelHeader icon={BarChart3} title="Formula editor" subtitle="Final score og'irliklari" />
+        <PanelHeader icon={BarChart3} title="Formula sozlamasi" subtitle="Yakuniy natija og'irliklari" />
         <div className="formula-preview">
-          Final Score = Homework% * {draft.homeworkWeight} + Attendance% * {draft.attendanceWeight} + Activity% * {draft.activityWeight}
+          Yakuniy natija = Uy vazifa% * {draft.homeworkWeight} + Davomat% * {draft.attendanceWeight} + Aktivlik% * {draft.activityWeight}
         </div>
         <div className="settings-grid">
-          <SettingInput step="0.1" label="HW weight" value={draft.homeworkWeight} onChange={(value) => update("homeworkWeight", value)} />
-          <SettingInput step="0.1" label="Attendance weight" value={draft.attendanceWeight} onChange={(value) => update("attendanceWeight", value)} />
-          <SettingInput step="0.1" label="Activity weight" value={draft.activityWeight} onChange={(value) => update("activityWeight", value)} />
+          <SettingInput step="0.1" label="Uy vazifa og'irligi" value={draft.homeworkWeight} onChange={(value) => update("homeworkWeight", value)} />
+          <SettingInput step="0.1" label="Davomat og'irligi" value={draft.attendanceWeight} onChange={(value) => update("attendanceWeight", value)} />
+          <SettingInput step="0.1" label="Aktivlik og'irligi" value={draft.activityWeight} onChange={(value) => update("activityWeight", value)} />
         </div>
         <button className="primary-button save-button" onClick={() => saveSettings(draft)}>
           <Settings size={17} />
