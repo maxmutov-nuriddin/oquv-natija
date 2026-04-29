@@ -2,18 +2,19 @@ import dayjs from "dayjs";
 
 export function calculateCoins(record, settings) {
   const homeworkCoins = (Number(record.homework) / 100) * Number(settings.homeworkCoin || 0);
-  const attendanceCoins = Number(record.attendance) > 0 ? Number(settings.attendanceCoin || 0) : 0;
   const activityCoins = (Number(record.activity || 0) / 100) * Number(settings.activityCoin || 0);
-  return Math.round(homeworkCoins + attendanceCoins + activityCoins);
+  const lessonScore = Math.round((Number(record.homework || 0) + Number(record.attendance || 0) + Number(record.activity || 0)) / 3);
+  const highScoreBonus = lessonScore >= 90 ? Number(settings.attendanceCoin || 0) : 0;
+  return Math.round(homeworkCoins + activityCoins + highScoreBonus);
 }
 
 export function finalScore(student, settings) {
   const hw = Number(settings.homeworkWeight ?? 0.4);
-  const att = Number(settings.attendanceWeight ?? 0.3);
+  const result = Number(settings.attendanceWeight ?? 0.3);
   const act = Number(settings.activityWeight ?? 0.3);
   return Math.round(
     Number(student.homeworkScore || 0) * hw +
-      Number(student.attendanceScore || 0) * att +
+      Number(student.attendanceScore || 0) * result +
       Number(student.activityScore || 0) * act
   );
 }
@@ -21,10 +22,42 @@ export function finalScore(student, settings) {
 export function getWindowRecords(records, days, date = dayjs()) {
   const end = dayjs(date).endOf("day");
   const start = end.subtract(days - 1, "day").startOf("day");
+  return getRecordsInRange(records, start, end);
+}
+
+export function getRecordsInRange(records, start, end) {
   return records.filter((record) => {
     const recordDate = dayjs(record.date);
     return recordDate.isAfter(start.subtract(1, "millisecond")) && recordDate.isBefore(end.add(1, "millisecond"));
   });
+}
+
+export function getPreviousWeekRange(date = dayjs()) {
+  const current = dayjs(date).startOf("day");
+  const mondayOffset = (current.day() + 6) % 7;
+  const currentWeekStart = current.subtract(mondayOffset, "day");
+  const start = currentWeekStart.subtract(7, "day");
+  return { start, end: start.add(6, "day").endOf("day") };
+}
+
+export function getPreviousMonthRange(date = dayjs()) {
+  const start = dayjs(date).subtract(1, "month").startOf("month");
+  return { start, end: start.endOf("month") };
+}
+
+export function getPeriodLeader(students, records, settings, range) {
+  const results = students.map((student) => {
+    const periodRecords = getRecordsInRange(
+      records.filter((record) => record.studentId === student.id),
+      range.start,
+      range.end
+    );
+    const coins = periodRecords.reduce((sum, record) => sum + (Number(record.coinsEarned) || calculateCoins(record, settings)), 0);
+    return { ...student, periodCoins: coins };
+  });
+
+  const leader = results.sort((a, b) => b.periodCoins - a.periodCoins)[0] || null;
+  return leader?.periodCoins > 0 ? leader : null;
 }
 
 export function summarizeStudent(student, records, settings, date = dayjs()) {

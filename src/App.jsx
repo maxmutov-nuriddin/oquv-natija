@@ -35,7 +35,7 @@ import {
 } from "recharts";
 import { useDashboardData } from "./hooks/useDashboardData";
 import { useTeacherAuth } from "./hooks/useTeacherAuth";
-import { groupForDate, rankStudents } from "./lib/scoring";
+import { getPeriodLeader, getPreviousMonthRange, getPreviousWeekRange, groupForDate, rankStudents } from "./lib/scoring";
 
 const navItems = [
   { id: "dashboard", label: "Bosh sahifa", icon: LayoutDashboard },
@@ -45,7 +45,7 @@ const navItems = [
 
 const scoreFields = [
   { key: "homeworkScore", label: "Uy vazifa", short: "HW", icon: BookOpenCheck },
-  { key: "attendanceScore", label: "Davomat", short: "DAV", icon: CheckCircle2 },
+  { key: "attendanceScore", label: "Yuqori natija", short: "NAT", icon: CheckCircle2 },
   { key: "activityScore", label: "Aktivlik", short: "ACT", icon: Activity }
 ];
 
@@ -460,7 +460,7 @@ function StudentCard({ student, onUpdate, onDelete, index }) {
 
       <div className="student-progress">
         <ProgressLine label="Uy vazifa" value={student.homeworkScore} tone="tone-homework" />
-        <ProgressLine label="Davomat" value={student.attendanceScore} tone="tone-attendance" />
+        <ProgressLine label="Yuqori natija" value={student.attendanceScore} tone="tone-result" />
         <ProgressLine label="Aktivlik" value={student.activityScore} tone="tone-activity" />
       </div>
 
@@ -603,7 +603,7 @@ function LessonEntryPanel({ group, students, records, date, settings, saveLesson
             <div className="lesson-table-head">
               <span>O'quvchi</span>
               <span>Uy vazifa %</span>
-              <span>Davomat %</span>
+              <span>Yuqori natija %</span>
               <span>Aktivlik %</span>
             </div>
             {students.map((student) => (
@@ -638,12 +638,11 @@ function LessonEntryPanel({ group, students, records, date, settings, saveLesson
 }
 
 function DashboardPage({ students, records, settings, selectedGroup, date, query, onUpdate, onDeleteStudent }) {
+  const groupStudents = useMemo(() => students.filter((student) => student.group === selectedGroup), [students, selectedGroup]);
   const ranked = useMemo(() => {
-    const filtered = students
-      .filter((student) => student.group === selectedGroup)
-      .filter((student) => student.name.toLowerCase().includes(query.toLowerCase()));
+    const filtered = groupStudents.filter((student) => student.name.toLowerCase().includes(query.toLowerCase()));
     return rankStudents(filtered, records, settings, date);
-  }, [students, selectedGroup, query, records, settings, date]);
+  }, [groupStudents, query, records, settings, date]);
 
   const chartData = ranked.map((student) => ({
     name: student.name.split(" ")[0],
@@ -652,7 +651,14 @@ function DashboardPage({ students, records, settings, selectedGroup, date, query
   }));
   const totalCoins = ranked.reduce((sum, student) => sum + student.coins, 0);
   const averageScore = ranked.length ? Math.round(ranked.reduce((sum, student) => sum + student.finalScore, 0) / ranked.length) : 0;
-  const topStudent = [...ranked].sort((a, b) => b.monthlyCoins - a.monthlyCoins)[0];
+  const previousWeekLeader = useMemo(
+    () => getPeriodLeader(groupStudents, records, settings, getPreviousWeekRange(date)),
+    [groupStudents, records, settings, date]
+  );
+  const previousMonthLeader = useMemo(
+    () => getPeriodLeader(groupStudents, records, settings, getPreviousMonthRange(date)),
+    [groupStudents, records, settings, date]
+  );
 
   return (
     <div className="page-stack">
@@ -660,7 +666,8 @@ function DashboardPage({ students, records, settings, selectedGroup, date, query
         <StatCard icon={Users} label="O'quvchilar" value={ranked.length} hint={selectedGroup} />
         <StatCard icon={Coins} label="Jami coin" value={totalCoins} hint="tanlangan guruh" tone="gold" />
         <StatCard icon={BarChart3} label="O'rtacha score" value={`${averageScore}%`} hint="final formula" tone="cyan" />
-        <StatCard icon={Trophy} label="Oylik lider" value={topStudent?.name.split(" ")[0] || "-"} hint={`${topStudent?.monthlyCoins || 0} coin`} tone="rose" />
+        <StatCard icon={Medal} label="O'tgan hafta lideri" value={previousWeekLeader?.name.split(" ")[0] || "-"} hint={`${previousWeekLeader?.periodCoins || 0} coin`} tone="mint" />
+        <StatCard icon={Trophy} label="O'tgan oy lideri" value={previousMonthLeader?.name.split(" ")[0] || "-"} hint={`${previousMonthLeader?.periodCoins || 0} coin`} tone="rose" />
       </section>
 
       <section className="dashboard-grid">
@@ -684,10 +691,19 @@ function DashboardPage({ students, records, settings, selectedGroup, date, query
           <div className="winner-icon">
             <Medal size={28} />
           </div>
-          <span>Top student of month</span>
-          <h3>{topStudent?.name || "Hali ma'lumot yo'q"}</h3>
-          <strong>{topStudent?.monthlyCoins || 0} coin</strong>
-          <p>Oylik natija bo'yicha eng yuqori ko'rsatkich.</p>
+          <span>Oldingi davr g'oliblari</span>
+          <div className="winner-list">
+            <div>
+              <p>O'tgan hafta</p>
+              <h3>{previousWeekLeader?.name || "Hali ma'lumot yo'q"}</h3>
+              <strong>{previousWeekLeader?.periodCoins || 0} coin</strong>
+            </div>
+            <div>
+              <p>O'tgan oy</p>
+              <h3>{previousMonthLeader?.name || "Hali ma'lumot yo'q"}</h3>
+              <strong>{previousMonthLeader?.periodCoins || 0} coin</strong>
+            </div>
+          </div>
         </aside>
       </section>
 
@@ -888,7 +904,7 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
 
 function ExportButton({ rows, groupName }) {
   function exportRows() {
-    const columns = ["Ism", "Guruh", "Uy vazifa %", "Davomat %", "Aktivlik %", "Coin", "Haftalik rank", "Oylik rank"];
+    const columns = ["Ism", "Guruh", "Uy vazifa %", "Yuqori natija %", "Aktivlik %", "Coin", "Haftalik rank", "Oylik rank"];
     const body = rows
       .map((student) =>
         [
@@ -951,7 +967,7 @@ function SettingsPage({ settings, saveSettings }) {
         <PanelHeader icon={SlidersHorizontal} title="Mukofot tizimi" subtitle="Coin qiymatlarini o'zingizga moslang" />
         <div className="settings-grid">
           <SettingInput label="Uy vazifa coini" value={draft.homeworkCoin} onChange={(value) => update("homeworkCoin", value)} />
-          <SettingInput label="Davomat coini" value={draft.attendanceCoin} onChange={(value) => update("attendanceCoin", value)} />
+          <SettingInput label="Yuqori natija bonusi" value={draft.attendanceCoin} onChange={(value) => update("attendanceCoin", value)} />
           <SettingInput label="Aktivlik coini" value={draft.activityCoin} onChange={(value) => update("activityCoin", value)} />
         </div>
       </section>
@@ -959,11 +975,11 @@ function SettingsPage({ settings, saveSettings }) {
       <section className="panel formula-panel">
         <PanelHeader icon={BarChart3} title="Formula sozlamasi" subtitle="Yakuniy natija og'irliklari" />
         <div className="formula-preview">
-          Yakuniy natija = Uy vazifa% * {draft.homeworkWeight} + Davomat% * {draft.attendanceWeight} + Aktivlik% * {draft.activityWeight}
+          Yakuniy natija = Uy vazifa% * {draft.homeworkWeight} + Yuqori natija% * {draft.attendanceWeight} + Aktivlik% * {draft.activityWeight}
         </div>
         <div className="settings-grid">
           <SettingInput step="0.1" label="Uy vazifa og'irligi" value={draft.homeworkWeight} onChange={(value) => update("homeworkWeight", value)} />
-          <SettingInput step="0.1" label="Davomat og'irligi" value={draft.attendanceWeight} onChange={(value) => update("attendanceWeight", value)} />
+          <SettingInput step="0.1" label="Yuqori natija og'irligi" value={draft.attendanceWeight} onChange={(value) => update("attendanceWeight", value)} />
           <SettingInput step="0.1" label="Aktivlik og'irligi" value={draft.activityWeight} onChange={(value) => update("activityWeight", value)} />
         </div>
         <button className="primary-button save-button" onClick={saveDraft}>

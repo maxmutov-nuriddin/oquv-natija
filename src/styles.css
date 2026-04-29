@@ -282,7 +282,7 @@ button {
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 14px;
 }
 
@@ -463,6 +463,36 @@ button {
   font-size: 14px;
 }
 
+.winner-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.winner-list div {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+  padding: 12px;
+}
+
+.winner-list p {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.winner-list h3 {
+  margin-top: 6px;
+  font-size: 20px;
+}
+
+.winner-list strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 24px;
+}
+
 .student-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -615,7 +645,7 @@ button {
   background: var(--mint);
 }
 
-.tone-attendance {
+.tone-result {
   background: var(--blue);
 }
 
