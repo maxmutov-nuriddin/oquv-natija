@@ -19,7 +19,8 @@ import {
   Trash2,
   UserPlus,
   UserRound,
-  Users
+  Users,
+  X
 } from "lucide-react";
 import {
   Area,
@@ -197,7 +198,7 @@ function Topbar({ activePage, date, setDate, query, setQuery, selectedGroup, gro
   );
 }
 
-function GroupForm({ addGroup }) {
+function GroupForm({ addGroup, onSaved }) {
   const [name, setName] = useState("");
   const [weekdays, setWeekdays] = useState([]);
   const [lessonStart, setLessonStart] = useState("");
@@ -226,6 +227,7 @@ function GroupForm({ addGroup }) {
       setName("");
       setWeekdays([]);
       setLessonStart("");
+      onSaved?.();
     } catch (error) {
       setTimeError(
         error?.code === "permission-denied"
@@ -289,7 +291,7 @@ function GroupForm({ addGroup }) {
   );
 }
 
-function StudentForm({ groups, addStudent, selectedGroup }) {
+function StudentForm({ groups, addStudent, selectedGroup, onSaved }) {
   const [form, setForm] = useState({
     name: "",
     group: selectedGroup || groups[0]?.name || "",
@@ -313,6 +315,7 @@ function StudentForm({ groups, addStudent, selectedGroup }) {
     try {
       await addStudent(form);
       setForm((current) => ({ ...current, name: "", homeworkScore: 0, attendanceScore: 0, activityScore: 0 }));
+      onSaved?.();
     } catch (submitError) {
       setError(
         submitError?.code === "permission-denied"
@@ -363,6 +366,22 @@ function StudentForm({ groups, addStudent, selectedGroup }) {
         {saving ? "Saqlanmoqda..." : "Qo'shish"}
       </button>
     </form>
+  );
+}
+
+function Modal({ title, children, onClose }) {
+  return (
+    <div className="modal-backdrop" onMouseDown={onClose}>
+      <section className="modal-panel" role="dialog" aria-modal="true" aria-label={title} onMouseDown={(event) => event.stopPropagation()}>
+        <div className="modal-header">
+          <h3>{title}</h3>
+          <button className="modal-close" type="button" onClick={onClose} aria-label="Yopish">
+            <X size={18} />
+          </button>
+        </div>
+        {children}
+      </section>
+    </div>
   );
 }
 
@@ -678,6 +697,7 @@ function DashboardPage({ students, records, settings, selectedGroup, date, query
 
 function GroupsPage({ groups, students, records, settings, date, query, addGroup, addStudent, saveLessonRecords, deleteStudent, selectedGroup }) {
   const [activeGroup, setActiveGroup] = useState(groups[0]?.name || "");
+  const [modal, setModal] = useState("");
   useEffect(() => {
     if (!activeGroup && (selectedGroup || groups[0]?.name)) {
       setActiveGroup(selectedGroup || groups[0]?.name || "");
@@ -704,8 +724,24 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
   return (
     <div className="groups-layout">
       <section className="panel group-list-panel">
-        <PanelHeader icon={Users} title="Guruhlar" subtitle="Guruhni tanlang" />
-        {!groups.length && <EmptyState title="Guruh yo'q" text="Pastdagi forma orqali yangi guruh qo'shing." />}
+        <PanelHeader
+          icon={Users}
+          title="Guruhlar"
+          subtitle="Guruhni tanlang"
+          action={
+            <div className="group-actions">
+              <button className="secondary-button" type="button" onClick={() => setModal("group")}>
+                <Plus size={16} />
+                Guruh
+              </button>
+              <button className="primary-button" type="button" onClick={() => setModal("student")} disabled={!groups.length}>
+                <UserPlus size={16} />
+                O'quvchi
+              </button>
+            </div>
+          }
+        />
+        {!groups.length && <EmptyState title="Guruh yo'q" text="Yangi guruh qo'shish tugmasi orqali birinchi guruhingizni yarating." />}
         {!!groups.length && (
           <div className="group-list">
             {groups.map((group) => {
@@ -723,10 +759,6 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
             })}
           </div>
         )}
-        <div className="form-stack">
-          <GroupForm addGroup={addGroup} />
-          <StudentForm groups={groups} selectedGroup={activeGroup} addStudent={addStudent} />
-        </div>
       </section>
 
       <div className="group-workspace">
@@ -790,6 +822,18 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
         )}
       </section>
       </div>
+
+      {modal === "group" && (
+        <Modal title="Guruh qo'shish" onClose={() => setModal("")}>
+          <GroupForm addGroup={addGroup} onSaved={() => setModal("")} />
+        </Modal>
+      )}
+
+      {modal === "student" && (
+        <Modal title="O'quvchi qo'shish" onClose={() => setModal("")}>
+          <StudentForm groups={groups} selectedGroup={activeGroup} addStudent={addStudent} onSaved={() => setModal("")} />
+        </Modal>
+      )}
     </div>
   );
 }
