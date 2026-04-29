@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import dayjs from "dayjs";
 import {
   Activity,
@@ -11,10 +11,12 @@ import {
   Download,
   LayoutDashboard,
   Medal,
+  Plus,
   Search,
   Settings,
   SlidersHorizontal,
   Trophy,
+  UserPlus,
   UserRound,
   Users
 } from "lucide-react";
@@ -42,6 +44,16 @@ const scoreFields = [
   { key: "homeworkScore", label: "Uy vazifa", short: "HW", icon: BookOpenCheck },
   { key: "attendanceScore", label: "Davomat", short: "DAV", icon: CheckCircle2 },
   { key: "activityScore", label: "Aktivlik", short: "ACT", icon: Activity }
+];
+
+const weekDays = [
+  { value: 1, label: "Du" },
+  { value: 2, label: "Se" },
+  { value: 3, label: "Ch" },
+  { value: 4, label: "Pa" },
+  { value: 5, label: "Ju" },
+  { value: 6, label: "Sh" },
+  { value: 0, label: "Ya" }
 ];
 
 function cx(...classes) {
@@ -140,6 +152,7 @@ function Topbar({ activePage, date, setDate, query, setQuery, selectedGroup, gro
         <label className="control control-select">
           <Users size={17} />
           <select value={selectedGroup} onChange={(event) => setSelectedGroup(event.target.value)}>
+            {!groups.length && <option value="">Guruh yo'q</option>}
             {groups.map((group) => (
               <option key={group.id} value={group.name}>
                 {group.name}
@@ -149,6 +162,123 @@ function Topbar({ activePage, date, setDate, query, setQuery, selectedGroup, gro
         </label>
       </div>
     </header>
+  );
+}
+
+function GroupForm({ addGroup }) {
+  const [name, setName] = useState("");
+  const [weekdays, setWeekdays] = useState([]);
+
+  async function submit(event) {
+    event.preventDefault();
+    await addGroup({ name, weekdays });
+    setName("");
+    setWeekdays([]);
+  }
+
+  function toggleDay(day) {
+    setWeekdays((current) => (current.includes(day) ? current.filter((item) => item !== day) : [...current, day]));
+  }
+
+  return (
+    <form className="entry-form" onSubmit={submit}>
+      <div className="entry-form-head">
+        <Plus size={18} />
+        <strong>Guruh qo'shish</strong>
+      </div>
+      <label>
+        <span>Guruh nomi</span>
+        <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Masalan: IELTS A" required />
+      </label>
+      <div className="weekday-picker" aria-label="Dars kunlari">
+        {weekDays.map((day) => (
+          <button
+            key={day.value}
+            type="button"
+            className={cx(weekdays.includes(day.value) && "weekday-active")}
+            onClick={() => toggleDay(day.value)}
+          >
+            {day.label}
+          </button>
+        ))}
+      </div>
+      <button className="primary-button" type="submit">
+        <Plus size={16} />
+        Qo'shish
+      </button>
+    </form>
+  );
+}
+
+function StudentForm({ groups, addStudent, selectedGroup }) {
+  const [form, setForm] = useState({
+    name: "",
+    group: selectedGroup || groups[0]?.name || "",
+    homeworkScore: 0,
+    attendanceScore: 0,
+    activityScore: 0
+  });
+
+  useEffect(() => {
+    if (!form.group && (selectedGroup || groups[0]?.name)) {
+      setForm((current) => ({ ...current, group: selectedGroup || groups[0]?.name || "" }));
+    }
+  }, [groups, selectedGroup, form.group]);
+
+  async function submit(event) {
+    event.preventDefault();
+    await addStudent(form);
+    setForm((current) => ({ ...current, name: "", homeworkScore: 0, attendanceScore: 0, activityScore: 0 }));
+  }
+
+  function update(key, value) {
+    setForm((current) => ({ ...current, [key]: value }));
+  }
+
+  return (
+    <form className="entry-form" onSubmit={submit}>
+      <div className="entry-form-head">
+        <UserPlus size={18} />
+        <strong>O'quvchi qo'shish</strong>
+      </div>
+      <label>
+        <span>Ism familiya</span>
+        <input value={form.name} onChange={(event) => update("name", event.target.value)} placeholder="O'quvchi ismi" required />
+      </label>
+      <label>
+        <span>Guruh</span>
+        <select value={form.group} onChange={(event) => update("group", event.target.value)} required disabled={!groups.length}>
+          {!groups.length && <option value="">Avval guruh qo'shing</option>}
+          {groups.map((group) => (
+            <option key={group.id} value={group.name}>
+              {group.name}
+            </option>
+          ))}
+        </select>
+      </label>
+      <div className="form-score-grid">
+        {scoreFields.map((field) => (
+          <label key={field.key}>
+            <span>{field.short}</span>
+            <input type="number" min="0" max="100" value={form[field.key]} onChange={(event) => update(field.key, Number(event.target.value))} />
+          </label>
+        ))}
+      </div>
+      <button className="primary-button" type="submit" disabled={!groups.length}>
+        <UserPlus size={16} />
+        Qo'shish
+      </button>
+    </form>
+  );
+}
+
+function EmptyState({ title, text }) {
+  return (
+    <div className="empty-state">
+      <Users size={32} />
+      <h3>{title}</h3>
+      <p>{text}</p>
+    </div>
   );
 }
 
@@ -312,18 +442,31 @@ function DashboardPage({ students, records, settings, selectedGroup, date, query
 
       <section className="panel">
         <PanelHeader icon={UserRound} title="O'quvchilar" subtitle="Foizlarni o'zgartirsangiz rank avtomatik yangilanadi" />
-        <div className="student-grid">
-          {ranked.map((student, index) => (
-            <StudentCard key={student.id} student={student} index={index} onUpdate={onUpdate} />
-          ))}
-        </div>
+        {!selectedGroup && <EmptyState title="Hali guruh yo'q" text="Guruhlar sahifasidan birinchi guruhingizni qo'shing." />}
+        {selectedGroup && !ranked.length && <EmptyState title="Bu guruhda o'quvchi yo'q" text="Guruhlar sahifasidan o'quvchi qo'shing." />}
+        {!!ranked.length && (
+          <div className="student-grid">
+            {ranked.map((student, index) => (
+              <StudentCard key={student.id} student={student} index={index} onUpdate={onUpdate} />
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );
 }
 
-function GroupsPage({ groups, students, records, settings, date, query }) {
+function GroupsPage({ groups, students, records, settings, date, query, addGroup, addStudent, selectedGroup }) {
   const [activeGroup, setActiveGroup] = useState(groups[0]?.name || "");
+  useEffect(() => {
+    if (!activeGroup && (selectedGroup || groups[0]?.name)) {
+      setActiveGroup(selectedGroup || groups[0]?.name || "");
+    }
+    if (activeGroup && groups.length && !groups.some((group) => group.name === activeGroup)) {
+      setActiveGroup(groups[0]?.name || "");
+    }
+  }, [activeGroup, groups, selectedGroup]);
+
   const ranked = useMemo(() => {
     return rankStudents(
       students.filter((student) => student.group === activeGroup && student.name.toLowerCase().includes(query.toLowerCase())),
@@ -339,19 +482,26 @@ function GroupsPage({ groups, students, records, settings, date, query }) {
     <div className="groups-layout">
       <section className="panel group-list-panel">
         <PanelHeader icon={Users} title="Guruhlar" subtitle="Guruhni tanlang" />
-        <div className="group-list">
-          {groups.map((group) => {
-            const count = students.filter((student) => student.group === group.name).length;
-            return (
-              <button key={group.id} className={cx("group-card", activeGroup === group.name && "group-card-active")} onClick={() => setActiveGroup(group.name)}>
-                <div>
-                  <strong>{group.name}</strong>
-                  <span>{count} o'quvchi</span>
-                </div>
-                <Users size={18} />
-              </button>
-            );
-          })}
+        {!groups.length && <EmptyState title="Guruh yo'q" text="Pastdagi forma orqali yangi guruh qo'shing." />}
+        {!!groups.length && (
+          <div className="group-list">
+            {groups.map((group) => {
+              const count = students.filter((student) => student.group === group.name).length;
+              return (
+                <button key={group.id} className={cx("group-card", activeGroup === group.name && "group-card-active")} onClick={() => setActiveGroup(group.name)}>
+                  <div>
+                    <strong>{group.name}</strong>
+                    <span>{count} o'quvchi</span>
+                  </div>
+                  <Users size={18} />
+                </button>
+              );
+            })}
+          </div>
+        )}
+        <div className="form-stack">
+          <GroupForm addGroup={addGroup} />
+          <StudentForm groups={groups} selectedGroup={activeGroup} addStudent={addStudent} />
         </div>
       </section>
 
@@ -363,36 +513,42 @@ function GroupsPage({ groups, students, records, settings, date, query }) {
           action={<ExportButton rows={ranked} groupName={activeGroup} />}
         />
 
-        <div className="chart-box chart-box-small">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={monthly}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#dbe3ef" vertical={false} />
-              <XAxis dataKey="name" stroke="#64748b" tickLine={false} axisLine={false} />
-              <YAxis stroke="#64748b" tickLine={false} axisLine={false} />
-              <Tooltip contentStyle={{ background: "#ffffff", border: "1px solid #dbe3ef", borderRadius: 8, color: "#0f172a" }} />
-              <Area type="monotone" dataKey="monthly" stroke="#16a34a" fill="#16a34a" fillOpacity={0.14} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="leaderboard">
-          {ranked.map((student, index) => (
-            <div key={student.id} className={cx("leader-row", index < 3 && "leader-row-top")}>
-              <div className="leader-main">
-                <span className="leader-rank">{medalLabel(index)}</span>
-                <div className="avatar avatar-small">{initials(student.name)}</div>
-                <div>
-                  <strong>{student.name}</strong>
-                  <p>Weekly {student.weeklyCoins} coin · Monthly {student.monthlyCoins} coin</p>
-                </div>
-              </div>
-              <div className="leader-score">
-                <strong>{student.coins}</strong>
-                <span>total coin</span>
-              </div>
+        {!activeGroup && <EmptyState title="Ranking bo'sh" text="Avval guruh va o'quvchi qo'shing." />}
+        {activeGroup && !ranked.length && <EmptyState title="Bu guruhda o'quvchi yo'q" text="Chap paneldan o'quvchi qo'shsangiz ranking paydo bo'ladi." />}
+        {!!ranked.length && (
+          <>
+            <div className="chart-box chart-box-small">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={monthly}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#dbe3ef" vertical={false} />
+                  <XAxis dataKey="name" stroke="#64748b" tickLine={false} axisLine={false} />
+                  <YAxis stroke="#64748b" tickLine={false} axisLine={false} />
+                  <Tooltip contentStyle={{ background: "#ffffff", border: "1px solid #dbe3ef", borderRadius: 8, color: "#0f172a" }} />
+                  <Area type="monotone" dataKey="monthly" stroke="#16a34a" fill="#16a34a" fillOpacity={0.14} />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
-          ))}
-        </div>
+
+            <div className="leaderboard">
+              {ranked.map((student, index) => (
+                <div key={student.id} className={cx("leader-row", index < 3 && "leader-row-top")}>
+                  <div className="leader-main">
+                    <span className="leader-rank">{medalLabel(index)}</span>
+                    <div className="avatar avatar-small">{initials(student.name)}</div>
+                    <div>
+                      <strong>{student.name}</strong>
+                      <p>Weekly {student.weeklyCoins} coin · Monthly {student.monthlyCoins} coin</p>
+                    </div>
+                  </div>
+                  <div className="leader-score">
+                    <strong>{student.coins}</strong>
+                    <span>total coin</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </section>
     </div>
   );
@@ -485,7 +641,7 @@ function SettingInput({ label, value, onChange, step = "1" }) {
 }
 
 export default function App() {
-  const { students, groups, records, settings, loading, isDemo, saveSettings, updateStudent } = useDashboardData();
+  const { students, groups, records, settings, loading, isDemo, addGroup, addStudent, saveSettings, updateStudent } = useDashboardData();
   const [activePage, setActivePage] = useState("dashboard");
   const [date, setDate] = useState(dayjs().format("YYYY-MM-DD"));
   const [query, setQuery] = useState("");
@@ -525,7 +681,17 @@ export default function App() {
             />
           )}
           {!loading && activePage === "groups" && (
-            <GroupsPage groups={groups} students={students} records={records} settings={settings} date={date} query={query} />
+            <GroupsPage
+              groups={groups}
+              students={students}
+              records={records}
+              settings={settings}
+              date={date}
+              query={query}
+              addGroup={addGroup}
+              addStudent={addStudent}
+              selectedGroup={selectedGroup}
+            />
           )}
           {!loading && activePage === "settings" && <SettingsPage settings={settings} saveSettings={saveSettings} />}
         </main>

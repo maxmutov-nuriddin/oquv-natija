@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import { collection, doc, onSnapshot, setDoc, updateDoc } from "firebase/firestore";
+import { addDoc, collection, doc, onSnapshot, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { db, ensureAdminSession, hasFirebaseConfig } from "../firebase";
-import { demoGroups, demoRecords, demoSettings, demoStudents } from "../data/demoData";
+import { defaultSettings } from "../data/demoData";
 
 const initialData = {
-  students: demoStudents,
-  groups: demoGroups,
-  records: demoRecords,
-  settings: demoSettings,
-  isDemo: true,
+  students: [],
+  groups: [],
+  records: [],
+  settings: defaultSettings,
+  isDemo: !hasFirebaseConfig,
   loading: false
 };
 
@@ -42,7 +42,7 @@ export function useDashboardData() {
           onSnapshot(doc(db, "settings", "reward-system"), (snapshot) => {
             setData((current) => ({
               ...current,
-              settings: snapshot.exists() ? { ...demoSettings, ...snapshot.data() } : demoSettings,
+              settings: snapshot.exists() ? { ...defaultSettings, ...snapshot.data() } : defaultSettings,
               loading: false
             }));
           })
@@ -58,6 +58,50 @@ export function useDashboardData() {
 
   const actions = useMemo(() => {
     return {
+      async addGroup(group) {
+        const nextGroup = {
+          name: group.name.trim(),
+          weekdays: group.weekdays || [],
+          studentsCount: 0,
+          createdAt: new Date().toISOString()
+        };
+        if (!nextGroup.name) return;
+
+        if (hasFirebaseConfig && db) {
+          await addDoc(collection(db, "groups"), { ...nextGroup, createdAt: serverTimestamp() });
+          return;
+        }
+
+        setData((current) => ({
+          ...current,
+          groups: [...current.groups, { id: crypto.randomUUID(), ...nextGroup }]
+        }));
+      },
+      async addStudent(student) {
+        const nextStudent = {
+          name: student.name.trim(),
+          group: student.group,
+          homeworkScore: Number(student.homeworkScore || 0),
+          attendanceScore: Number(student.attendanceScore || 0),
+          activityScore: Number(student.activityScore || 0),
+          coins: 0,
+          createdAt: new Date().toISOString()
+        };
+        if (!nextStudent.name || !nextStudent.group) return;
+
+        if (hasFirebaseConfig && db) {
+          await addDoc(collection(db, "students"), { ...nextStudent, createdAt: serverTimestamp() });
+          return;
+        }
+
+        setData((current) => ({
+          ...current,
+          students: [...current.students, { id: crypto.randomUUID(), ...nextStudent }],
+          groups: current.groups.map((group) =>
+            group.name === nextStudent.group ? { ...group, studentsCount: Number(group.studentsCount || 0) + 1 } : group
+          )
+        }));
+      },
       async saveSettings(nextSettings) {
         setData((current) => ({ ...current, settings: nextSettings }));
         if (hasFirebaseConfig && db) {
