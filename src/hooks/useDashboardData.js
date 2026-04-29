@@ -62,12 +62,15 @@ export function useDashboardData() {
         const nextGroup = {
           name: group.name.trim(),
           weekdays: group.weekdays || [],
+          lessonStart: group.lessonStart || "",
+          lessonEnd: group.lessonEnd || "",
           studentsCount: 0,
           createdAt: new Date().toISOString()
         };
         if (!nextGroup.name) return;
 
         if (hasFirebaseConfig && db) {
+          await ensureAdminSession();
           await addDoc(collection(db, "groups"), { ...nextGroup, createdAt: serverTimestamp() });
           return;
         }
@@ -90,6 +93,7 @@ export function useDashboardData() {
         if (!nextStudent.name || !nextStudent.group) return;
 
         if (hasFirebaseConfig && db) {
+          await ensureAdminSession();
           await addDoc(collection(db, "students"), { ...nextStudent, createdAt: serverTimestamp() });
           return;
         }
@@ -105,6 +109,7 @@ export function useDashboardData() {
       async saveSettings(nextSettings) {
         setData((current) => ({ ...current, settings: nextSettings }));
         if (hasFirebaseConfig && db) {
+          await ensureAdminSession();
           await setDoc(doc(db, "settings", "reward-system"), nextSettings, { merge: true });
         }
       },
@@ -114,6 +119,7 @@ export function useDashboardData() {
           students: current.students.map((student) => (student.id === studentId ? { ...student, ...values } : student))
         }));
         if (hasFirebaseConfig && db) {
+          await ensureAdminSession();
           await updateDoc(doc(db, "students", studentId), values);
         }
       }

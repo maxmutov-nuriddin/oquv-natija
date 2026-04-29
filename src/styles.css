@@ -719,6 +719,23 @@ button {
   gap: 8px;
 }
 
+.time-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.form-error {
+  margin: 0;
+  border: 1px solid #fecdd3;
+  border-radius: 8px;
+  background: #fff1f2;
+  padding: 9px 10px;
+  color: #be123c;
+  font-size: 12px;
+  font-weight: 800;
+}
+
 .empty-state {
   display: grid;
   min-height: 180px;

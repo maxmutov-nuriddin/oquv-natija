@@ -56,6 +56,22 @@ const weekDays = [
   { value: 0, label: "Ya" }
 ];
 
+const lessonStartOptions = Array.from({ length: 20 }, (_, index) => {
+  const totalMinutes = 9 * 60 + index * 30;
+  const hour = String(Math.floor(totalMinutes / 60)).padStart(2, "0");
+  const minute = String(totalMinutes % 60).padStart(2, "0");
+  return `${hour}:${minute}`;
+});
+
+function addLessonDuration(time) {
+  if (!time) return "";
+  const [hour, minute] = time.split(":").map(Number);
+  const totalMinutes = hour * 60 + minute + 90;
+  const endHour = String(Math.floor(totalMinutes / 60)).padStart(2, "0");
+  const endMinute = String(totalMinutes % 60).padStart(2, "0");
+  return `${endHour}:${endMinute}`;
+}
+
 function cx(...classes) {
   return classes.filter(Boolean).join(" ");
 }
@@ -85,6 +101,12 @@ function medalLabel(index) {
 
 function percent(value) {
   return Math.max(0, Math.min(100, Number(value || 0)));
+}
+
+function isValidLessonTime(time) {
+  if (!time) return false;
+  const [hour, minute] = time.split(":").map(Number);
+  return hour >= 9 && hour <= 20 && [0, 30].includes(minute) && !(hour === 20 && minute > 0);
 }
 
 function Sidebar({ activePage, setActivePage, isDemo }) {
@@ -168,12 +190,41 @@ function Topbar({ activePage, date, setDate, query, setQuery, selectedGroup, gro
 function GroupForm({ addGroup }) {
   const [name, setName] = useState("");
   const [weekdays, setWeekdays] = useState([]);
+  const [lessonStart, setLessonStart] = useState("");
+  const [timeError, setTimeError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const lessonEnd = addLessonDuration(lessonStart);
 
   async function submit(event) {
     event.preventDefault();
-    await addGroup({ name, weekdays });
-    setName("");
-    setWeekdays([]);
+    if (!weekdays.length) {
+      setTimeError("Kamida bitta dars kunini tanlang.");
+      return;
+    }
+    if (!isValidLessonTime(lessonStart)) {
+      setTimeError("Boshlanish vaqti 09:00 dan 20:00 gacha, daqiqa faqat 00 yoki 30 bo'lishi kerak.");
+      return;
+    }
+    if (!lessonEnd || lessonEnd > "20:00") {
+      setTimeError("Dars 1 soat 30 daqiqa bo'lgani uchun eng kech boshlanish 18:30 bo'lishi kerak.");
+      return;
+    }
+    setTimeError("");
+    setSaving(true);
+    try {
+      await addGroup({ name, weekdays, lessonStart, lessonEnd });
+      setName("");
+      setWeekdays([]);
+      setLessonStart("");
+    } catch (error) {
+      setTimeError(
+        error?.code === "permission-denied"
+          ? "Firebase ruxsat bermadi. Firestore rules yoki Anonymous Auth sozlamasini tekshiring."
+          : `Guruh qo'shilmadi: ${error?.message || "noma'lum xato"}`
+      );
+    } finally {
+      setSaving(false);
+    }
   }
 
   function toggleDay(day) {
@@ -202,9 +253,27 @@ function GroupForm({ addGroup }) {
           </button>
         ))}
       </div>
-      <button className="primary-button" type="submit">
+      <div className="time-grid">
+        <label>
+          <span>Boshlanish</span>
+          <select value={lessonStart} onChange={(event) => setLessonStart(event.target.value)} required>
+            <option value="">Tanlang</option>
+            {lessonStartOptions.map((time) => (
+              <option key={time} value={time}>
+                {time}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          <span>Tugash</span>
+          <input value={lessonEnd || "Avto"} readOnly />
+        </label>
+      </div>
+      {timeError && <p className="form-error">{timeError}</p>}
+      <button className="primary-button" type="submit" disabled={saving}>
         <Plus size={16} />
-        Qo'shish
+        {saving ? "Saqlanmoqda..." : "Qo'shish"}
       </button>
     </form>
   );
@@ -218,6 +287,8 @@ function StudentForm({ groups, addStudent, selectedGroup }) {
     attendanceScore: 0,
     activityScore: 0
   });
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!form.group && (selectedGroup || groups[0]?.name)) {
@@ -227,8 +298,20 @@ function StudentForm({ groups, addStudent, selectedGroup }) {
 
   async function submit(event) {
     event.preventDefault();
-    await addStudent(form);
-    setForm((current) => ({ ...current, name: "", homeworkScore: 0, attendanceScore: 0, activityScore: 0 }));
+    setError("");
+    setSaving(true);
+    try {
+      await addStudent(form);
+      setForm((current) => ({ ...current, name: "", homeworkScore: 0, attendanceScore: 0, activityScore: 0 }));
+    } catch (submitError) {
+      setError(
+        submitError?.code === "permission-denied"
+          ? "Firebase ruxsat bermadi. Firestore rules yoki Anonymous Auth sozlamasini tekshiring."
+          : `O'quvchi qo'shilmadi: ${submitError?.message || "noma'lum xato"}`
+      );
+    } finally {
+      setSaving(false);
+    }
   }
 
   function update(key, value) {
@@ -264,9 +347,10 @@ function StudentForm({ groups, addStudent, selectedGroup }) {
           </label>
         ))}
       </div>
-      <button className="primary-button" type="submit" disabled={!groups.length}>
+      {error && <p className="form-error">{error}</p>}
+      <button className="primary-button" type="submit" disabled={!groups.length || saving}>
         <UserPlus size={16} />
-        Qo'shish
+        {saving ? "Saqlanmoqda..." : "Qo'shish"}
       </button>
     </form>
   );
@@ -492,6 +576,7 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
                   <div>
                     <strong>{group.name}</strong>
                     <span>{count} o'quvchi</span>
+                    <span>{group.lessonStart && group.lessonEnd ? `${group.lessonStart} - ${group.lessonEnd}` : "Vaqt belgilanmagan"}</span>
                   </div>
                   <Users size={18} />
                 </button>
