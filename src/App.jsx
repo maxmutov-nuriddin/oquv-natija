@@ -496,7 +496,7 @@ function ProgressLine({ label, value, tone }) {
   );
 }
 
-function StudentCard({ student, onDelete, onEdit, index, date, records, settings, saveLessonRecords }) {
+function StudentCard({ student, onDelete, onEdit, index, date, records, settings, saveLessonRecords, isLessonDay = true }) {
   const todayRecord = records?.find((r) => r.studentId === student.id && r.date === date);
   const hw = todayRecord ? todayRecord.homework : 0;
   const att = todayRecord ? todayRecord.attendance : 0;
@@ -562,6 +562,7 @@ function StudentCard({ student, onDelete, onEdit, index, date, records, settings
                 type="number"
                 min="0"
                 max="100"
+                disabled={!isLessonDay}
                 value={numberInputValue(val)}
                 onChange={(event) => handleQuickUpdate(field.key, parsePercentInput(event.target.value))}
                 aria-label={field.label}
@@ -704,6 +705,7 @@ function LessonEntryPanel({ group, students, records, date, settings, saveLesson
                     type="number"
                     min="0"
                     max="100"
+                    disabled={!isLessonDay}
                     value={numberInputValue(entries[student.id]?.[field.key])}
                     onChange={(event) => update(student.id, field.key, event.target.value)}
                     aria-label={`${student.name} ${field.label}`}
@@ -725,7 +727,12 @@ function LessonEntryPanel({ group, students, records, date, settings, saveLesson
   );
 }
 
-function DashboardPage({ students, records, settings, selectedGroup, currentGroup, currentTime, date, query, onEditStudent, onDeleteStudent, saveLessonRecords }) {
+function DashboardPage({ groups, students, records, settings, selectedGroup, currentGroup, currentTime, date, query, onEditStudent, onDeleteStudent, saveLessonRecords }) {
+  const isLessonDay = useMemo(() => {
+    const groupObj = groups?.find(g => g.name === selectedGroup);
+    return groupObj ? groupObj.weekdays?.includes(dayjs(date).day()) : false;
+  }, [groups, selectedGroup, date]);
+
   const groupStudents = useMemo(() => students.filter((student) => student.group === selectedGroup), [students, selectedGroup]);
   const ranked = useMemo(() => {
     const filtered = groupStudents.filter((student) => student.name.toLowerCase().includes(query.toLowerCase()));
@@ -814,6 +821,7 @@ function DashboardPage({ students, records, settings, selectedGroup, currentGrou
                 records={records}
                 settings={settings}
                 saveLessonRecords={saveLessonRecords}
+                isLessonDay={isLessonDay}
               />
             ))}
           </div>
@@ -1273,6 +1281,7 @@ function DashboardApp({ teacher, logout }) {
           {error && <div className="panel error-panel">{error}</div>}
           {!loading && activePage === "dashboard" && (
             <DashboardPage
+              groups={groups}
               students={students}
               records={records}
               settings={settings}
