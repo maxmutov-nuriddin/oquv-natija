@@ -507,7 +507,7 @@ function ProgressLine({ label, value, tone }) {
   );
 }
 
-function StudentCard({ student, onDelete, onEdit, index, date, records, settings, saveLessonRecords, isLessonDay = true }) {
+function StudentCard({ student, onDelete, onEdit, index, date, records, settings, saveLessonRecords, isLessonDay = true, onWarningReset }) {
   const todayRecord = records?.find((r) => r.studentId === student.id && r.date === date);
   const hw = todayRecord ? todayRecord.homework : 0;
   const att = todayRecord ? todayRecord.attendance : 0;
@@ -526,6 +526,10 @@ function StudentCard({ student, onDelete, onEdit, index, date, records, settings
       await saveLessonRecords({ date, settings, students: [updatedStudent] });
     }
   }
+
+  const ignoredZeroDates = student.ignoredZeroDates || [];
+  const zeroRecords = records?.filter((r) => r.studentId === student.id && r.homework === 0 && !ignoredZeroDates.includes(r.date)) || [];
+  const needsWarning = zeroRecords.length >= 3;
 
   return (
     <article className={cx("student-card", index < 3 && "student-card-top")}>
@@ -592,6 +596,21 @@ function StudentCard({ student, onDelete, onEdit, index, date, records, settings
           O'chirish
         </button>
       </div>
+
+      {needsWarning && (
+        <div style={{ background: "#fee2e2", color: "#b91c1c", padding: "10px", borderRadius: "8px", marginTop: "12px", fontSize: "13px", display: "flex", flexDirection: "column", gap: "8px", border: "1px solid #fca5a5" }}>
+          <strong style={{ display: "flex", alignItems: "center", gap: "6px" }}>⚠️ 3 marta uy vazifasi yo'q!</strong>
+          <span>Uydilariga aloqaga chiqish lozim.</span>
+          <button 
+            type="button"
+            className="danger-button" 
+            style={{ width: "100%", padding: "8px", justifyContent: "center", marginTop: "4px" }}
+            onClick={() => onWarningReset?.(student.id, [...ignoredZeroDates, ...zeroRecords.map(r => r.date)])}
+          >
+            Ogohlantirildi
+          </button>
+        </div>
+      )}
     </article>
   );
 }
@@ -738,7 +757,7 @@ function LessonEntryPanel({ group, students, records, date, settings, saveLesson
   );
 }
 
-function DashboardPage({ groups, students, records, settings, selectedGroup, currentGroup, currentTime, date, query, onEditStudent, onDeleteStudent, saveLessonRecords }) {
+function DashboardPage({ groups, students, records, settings, selectedGroup, currentGroup, currentTime, date, query, onEditStudent, onDeleteStudent, saveLessonRecords, updateStudent }) {
   const isLessonDay = useMemo(() => {
     const groupObj = groups?.find(g => g.name === selectedGroup);
     return groupObj ? groupObj.weekdays?.includes(dayjs(date).day()) : false;
@@ -833,6 +852,7 @@ function DashboardPage({ groups, students, records, settings, selectedGroup, cur
                 settings={settings}
                 saveLessonRecords={saveLessonRecords}
                 isLessonDay={isLessonDay}
+                onWarningReset={(studentId, newIgnoredDates) => updateStudent(studentId, { ignoredZeroDates: newIgnoredDates })}
               />
             ))}
           </div>
@@ -1305,6 +1325,7 @@ function DashboardApp({ teacher, logout }) {
               onEditStudent={setEditingStudent}
               onDeleteStudent={handleDeleteStudent}
               saveLessonRecords={saveLessonRecords}
+              updateStudent={updateStudent}
             />
           )}
           {!loading && activePage === "groups" && (

@@ -210,25 +210,42 @@ export function useDashboardData() {
         }
       },
       async saveLessonRecords({ date, students, settings }) {
-        const rows = students.map((student) => {
-          const record = {
-            studentId: student.id,
-            date,
-            homework: Number(student.homeworkScore || 0),
-            attendance: Number(student.attendanceScore || 0),
-            activity: Number(student.activityScore || 0)
-          };
-          return {
-            student,
-            record: {
-              ...record,
-              coinsEarned: calculateCoins(record, settings)
-            }
-          };
+        const rows = [];
+        const recordsToDelete = [];
+
+        students.forEach((student) => {
+          const hw = Number(student.homeworkScore || 0);
+          const att = Number(student.attendanceScore || 0);
+          const act = Number(student.activityScore || 0);
+
+          if (hw === 0 && att === 0 && act === 0) {
+            recordsToDelete.push({ studentId: student.id, date });
+          } else {
+            const record = {
+              studentId: student.id,
+              date,
+              homework: hw,
+              attendance: att,
+              activity: act
+            };
+            rows.push({
+              student,
+              record: {
+                ...record,
+                coinsEarned: calculateCoins(record, settings)
+              }
+            });
+          }
         });
 
         setData((current) => {
-          const nextRecords = [...current.records];
+          let nextRecords = [...current.records];
+          
+          recordsToDelete.forEach(({ studentId, date }) => {
+            const recordId = `${studentId}-${date}`;
+            nextRecords = nextRecords.filter((item) => item.id !== recordId);
+          });
+
           rows.forEach(({ record }) => {
             const recordId = `${record.studentId}-${record.date}`;
             const index = nextRecords.findIndex((item) => item.id === recordId);
@@ -241,31 +258,37 @@ export function useDashboardData() {
             ...current,
             records: nextRecords,
             students: current.students.map((student) => {
-              const row = rows.find((item) => item.student.id === student.id);
-              return row
-                ? {
-                    ...student,
-                    homeworkScore: row.record.homework,
-                    attendanceScore: row.record.attendance,
-                    activityScore: row.record.activity
-                  }
-                : student;
+              const rowToSave = rows.find((item) => item.student.id === student.id);
+              if (rowToSave) {
+                return {
+                  ...student,
+                  homeworkScore: rowToSave.record.homework,
+                  attendanceScore: rowToSave.record.attendance,
+                  activityScore: rowToSave.record.activity
+                };
+              }
+              return student;
             })
           };
         });
 
         if (hasFirebaseConfig && db) {
           await ensureAdminSession();
-          await Promise.all(
-            rows.flatMap(({ student, record }) => [
-              setDoc(doc(db, "records", `${student.id}-${date}`), record, { merge: true }),
-              updateDoc(doc(db, "students", student.id), {
-                homeworkScore: record.homework,
-                attendanceScore: record.attendance,
-                activityScore: record.activity
-              })
-            ])
+          
+          const savePromises = rows.flatMap(({ student, record }) => [
+            setDoc(doc(db, "records", `${student.id}-${date}`), record, { merge: true }),
+            updateDoc(doc(db, "students", student.id), {
+              homeworkScore: record.homework,
+              attendanceScore: record.attendance,
+              activityScore: record.activity
+            })
+          ]);
+
+          const deletePromises = recordsToDelete.map(({ studentId, date }) => 
+            deleteDoc(doc(db, "records", `${studentId}-${date}`))
           );
+          
+          await Promise.all([...savePromises, ...deletePromises]);
         }
       },
       async saveSettings(nextSettings) {
