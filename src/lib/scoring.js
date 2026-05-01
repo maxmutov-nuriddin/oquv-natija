@@ -56,7 +56,12 @@ export function getPeriodLeader(students, records, settings, range) {
     return { ...student, periodCoins: coins };
   });
 
-  const leader = results.sort((a, b) => b.periodCoins - a.periodCoins)[0] || null;
+  const leader = results.sort((a, b) => {
+    if (b.periodCoins !== a.periodCoins) {
+      return b.periodCoins - a.periodCoins;
+    }
+    return finalScore(b, settings) - finalScore(a, settings);
+  })[0] || null;
   return leader?.periodCoins > 0 ? leader : null;
 }
 
@@ -78,8 +83,14 @@ export function summarizeStudent(student, records, settings, date = dayjs()) {
 
 export function rankStudents(students, records, settings, date = dayjs()) {
   const summarized = students.map((student) => summarizeStudent(student, records, settings, date));
-  const weekly = [...summarized].sort((a, b) => b.weeklyCoins - a.weeklyCoins);
-  const monthly = [...summarized].sort((a, b) => b.monthlyCoins - a.monthlyCoins);
+  const weekly = [...summarized].sort((a, b) => {
+    if (b.weeklyCoins !== a.weeklyCoins) return b.weeklyCoins - a.weeklyCoins;
+    return b.finalScore - a.finalScore;
+  });
+  const monthly = [...summarized].sort((a, b) => {
+    if (b.monthlyCoins !== a.monthlyCoins) return b.monthlyCoins - a.monthlyCoins;
+    return b.finalScore - a.finalScore;
+  });
   const weeklyRanks = new Map(weekly.map((student, index) => [student.id, index + 1]));
   const monthlyRanks = new Map(monthly.map((student, index) => [student.id, index + 1]));
   return summarized
@@ -88,7 +99,10 @@ export function rankStudents(students, records, settings, date = dayjs()) {
       weeklyRank: weeklyRanks.get(student.id),
       monthlyRank: monthlyRanks.get(student.id)
     }))
-    .sort((a, b) => b.coins - a.coins);
+    .sort((a, b) => {
+      if (b.coins !== a.coins) return b.coins - a.coins;
+      return b.finalScore - a.finalScore;
+    });
 }
 
 export function groupForDate(groups, date = dayjs()) {
