@@ -99,6 +99,56 @@ const privilegesData = {
   ]
 };
 
+const vipData = {
+  senior: {
+    monthly: [
+      { id: "homework_25", name: "Vazifani 25% qilish", uses: 2 },
+      { id: "free_mode", name: "Free mode", uses: 2 },
+      { id: "remove_bad_mark", name: "Past bahoni o‘chirish", uses: 2 },
+      { id: "coin_boost_2x", name: "2x coin boost", uses: 1 },
+      { id: "skip_task", name: "1 ta vazifa skip", uses: 1 },
+      { id: "no_question", name: "Savol bermaslik huquqi", uses: 1 },
+      { id: "choose_question", name: "Savolni o‘zi tanlaydi", uses: 2 },
+      { id: "extend_time", name: "Topshiriq vaqtini uzaytirish", uses: 2 },
+      { id: "escape_punishment", name: "Jazodan qutilish", uses: 1 },
+      { id: "gift_coin", name: "Do‘stiga coin 2x qilish", uses: 1 },
+      { id: "mystery_box", name: "MISTIRIY BOX", uses: 1 }
+    ],
+    weekly: [
+      { id: "homework_50", name: "Vazifani 50% qilish", uses: 1 },
+      { id: "choose_question", name: "Savolni o‘zi tanlaydi", uses: 1 },
+      { id: "homework_15", name: "1 ta vazifani 15% qilish", uses: 1 },
+      { id: "coin_boost_2x", name: "2x coin boost", uses: 2 },
+      { id: "free_mode", name: "Free mode", uses: 1 },
+      { id: "skip_task", name: "1 ta vazifa skip", uses: 1 },
+      { id: "mystery_box", name: "MISTIRIY BOX", uses: 1 }
+    ]
+  },
+  junior: {
+    monthly: [
+      { id: "homework_25", name: "Vazifani 25% qilish", uses: 2 },
+      { id: "free_mode", name: "Free mode", uses: 2 },
+      { id: "remove_bad_mark", name: "Past bahoni o‘chirish", uses: 2 },
+      { id: "coin_boost_2x", name: "2x coin boost", uses: 1 },
+      { id: "skip_task", name: "1 ta vazifa skip", uses: 1 },
+      { id: "no_question", name: "Savol bermaslik huquqi", uses: 1 },
+      { id: "choose_question", name: "Savolni o‘zi tanlaydi", uses: 2 },
+      { id: "extend_time", name: "Topshiriq vaqtini uzaytirish", uses: 2 },
+      { id: "gift_coin", name: "Do‘stiga coin 2x qilish", uses: 1 },
+      { id: "mystery_box", name: "MISTIRIY BOX", uses: 1 }
+    ],
+    weekly: [
+      { id: "homework_50", name: "Vazifani 50% qilish", uses: 1 },
+      { id: "choose_question", name: "Savolni o‘zi tanlaydi", uses: 1 },
+      { id: "homework_15", name: "1 ta vazifani 15% qilish", uses: 1 },
+      { id: "coin_boost_2x", name: "2x coin boost", uses: 2 },
+      { id: "free_mode", name: "Free mode", uses: 1 },
+      { id: "skip_task", name: "1 ta vazifa skip", uses: 1 },
+      { id: "mystery_box", name: "MISTIRIY BOX", uses: 1 }
+    ]
+  }
+};
+
 const lessonStartOptions = Array.from({ length: 20 }, (_, index) => {
   const totalMinutes = 9 * 60 + index * 30;
   const hour = String(Math.floor(totalMinutes / 60)).padStart(2, "0");
@@ -1314,41 +1364,60 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
 
             <section className="panel">
               <PanelHeader icon={Award} title="Guruh sovg'alari" subtitle="Kimda qanday sovg'a yoki privelegiya borligi" />
-              {activeGroupStudents.filter(s => s.gifts?.length > 0).length === 0 ? (
+              {activeGroupStudents.filter(s => s.gifts?.length > 0 || s.id === weeklyWinner?.id || s.id === monthlyWinner?.id).length === 0 ? (
                 <EmptyState title="Sovg'alar yo'q" text="Hali bu guruhda hech kim sovg'a sotib olmagan." />
               ) : (
                 <div className="group-gifts-summary">
-                  {activeGroupStudents.filter(s => s.gifts?.length > 0).map(s => (
-                    <div key={s.id} className="summary-gift-row">
-                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                        <div className="avatar avatar-small">{initials(s.name)}</div>
-                        <strong>{s.name}</strong>
-                        {s.id === weeklyWinner?.id && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px", background: "linear-gradient(135deg, #60a5fa, #2563eb)", color: "white" }}>Hafta G'olibi</span>}
-                        {s.id === monthlyWinner?.id && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px", background: "linear-gradient(135deg, #f472b6, #db2777)", color: "white" }}>Oy G'olibi</span>}
-                        {s.gifts?.some(g => g.type === "vip") && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px" }}>VIP</span>}
+                  {activeGroupStudents.filter(s => s.gifts?.length > 0 || s.id === weeklyWinner?.id || s.id === monthlyWinner?.id).map(s => {
+                    const isSenior = s.group.toLowerCase().includes("senior");
+                    const isJunior = s.group.toLowerCase().includes("junior");
+                    const tier = isSenior ? "senior" : (isJunior ? "junior" : "junior");
+                    const vipPerks = [];
+                    if (s.id === monthlyWinner?.id) {
+                      vipPerks.push(...vipData[tier].monthly);
+                    }
+                    if (s.id === weeklyWinner?.id) {
+                      vipPerks.push(...vipData[tier].weekly);
+                    }
+
+                    return (
+                      <div key={s.id} className="summary-gift-row">
+                        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                          <div className="avatar avatar-small">{initials(s.name)}</div>
+                          <strong>{s.name}</strong>
+                          {s.id === weeklyWinner?.id && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px", background: "linear-gradient(135deg, #60a5fa, #2563eb)", color: "white" }}>Hafta G'olibi</span>}
+                          {s.id === monthlyWinner?.id && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px", background: "linear-gradient(135deg, #f472b6, #db2777)", color: "white" }}>Oy G'olibi</span>}
+                          {s.gifts?.some(g => g.type === "vip") && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px" }}>VIP</span>}
+                        </div>
+                        <div className="student-gifts" style={{ marginTop: 0 }}>
+                          {(s.gifts || []).map((g, idx) => {
+                            const giftMeta = availableGifts.find(ag => ag.id === g.id) || { icon: Award, color: g.type === "vip" ? "var(--rose)" : "var(--blue)" };
+                            const GiftIcon = giftMeta.icon;
+                            return (
+                            <button key={idx} type="button" className="gift-tag" style={{ "--gift-color": giftMeta.color }} title="Ishlatish uchun bosing" onClick={(e) => {
+                              e.stopPropagation();
+                              const nextGifts = s.gifts.map(item => {
+                                const currentCount = Number(item.count || 0);
+                                if (item.id === g.id) return { ...item, count: currentCount - 1 };
+                                return item;
+                              }).filter(item => item.count > 0);
+                              updateStudent(s.id, { gifts: nextGifts });
+                            }}>
+                              <GiftIcon size={12} />
+                              <span>{g.name} x{g.count}</span>
+                            </button>
+                            );
+                          })}
+                          {vipPerks.map((vp, idx) => (
+                            <div key={`vip-${idx}`} className="gift-tag" style={{ "--gift-color": "var(--rose)", cursor: "default" }}>
+                              <Star size={12} />
+                              <span>{vp.name} {vp.uses ? `x${vp.uses}` : ""}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <div className="student-gifts" style={{ marginTop: 0 }}>
-                        {s.gifts.map((g, idx) => {
-                          const giftMeta = availableGifts.find(ag => ag.id === g.id) || { icon: Award, color: g.type === "vip" ? "var(--rose)" : "var(--blue)" };
-                          const GiftIcon = giftMeta.icon;
-                          return (
-                          <button key={idx} type="button" className="gift-tag" style={{ "--gift-color": giftMeta.color }} title="Ishlatish uchun bosing" onClick={(e) => {
-                            e.stopPropagation();
-                            const nextGifts = s.gifts.map(item => {
-                              const currentCount = Number(item.count || 0);
-                              if (item.id === g.id) return { ...item, count: currentCount - 1 };
-                              return item;
-                            }).filter(item => item.count > 0);
-                            updateStudent(s.id, { gifts: nextGifts });
-                          }}>
-                            <GiftIcon size={12} />
-                            <span>{g.name} x{g.count}</span>
-                          </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </section>
