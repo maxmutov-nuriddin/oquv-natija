@@ -866,6 +866,7 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
   const [activeGroup, setActiveGroup] = useState(groups[0]?.name || "");
   const [modal, setModal] = useState("");
   const [editingStudent, setEditingStudent] = useState(null);
+  const [expandedDate, setExpandedDate] = useState(null);
   useEffect(() => {
     if (!activeGroup && (selectedGroup || groups[0]?.name)) {
       setActiveGroup(selectedGroup || groups[0]?.name || "");
@@ -903,10 +904,14 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
     const datesMap = new Map();
     records.forEach(r => {
       if (groupStudentIds.has(r.studentId)) {
-         if (!datesMap.has(r.date)) datesMap.set(r.date, { count: 0, coins: 0 });
+         if (!datesMap.has(r.date)) datesMap.set(r.date, { count: 0, coins: 0, records: [] });
          const stats = datesMap.get(r.date);
          stats.count++;
          stats.coins += Number(r.coinsEarned || 0);
+         stats.records.push({
+           ...r,
+           studentName: activeGroupStudents.find(s => s.id === r.studentId)?.name || "Noma'lum"
+         });
       }
     });
     return Array.from(datesMap.entries())
@@ -1010,21 +1015,45 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
             {!!historyDates.length && (
               <div className="history-list" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {historyDates.map(h => (
-                  <button 
-                    key={h.date} 
-                    className={cx("secondary-button", date === h.date && "nav-button-active")} 
-                    style={{ justifyContent: 'space-between', padding: '12px', width: '100%', background: date === h.date ? '#eff6ff' : '#f8fafc', border: `1px solid ${date === h.date ? '#bfdbfe' : '#e2e8f0'}`, textAlign: 'left' }}
-                    onClick={() => setDate(h.date)}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <CalendarDays size={18} color={date === h.date ? "#2563eb" : "#64748b"} />
-                      <strong style={{ color: date === h.date ? '#1e40af' : '#0f172a' }}>{dayjs(h.date).format("DD MMMM YYYY")}</strong>
-                    </div>
-                    <div style={{ display: 'flex', gap: '16px', color: date === h.date ? '#1e40af' : '#64748b', fontSize: '13px' }}>
-                      <span>{h.count} o'quvchi</span>
-                      <span>{h.coins} coin</span>
-                    </div>
-                  </button>
+                  <div key={h.date} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <button 
+                      className={cx("secondary-button", date === h.date && "nav-button-active")} 
+                      style={{ justifyContent: 'space-between', padding: '12px', width: '100%', background: date === h.date ? '#eff6ff' : '#f8fafc', border: `1px solid ${date === h.date ? '#bfdbfe' : '#e2e8f0'}`, textAlign: 'left' }}
+                      onClick={() => {
+                        setDate(h.date);
+                        setExpandedDate(expandedDate === h.date ? null : h.date);
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <CalendarDays size={18} color={date === h.date ? "#2563eb" : "#64748b"} />
+                        <strong style={{ color: date === h.date ? '#1e40af' : '#0f172a' }}>{dayjs(h.date).format("DD MMMM YYYY")}</strong>
+                      </div>
+                      <div style={{ display: 'flex', gap: '16px', color: date === h.date ? '#1e40af' : '#64748b', fontSize: '13px' }}>
+                        <span>{h.count} o'quvchi</span>
+                        <span>{h.coins} coin</span>
+                      </div>
+                    </button>
+                    {expandedDate === h.date && (
+                      <div style={{ padding: "12px", background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "8px", marginTop: "4px" }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr", gap: "8px", fontSize: "12px", color: "#64748b", paddingBottom: "8px", borderBottom: "1px solid #f1f5f9", marginBottom: "8px" }}>
+                          <span>O'quvchi</span>
+                          <span>Uy vazifa</span>
+                          <span>Yuqori natija</span>
+                          <span>Aktivlik</span>
+                          <span>Coin</span>
+                        </div>
+                        {h.records.sort((a,b) => b.coinsEarned - a.coinsEarned).map(r => (
+                          <div key={r.id} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr", gap: "8px", fontSize: "13px", alignItems: "center", padding: "6px 0" }}>
+                            <strong>{r.studentName}</strong>
+                            <span>{r.homework}%</span>
+                            <span>{r.attendance}%</span>
+                            <span>{r.activity}%</span>
+                            <strong style={{ color: "#16a34a" }}>+{r.coinsEarned}</strong>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
             )}
