@@ -603,6 +603,25 @@ function BuyGiftModal({ groups, students, onBuy, onClose }) {
   );
 }
 
+function GiftCoinModal({ activeGroupStudents, activeGiftCoin, onClose, onConfirm }) {
+  const [selectedStudent, setSelectedStudent] = useState("");
+  
+  const availableStudents = activeGroupStudents.filter(s => s.id !== activeGiftCoin.studentId);
+
+  return (
+    <form className="entry-form" onSubmit={(e) => { e.preventDefault(); onConfirm(selectedStudent, activeGiftCoin); }}>
+      <label>
+        <span>Kimga sovg'a qilasiz?</span>
+        <select value={selectedStudent} onChange={e => setSelectedStudent(e.target.value)} required>
+          <option value="">O'quvchini tanlang</option>
+          {availableStudents.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+        </select>
+      </label>
+      <button className="primary-button" type="submit">Tasdiqlash</button>
+    </form>
+  );
+}
+
 function getWeightedRandomItem(poolIds) {
   const items = poolIds.map(id => {
     const info = getPrivilegeInfo(id);
@@ -1256,6 +1275,7 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
   const [editingStudent, setEditingStudent] = useState(null);
   const [expandedDate, setExpandedDate] = useState(null);
   const [activeMystery, setActiveMystery] = useState(null);
+  const [activeGiftCoin, setActiveGiftCoin] = useState(null);
   useEffect(() => {
     if (!activeGroup && (selectedGroup || groups[0]?.name)) {
       setActiveGroup(selectedGroup || groups[0]?.name || "");
@@ -1553,6 +1573,11 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
                                 setModal("mystery-box");
                                 return;
                               }
+                              if (g.id === "gift_coin") {
+                                setActiveGiftCoin({ studentId: s.id, type: "shop", giftItem: g });
+                                setModal("gift-coin");
+                                return;
+                              }
                               const nextGifts = s.gifts.map(item => {
                                 const currentCount = Number(item.count || 0);
                                 if (item.id === g.id) return { ...item, count: currentCount - 1 };
@@ -1572,11 +1597,14 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
                             if (remaining <= 0) return null;
 
                             return (
-                              <button key={`vip-${idx}`} type="button" className="gift-tag" style={{ "--gift-color": "var(--rose)", cursor: vp.id === "mystery_box" ? "pointer" : "default" }} onClick={(e) => {
+                              <button key={`vip-${idx}`} type="button" className="gift-tag" style={{ "--gift-color": "var(--rose)", cursor: (vp.id === "mystery_box" || vp.id === "gift_coin") ? "pointer" : "default" }} onClick={(e) => {
                                 e.stopPropagation();
                                 if (vp.id === "mystery_box") {
                                   setActiveMystery({ studentId: s.id, type: vp.source, mysteryType: `${tier}_${vp.source}`, vipPerk: vp });
                                   setModal("mystery-box");
+                                } else if (vp.id === "gift_coin") {
+                                  setActiveGiftCoin({ studentId: s.id, type: vp.source, vipPerk: vp });
+                                  setModal("gift-coin");
                                 }
                               }}>
                                 <Star size={12} />
@@ -1694,6 +1722,49 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
                 updateStudent(student.id, { gifts: nextGifts, usedVipPerks });
               }
               setModal("");
+            }}
+          />
+        </Modal>
+      )}
+
+      {modal === "gift-coin" && activeGiftCoin && (
+        <Modal title="Do'stiga coin 2x qilish" onClose={() => setModal("")}>
+          <GiftCoinModal 
+            activeGroupStudents={activeGroupStudents}
+            activeGiftCoin={activeGiftCoin}
+            onClose={() => setModal("")}
+            onConfirm={(targetStudentId, giftData) => {
+              const targetStudent = students.find(s => s.id === targetStudentId);
+              if (targetStudent) {
+                const existingGifts = targetStudent.gifts || [];
+                const existingBoost = existingGifts.find(g => g.id === "coin_boost_2x");
+                let newGifts;
+                if (existingBoost) {
+                  newGifts = existingGifts.map(g => g.id === "coin_boost_2x" ? { ...g, count: (g.count || 0) + 1 } : g);
+                } else {
+                  newGifts = [...existingGifts, { id: "coin_boost_2x", name: "2x coin boost", count: 1, type: "gift" }];
+                }
+                updateStudent(targetStudent.id, { gifts: newGifts });
+              }
+
+              const givingStudent = students.find(s => s.id === giftData.studentId);
+              if (givingStudent) {
+                if (giftData.type === "shop") {
+                  const newGifts = givingStudent.gifts.map(item => {
+                    if (item.id === "gift_coin") return { ...item, count: (item.count || 0) - 1 };
+                    return item;
+                  }).filter(item => item.count > 0);
+                  updateStudent(givingStudent.id, { gifts: newGifts });
+                } else {
+                  const perkKey = `${giftData.type}_${giftData.vipPerk.id}`;
+                  const usedVipPerks = givingStudent.usedVipPerks || {};
+                  usedVipPerks[perkKey] = (usedVipPerks[perkKey] || 0) + 1;
+                  updateStudent(givingStudent.id, { usedVipPerks });
+                }
+              }
+
+              setModal("");
+              setActiveGiftCoin(null);
             }}
           />
         </Modal>
