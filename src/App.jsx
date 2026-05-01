@@ -65,6 +65,14 @@ const weekDays = [
   { value: 0, label: "Ya" }
 ];
 
+const availableGifts = [
+  { id: "sticker", name: "Stiker", icon: Star, color: "var(--gold)" },
+  { id: "notebook", name: "Daftar", icon: BookOpenCheck, color: "var(--blue)" },
+  { id: "pen", name: "Ruchka", icon: Activity, color: "var(--mint)" },
+  { id: "vip_weekly", name: "VIP Haftalik", icon: Trophy, color: "var(--rose)", type: "vip" },
+  { id: "vip_monthly", name: "VIP Oylik", icon: Award, color: "var(--gold)", type: "vip" }
+];
+
 const lessonStartOptions = Array.from({ length: 20 }, (_, index) => {
   const totalMinutes = 9 * 60 + index * 30;
   const hour = String(Math.floor(totalMinutes / 60)).padStart(2, "0");
@@ -451,6 +459,51 @@ function PrivilegesPage() {
   );
 }
 
+function BuyGiftModal({ groups, students, onBuy, onClose }) {
+  const [form, setForm] = useState({
+    group: groups[0]?.name || "",
+    studentId: "",
+    giftName: "",
+    count: 1
+  });
+
+  const groupStudents = students.filter(s => s.group === form.group);
+
+  function update(key, value) {
+    setForm(curr => ({ ...curr, [key]: value }));
+  }
+
+  return (
+    <form className="entry-form" onSubmit={(e) => { e.preventDefault(); onBuy(form); }}>
+      <label>
+        <span>Guruh</span>
+        <select value={form.group} onChange={(e) => update("group", e.target.value)}>
+          {groups.map(g => <option key={g.id} value={g.name}>{g.name}</option>)}
+        </select>
+      </label>
+      <label>
+        <span>O'quvchi</span>
+        <select value={form.studentId} onChange={(e) => update("studentId", e.target.value)} required>
+          <option value="">Tanlang</option>
+          {groupStudents.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+        </select>
+      </label>
+      <label>
+        <span>Sovg'a / Privelegiya nomi</span>
+        <input value={form.giftName} onChange={(e) => update("giftName", e.target.value)} placeholder="Masalan: VIP Haftalik yoki Stiker" required />
+      </label>
+      <label>
+        <span>Soni</span>
+        <input type="number" min="1" value={form.count} onChange={(e) => update("count", parseInt(e.target.value) || 1)} />
+      </label>
+      <button className="primary-button" type="submit">
+        <CheckCircle2 size={18} />
+        Sotib olish / Qo'shish
+      </button>
+    </form>
+  );
+}
+
 function Modal({ title, children, onClose }) {
   useEffect(() => {
     const originalStyle = window.getComputedStyle(document.body).overflow;
@@ -553,7 +606,7 @@ function ProgressLine({ label, value, tone }) {
   );
 }
 
-function StudentCard({ student, onDelete, onEdit, index, date, records, settings, saveLessonRecords, isLessonDay = true, onWarningReset }) {
+function StudentCard({ student, onDelete, onEdit, index, date, records, settings, saveLessonRecords, isLessonDay = true, onWarningReset, onUpdateStudent }) {
   const todayRecord = records?.find((r) => r.studentId === student.id && r.date === date);
   const hw = todayRecord ? todayRecord.homework : 0;
   const att = todayRecord ? todayRecord.attendance : 0;
@@ -577,11 +630,27 @@ function StudentCard({ student, onDelete, onEdit, index, date, records, settings
   const zeroRecords = records?.filter((r) => r.studentId === student.id && r.homework === 0 && !ignoredZeroDates.includes(r.date)) || [];
   const needsWarning = zeroRecords.length >= 3;
 
+  const gifts = student.gifts || [];
+  const isVip = gifts.some(g => g.type === "vip" && g.count > 0);
+
+  function useGift(giftId, e) {
+    if (e) e.stopPropagation();
+    const nextGifts = gifts.map(g => {
+      const currentCount = Number(g.count || 0);
+      if (g.id === giftId) return { ...g, count: currentCount - 1 };
+      return g;
+    }).filter(g => g.count > 0);
+    onUpdateStudent?.(student.id, { gifts: nextGifts });
+  }
+
   return (
-    <article className={cx("student-card", index < 3 && "student-card-top")}>
+    <article className={cx("student-card", index < 3 && "student-card-top", isVip && "student-card-vip")}>
       <div className="student-head">
         <div className="student-person">
-          <div className="avatar">{initials(student.name)}</div>
+          <div className="avatar">
+            {initials(student.name)}
+            {isVip && <div className="vip-badge-icon"><Star size={12} fill="currentColor" /></div>}
+          </div>
           <div>
             <h3>{student.name}</h3>
             <p>{student.group} · {rankText(student.weeklyRank)} hafta</p>
@@ -592,6 +661,21 @@ function StudentCard({ student, onDelete, onEdit, index, date, records, settings
           {todayCoins}
         </div>
       </div>
+
+      {gifts.length > 0 && (
+        <div className="student-gifts">
+          {gifts.map(g => {
+            const giftMeta = availableGifts.find(ag => ag.id === g.id) || { icon: Trophy, color: "var(--muted)" };
+            const GiftIcon = giftMeta.icon;
+            return (
+              <button key={g.id} type="button" className="gift-tag" style={{ "--gift-color": giftMeta.color }} onClick={(e) => useGift(g.id, e)} title="Ishlatish uchun bosing">
+                <GiftIcon size={12} />
+                <span>{g.name} x{g.count}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       <div className="student-score">
         <span>Final score</span>
@@ -899,6 +983,7 @@ function DashboardPage({ groups, students, records, settings, selectedGroup, cur
                 saveLessonRecords={saveLessonRecords}
                 isLessonDay={isLessonDay}
                 onWarningReset={(studentId, newIgnoredDates) => updateStudent(studentId, { ignoredZeroDates: newIgnoredDates })}
+                onUpdateStudent={updateStudent}
               />
             ))}
           </div>
@@ -984,9 +1069,13 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
             <Plus size={16} />
             Guruh
           </button>
-          <button className="primary-button" type="button" onClick={() => setModal("student")} disabled={!groups.length}>
+          <button className="secondary-button" type="button" onClick={() => setModal("student")} disabled={!groups.length}>
             <UserPlus size={16} />
             O'quvchi
+          </button>
+          <button className="primary-button" type="button" onClick={() => setModal("buy-gift")} disabled={!groups.length} style={{ gridColumn: "1 / -1" }}>
+            <Award size={16} />
+            Sotib oldi
           </button>
         </div>
         {!groups.length && <EmptyState title="Guruh yo'q" text="Yangi guruh qo'shish tugmasi orqali birinchi guruhingizni yarating." />}
@@ -1011,154 +1100,197 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
 
       <div className="group-workspace">
         {activeGroupObject && (
-          <section className="panel group-overview">
-            <div>
-              <span className="eyebrow">Tanlangan guruh</span>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px" }}>
-                <h3 style={{ margin: 0 }}>{activeGroupObject.name}</h3>
-                <div style={{ display: "flex", gap: "8px" }}>
-                  <button className="secondary-button" style={{ padding: "6px 12px", fontSize: "13px" }} onClick={() => setModal("edit-group")}>
-                    Tahrirlash
-                  </button>
-                  <button className="danger-button" style={{ padding: "6px 12px", fontSize: "13px" }} onClick={() => { if(window.confirm("Rostdan ham guruhni o'chirasizmi? O'quvchilar tarixi ham o'chib ketishi mumkin.")) deleteGroup(activeGroupObject.id) }}>
-                    O'chirish
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div className="group-metrics">
-              <div>
-                <strong>{activeGroupStudents.length}</strong>
-                <span>o'quvchi</span>
-              </div>
-              <div>
-                <strong>{activeLessonDays}</strong>
-                <span>dars kunlari</span>
-              </div>
-              <div>
-                <strong>{activeLessonTime}</strong>
-                <span>dars vaqti</span>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {activeGroupObject && (
-          <LessonEntryPanel
-            group={activeGroupObject}
-            students={activeGroupStudents}
-            records={records}
-            date={date}
-            settings={settings}
-            saveLessonRecords={saveLessonRecords}
-          />
-        )}
-
-        {activeGroupObject && (
-          <section className="panel">
-            <PanelHeader icon={CalendarDays} title="Darslar tarixi" subtitle="Oldingi darslar natijalarini ko'rish va tahrirlash (sanani tanlang)" />
-            {!historyDates.length && <EmptyState title="Tarix yo'q" text="Bu guruhda hali dars o'tilmagan." />}
-            {!!historyDates.length && (
-              <div className="history-list" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {historyDates.map(h => (
-                  <div key={h.date} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                    <button 
-                      className={cx("secondary-button", date === h.date && "nav-button-active")} 
-                      style={{ justifyContent: 'space-between', padding: '12px', width: '100%', background: date === h.date ? '#eff6ff' : '#f8fafc', border: `1px solid ${date === h.date ? '#bfdbfe' : '#e2e8f0'}`, textAlign: 'left' }}
-                      onClick={() => {
-                        setDate(h.date);
-                        setExpandedDate(expandedDate === h.date ? null : h.date);
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <CalendarDays size={18} color={date === h.date ? "#2563eb" : "#64748b"} />
-                        <strong style={{ color: date === h.date ? '#1e40af' : '#0f172a' }}>{dayjs(h.date).format("DD MMMM YYYY")}</strong>
-                      </div>
-                      <div style={{ display: 'flex', gap: '16px', color: date === h.date ? '#1e40af' : '#64748b', fontSize: '13px' }}>
-                        <span>{h.count} o'quvchi</span>
-                        <span>{h.coins} coin</span>
-                      </div>
-                    </button>
-                    {expandedDate === h.date && (
-                      <div style={{ padding: "12px", background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "8px", marginTop: "4px" }}>
-                        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr", gap: "8px", fontSize: "12px", color: "#64748b", paddingBottom: "8px", borderBottom: "1px solid #f1f5f9", marginBottom: "8px" }}>
-                          <span>O'quvchi</span>
-                          <span>Uy vazifa</span>
-                          <span>Yuqori natija</span>
-                          <span>Aktivlik</span>
-                          <span>Coin</span>
-                        </div>
-                        {h.records.sort((a,b) => b.coinsEarned - a.coinsEarned).map(r => (
-                          <div key={r.id} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr", gap: "8px", fontSize: "13px", alignItems: "center", padding: "6px 0" }}>
-                            <strong>{r.studentName}</strong>
-                            <span>{r.homework}%</span>
-                            <span>{r.attendance}%</span>
-                            <span>{r.activity}%</span>
-                            <strong style={{ color: "#16a34a" }}>+{r.coinsEarned}</strong>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-        )}
-
-      <section className="panel">
-        <PanelHeader
-          icon={Trophy}
-          title={`${activeGroup} ranking`}
-          subtitle="Coin bo'yicha tartiblangan haftalik va oylik natijalar"
-          action={<ExportButton rows={ranked} groupName={activeGroup} />}
-        />
-
-        {!activeGroup && <EmptyState title="Ranking bo'sh" text="Avval guruh va o'quvchi qo'shing." />}
-        {activeGroup && !ranked.length && <EmptyState title="Bu guruhda o'quvchi yo'q" text="Chap paneldan o'quvchi qo'shsangiz ranking paydo bo'ladi." />}
-        {!!ranked.length && (
           <>
-            <div className="chart-box chart-box-small">
-              <ResponsiveContainer width="100%" height={230}>
-                <AreaChart data={monthly}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#dbe3ef" vertical={false} />
-                  <XAxis dataKey="name" stroke="#64748b" tickLine={false} axisLine={false} />
-                  <YAxis stroke="#64748b" tickLine={false} axisLine={false} />
-                  <Tooltip contentStyle={{ background: "#ffffff", border: "1px solid #dbe3ef", borderRadius: 8, color: "#0f172a" }} />
-                  <Area type="monotone" dataKey="monthly" stroke="#16a34a" fill="#16a34a" fillOpacity={0.14} animationDuration={280} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-
-            <div className="leaderboard">
-              {ranked.map((student, index) => (
-                <div key={student.id} className={cx("leader-row", index < 3 && "leader-row-top")}>
-                  <div className="leader-main">
-                    <span className="leader-rank">{medalLabel(index)}</span>
-                    <div className="avatar avatar-small">{initials(student.name)}</div>
-                    <div>
-                      <strong>{student.name}</strong>
-                      <p>Weekly {student.weeklyCoins} coin · Monthly {student.monthlyCoins} coin</p>
-                    </div>
-                  </div>
-                  <div className="leader-score">
-                    <strong>{student.coins}</strong>
-                    <span>total coin</span>
-                  </div>
-                  <div className="leader-actions" style={{ display: "flex", gap: "4px" }}>
-                    <button className="secondary-icon-button" type="button" onClick={() => { setEditingStudent(student); setModal("edit-student"); }}>
-                      <Settings size={16} />
+            <section className="panel group-overview">
+              <div>
+                <span className="eyebrow">Tanlangan guruh</span>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px" }}>
+                  <h3 style={{ margin: 0 }}>{activeGroupObject.name}</h3>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <button className="secondary-button" style={{ padding: "6px 12px", fontSize: "13px" }} onClick={() => setModal("edit-group")}>
+                      Tahrirlash
                     </button>
-                    <button className="danger-icon-button" type="button" onClick={() => deleteStudent(student)}>
-                      <Trash2 size={16} />
+                    <button className="danger-button" style={{ padding: "6px 12px", fontSize: "13px" }} onClick={() => { if(window.confirm("Rostdan ham guruhni o'chirasizmi? O'quvchilar tarixi ham o'chib ketishi mumkin.")) deleteGroup(activeGroupObject.id) }}>
+                      O'chirish
                     </button>
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+              <div className="group-metrics">
+                <div>
+                  <strong>{activeGroupStudents.length}</strong>
+                  <span>o'quvchi</span>
+                </div>
+                <div>
+                  <strong>{activeLessonDays}</strong>
+                  <span>dars kunlari</span>
+                </div>
+                <div>
+                  <strong>{activeLessonTime}</strong>
+                  <span>dars vaqti</span>
+                </div>
+              </div>
+            </section>
+
+            <LessonEntryPanel
+              group={activeGroupObject}
+              students={activeGroupStudents}
+              records={records}
+              date={date}
+              settings={settings}
+              saveLessonRecords={saveLessonRecords}
+            />
+
+            <section className="panel">
+              <PanelHeader icon={CalendarDays} title="Darslar tarixi" subtitle="Oldingi darslar natijalarini ko'rish va tahrirlash (sanani tanlang)" />
+              {!historyDates.length && <EmptyState title="Tarix yo'q" text="Bu guruhda hali dars o'tilmagan." />}
+              {!!historyDates.length && (
+                <div className="history-list" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {historyDates.map(h => (
+                    <div key={h.date} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                      <button 
+                        className={cx("secondary-button", date === h.date && "nav-button-active")} 
+                        style={{ justifyContent: 'space-between', padding: '12px', width: '100%', background: date === h.date ? '#eff6ff' : '#f8fafc', border: `1px solid ${date === h.date ? '#bfdbfe' : '#e2e8f0'}`, textAlign: 'left' }}
+                        onClick={() => {
+                          setDate(h.date);
+                          setExpandedDate(expandedDate === h.date ? null : h.date);
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <CalendarDays size={18} color={date === h.date ? "#2563eb" : "#64748b"} />
+                          <strong style={{ color: date === h.date ? '#1e40af' : '#0f172a' }}>{dayjs(h.date).format("DD MMMM YYYY")}</strong>
+                        </div>
+                        <div style={{ display: 'flex', gap: '16px', color: date === h.date ? '#1e40af' : '#64748b', fontSize: '13px' }}>
+                          <span>{h.count} o'quvchi</span>
+                          <span>{h.coins} coin</span>
+                        </div>
+                      </button>
+                      {expandedDate === h.date && (
+                        <div style={{ padding: "12px", background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "8px", marginTop: "4px" }}>
+                          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr", gap: "8px", fontSize: "12px", color: "#64748b", paddingBottom: "8px", borderBottom: "1px solid #f1f5f9", marginBottom: "8px" }}>
+                            <span>O'quvchi</span>
+                            <span>Uy vazifa</span>
+                            <span>Yuqori natija</span>
+                            <span>Aktivlik</span>
+                            <span>Coin</span>
+                          </div>
+                          {h.records.sort((a,b) => b.coinsEarned - a.coinsEarned).map(r => (
+                            <div key={r.id} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr", gap: "8px", fontSize: "13px", alignItems: "center", padding: "6px 0" }}>
+                              <strong>{r.studentName}</strong>
+                              <span>{r.homework}%</span>
+                              <span>{r.attendance}%</span>
+                              <span>{r.activity}%</span>
+                              <strong style={{ color: "#16a34a" }}>+{r.coinsEarned}</strong>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <section className="panel">
+              <PanelHeader
+                icon={Trophy}
+                title={`${activeGroup} ranking`}
+                subtitle="Coin bo'yicha tartiblangan haftalik va oylik natijalar"
+                action={<ExportButton rows={ranked} groupName={activeGroup} />}
+              />
+
+              {!activeGroup && <EmptyState title="Ranking bo'sh" text="Avval guruh va o'quvchi qo'shing." />}
+              {activeGroup && !ranked.length && <EmptyState title="Bu guruhda o'quvchi yo'q" text="Chap paneldan o'quvchi qo'shsangiz ranking paydo bo'ladi." />}
+              {!!ranked.length && (
+                <>
+                  <div className="chart-box chart-box-small">
+                    <ResponsiveContainer width="100%" height={230}>
+                      <AreaChart data={monthly}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#dbe3ef" vertical={false} />
+                        <XAxis dataKey="name" stroke="#64748b" tickLine={false} axisLine={false} />
+                        <YAxis stroke="#64748b" tickLine={false} axisLine={false} />
+                        <Tooltip contentStyle={{ background: "#ffffff", border: "1px solid #dbe3ef", borderRadius: 8, color: "#0f172a" }} />
+                        <Area type="monotone" dataKey="monthly" stroke="#16a34a" fill="#16a34a" fillOpacity={0.14} animationDuration={280} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  <div className="leaderboard">
+                    {ranked.map((student, index) => (
+                      <div key={student.id} className={cx("leader-row", index < 3 && "leader-row-top")}>
+                        <div className="leader-main">
+                          <span className="leader-rank">{medalLabel(index)}</span>
+                          <div className="avatar avatar-small">
+                            {initials(student.name)}
+                            {student.gifts?.some(g => g.type === "vip") && (
+                              <div className="vip-badge-icon" style={{ width: "14px", height: "14px", border: "1px solid white", bottom: "-1px", right: "-1px" }}>
+                                <Star size={8} fill="currentColor" />
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <strong>{student.name}</strong>
+                            <p>Weekly {student.weeklyCoins} coin · Monthly {student.monthlyCoins} coin</p>
+                          </div>
+                        </div>
+                        <div className="leader-score">
+                          <strong>{student.coins}</strong>
+                          <span>total coin</span>
+                        </div>
+                        <div className="leader-actions" style={{ display: "flex", gap: "4px" }}>
+                          <button className="secondary-icon-button" type="button" onClick={() => { setEditingStudent(student); setModal("edit-student"); }}>
+                            <Settings size={16} />
+                          </button>
+                          <button className="danger-icon-button" type="button" onClick={() => deleteStudent(student)}>
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </section>
+
+            <section className="panel">
+              <PanelHeader icon={Award} title="Guruh sovg'alari" subtitle="Kimda qanday sovg'a yoki privelegiya borligi" />
+              {activeGroupStudents.filter(s => s.gifts?.length > 0).length === 0 ? (
+                <EmptyState title="Sovg'alar yo'q" text="Hali bu guruhda hech kim sovg'a sotib olmagan." />
+              ) : (
+                <div className="group-gifts-summary">
+                  {activeGroupStudents.filter(s => s.gifts?.length > 0).map(s => (
+                    <div key={s.id} className="summary-gift-row">
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <div className="avatar avatar-small">{initials(s.name)}</div>
+                        <strong>{s.name}</strong>
+                      </div>
+                      <div className="student-gifts" style={{ marginTop: 0 }}>
+                        {s.gifts.map((g, idx) => {
+                          const giftMeta = availableGifts.find(ag => ag.id === g.id) || { icon: Award, color: g.type === "vip" ? "var(--rose)" : "var(--blue)" };
+                          const GiftIcon = giftMeta.icon;
+                          return (
+                          <button key={idx} type="button" className="gift-tag" style={{ "--gift-color": giftMeta.color }} title="Ishlatish uchun bosing" onClick={(e) => {
+                            e.stopPropagation();
+                            const nextGifts = s.gifts.map(item => {
+                              const currentCount = Number(item.count || 0);
+                              if (item.id === g.id) return { ...item, count: currentCount - 1 };
+                              return item;
+                            }).filter(item => item.count > 0);
+                            updateStudent(s.id, { gifts: nextGifts });
+                          }}>
+                            <GiftIcon size={12} />
+                            <span>{g.name} x{g.count}</span>
+                          </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
           </>
         )}
-      </section>
       </div>
 
       {modal === "group" && (
@@ -1182,6 +1314,40 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
       {modal === "edit-student" && editingStudent && (
         <Modal title="O'quvchini tahrirlash" onClose={() => { setModal(""); setEditingStudent(null); }}>
           <StudentForm groups={groups} initialData={editingStudent} onSubmit={(values) => updateStudent(editingStudent.id, values)} onSaved={() => { setModal(""); setEditingStudent(null); }} />
+        </Modal>
+      )}
+
+      {modal === "buy-gift" && (
+        <Modal title="Sovg'a / Privelegiya qo'shish" onClose={() => setModal("")}>
+          <BuyGiftModal 
+            groups={groups} 
+            students={students} 
+            onBuy={(form) => {
+              const student = students.find(s => s.id === form.studentId);
+              if (!student) return;
+              
+              const currentGifts = student.gifts || [];
+              const giftId = form.giftName.toLowerCase().replace(/\s+/g, "_");
+              const existingGift = currentGifts.find(g => g.name.toLowerCase() === form.giftName.toLowerCase());
+              
+              let nextGifts;
+              const isVip = form.giftName.toUpperCase().includes("VIP");
+              
+              if (existingGift) {
+                nextGifts = currentGifts.map(g => g.name.toLowerCase() === form.giftName.toLowerCase() ? { ...g, count: Number(g.count || 0) + Number(form.count) } : g);
+              } else {
+                nextGifts = [...currentGifts, { 
+                  id: giftId, 
+                  name: form.giftName, 
+                  count: Number(form.count), 
+                  type: isVip ? "vip" : "gift" 
+                }];
+              }
+              
+              updateStudent(student.id, { gifts: nextGifts });
+              setModal("");
+            }} 
+          />
         </Modal>
       )}
     </div>

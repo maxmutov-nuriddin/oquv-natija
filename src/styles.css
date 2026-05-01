@@ -310,6 +310,66 @@ button {
   border-bottom: 4px solid var(--gold-dark);
 }
 
+.student-card-vip {
+  border-color: var(--blue);
+  background: linear-gradient(to bottom right, #ffffff, #f0f9ff);
+  box-shadow: 0 10px 20px rgba(28, 176, 246, 0.1);
+}
+
+.vip-badge-icon {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  background: var(--gold);
+  color: white;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.avatar {
+  position: relative;
+}
+
+.student-gifts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: -8px;
+}
+
+.gift-tag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: white;
+  border: 2px solid var(--gift-color, var(--line));
+  border-bottom: 4px solid var(--gift-color, var(--line-dark));
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.1s;
+}
+
+.gift-tag:hover {
+  transform: translateY(-2px);
+  filter: brightness(0.95);
+}
+
+.gift-tag:active {
+  transform: translateY(2px);
+  border-bottom-width: 0;
+  margin-bottom: 4px;
+}
+
 .student-score {
   display: flex; justify-content: space-between; align-items: center;
   background: #f8fafc; border: 2px solid var(--line); border-bottom: 4px solid var(--line-dark); border-radius: var(--radius-sm); padding: 16px 20px;
@@ -578,3 +638,22 @@ button {
 .chart-box-small { height: 250px; }
 
 .history-list button { margin-bottom: 12px; }
+
+.group-gifts-summary {
+  display: grid;
+  gap: 16px;
+}
+.summary-gift-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: #f8fafc;
+  border: 2px solid var(--line);
+  border-bottom: 5px solid var(--line-dark);
+  border-radius: var(--radius-sm);
+}
+.summary-gift-row strong {
+  font-size: 18px;
+  font-weight: 900;
+}
