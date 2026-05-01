@@ -25,6 +25,8 @@ import {
   Users,
   User,
   Star,
+  Eye,
+  EyeOff,
   X
 } from "lucide-react";
 import {
@@ -45,8 +47,8 @@ import { getPeriodLeader, getPreviousMonthRange, getPreviousWeekRange, groupForD
 const navItems = [
   { id: "dashboard", label: "Bosh sahifa", icon: LayoutDashboard },
   { id: "groups", label: "Guruhlar", icon: Users },
-  { id: "settings", label: "Sozlamalar", icon: Settings },
-  { id: "privileges", label: "Privelegiya", icon: Star }
+  { id: "privileges", label: "Privelegiya", icon: Star },
+  { id: "settings", label: "Sozlamalar", icon: Settings }
 ];
 
 const scoreFields = [
@@ -178,9 +180,8 @@ function Sidebar({ activePage, setActivePage, isDemo, teacher, logout }) {
         <div className="avatar avatar-small">{initials(teacher?.name || "O")}</div>
         <div>
           <strong>{teacher?.name || "O'qituvchi"}</strong>
-          <p>{teacher?.phone}</p>
         </div>
-        <button type="button" onClick={logout}>Chiqish</button>
+        <button type="button" onClick={logout} className="logout-btn-small">Chiqish</button>
       </div>
     </aside>
   );
@@ -688,7 +689,11 @@ function StudentCard({ student, onDelete, onEdit, index, date, records, settings
 
       <div className="student-score">
         <span>Final score</span>
-        <strong>{student.finalScore}%</strong>
+        <strong>{Math.round(
+          hw * (settings.homeworkWeight || 0.4) +
+          att * (settings.attendanceWeight || 0.3) +
+          act * (settings.activityWeight || 0.3)
+        )}%</strong>
       </div>
 
       <div className="student-progress">
@@ -1418,49 +1423,135 @@ function ExportButton({ rows, groupName }) {
   );
 }
 
-function SettingsPage({ settings, saveSettings }) {
+function SettingsPage({ settings, saveSettings, teacher, updateProfile, changePassword }) {
   const [draft, setDraft] = useState(settings);
+  const [profileName, setProfileName] = useState(teacher?.name || "");
+  const [newPassword, setNewPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [status, setStatus] = useState({ type: "", message: "" });
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => { setDraft(settings); }, [settings]);
 
   function update(key, value) {
-    setDraft((current) => ({ ...current, [key]: parseNumberInput(value) }));
+    setDraft((current) => ({ ...current, [key]: Number(value) }));
   }
 
-  function saveDraft() {
-    saveSettings({
-      ...draft,
-      homeworkCoin: Number(draft.homeworkCoin || 0),
-      attendanceCoin: Number(draft.attendanceCoin || 0),
-      activityCoin: Number(draft.activityCoin || 0),
-      homeworkWeight: Number(draft.homeworkWeight || 0),
-      attendanceWeight: Number(draft.attendanceWeight || 0),
-      activityWeight: Number(draft.activityWeight || 0)
-    });
+  async function handleSaveSettings() {
+    setBusy(true);
+    try {
+      await saveSettings(draft);
+      setStatus({ type: "success", message: "Sozlamalar saqlandi!" });
+    } catch (e) {
+      setStatus({ type: "error", message: e.message });
+    } finally {
+      setBusy(false);
+      setTimeout(() => setStatus({ type: "", message: "" }), 3000);
+    }
+  }
+
+  async function handleUpdateProfile() {
+    setBusy(true);
+    try {
+      await updateProfile({ name: profileName });
+      setStatus({ type: "success", message: "Profil yangilandi!" });
+    } catch (e) {
+      setStatus({ type: "error", message: e.message });
+    } finally {
+      setBusy(false);
+      setTimeout(() => setStatus({ type: "", message: "" }), 3000);
+    }
+  }
+
+  async function handleChangePassword() {
+    if (!newPassword) return;
+    if (newPassword.length < 6) {
+      setStatus({ type: "error", message: "Parol kamida 6 ta belgidan iborat bo'lishi kerak." });
+      return;
+    }
+    
+    setBusy(true);
+    setStatus({ type: "", message: "" });
+    
+    try {
+      await changePassword(newPassword);
+      setNewPassword("");
+      setStatus({ type: "success", message: "Parol muvaffaqiyatli o'zgartirildi!" });
+      alert("Parolingiz o'zgartirildi!");
+    } catch (e) {
+      console.error("Password change error:", e);
+      setStatus({ type: "error", message: e.message });
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
-    <div className="settings-layout">
-      <section className="panel">
-        <PanelHeader icon={SlidersHorizontal} title="Mukofot tizimi" subtitle="Coin qiymatlarini o'zingizga moslang" />
-        <div className="settings-grid">
-          <SettingInput label="Uy vazifa coini" value={draft.homeworkCoin} onChange={(value) => update("homeworkCoin", value)} />
-          <SettingInput label="Yuqori natija bonusi" value={draft.attendanceCoin} onChange={(value) => update("attendanceCoin", value)} />
-          <SettingInput label="Aktivlik coini" value={draft.activityCoin} onChange={(value) => update("activityCoin", value)} />
+    <div className="page-stack">
+      <PanelHeader icon={Settings} title="Sozlamalar" subtitle="Tizim parametrlarini boshqarish" />
+      
+      {status.message && (
+        <div className={cx("alert", status.type === "error" ? "alert-error" : "alert-success")} style={{ padding: "12px", borderRadius: "8px", marginBottom: "16px", fontWeight: "600", textAlign: "center" }}>
+          {status.message}
         </div>
+      )}
+
+      <section className="panel">
+        <PanelHeader icon={UserRound} title="Profil ma'lumotlari" subtitle="Ismingizni o'zgartirishingiz mumkin" />
+        <div className="settings-grid">
+          <label className="setting-field">
+            <span>Ismingiz</span>
+            <input type="text" value={profileName} onChange={(e) => setProfileName(e.target.value)} placeholder="Ismingizni kiriting" style={{ padding: "10px", borderRadius: "8px", border: "1px solid #e2e8f0", marginTop: "4px" }} />
+          </label>
+        </div>
+        <button className="primary-button" onClick={handleUpdateProfile} disabled={busy} style={{ marginTop: "16px" }}>
+          {busy ? <Loader2 size={17} className="spinner" /> : <CheckCircle2 size={17} />}
+          Profilni saqlash
+        </button>
       </section>
 
-      <section className="panel formula-panel">
-        <PanelHeader icon={BarChart3} title="Formula sozlamasi" subtitle="Yakuniy natija og'irliklari" />
-        <div className="formula-preview">
-          Yakuniy natija = Uy vazifa% * {draft.homeworkWeight} + Yuqori natija% * {draft.attendanceWeight} + Aktivlik% * {draft.activityWeight}
-        </div>
+      <section className="panel">
+        <PanelHeader icon={BarChart3} title="Mukofot va Formula" subtitle="Coin qiymatlari va yakuniy natija og'irliklari" />
         <div className="settings-grid">
+          <SettingInput label="Uy vazifa coini" value={draft.homeworkCoin} onChange={(value) => update("homeworkCoin", value)} />
+          <SettingInput label="Yuqori natija coini" value={draft.attendanceCoin} onChange={(value) => update("attendanceCoin", value)} />
+          <SettingInput label="Aktivlik coini" value={draft.activityCoin} onChange={(value) => update("activityCoin", value)} />
           <SettingInput step="0.1" label="Uy vazifa og'irligi" value={draft.homeworkWeight} onChange={(value) => update("homeworkWeight", value)} />
           <SettingInput step="0.1" label="Yuqori natija og'irligi" value={draft.attendanceWeight} onChange={(value) => update("attendanceWeight", value)} />
           <SettingInput step="0.1" label="Aktivlik og'irligi" value={draft.activityWeight} onChange={(value) => update("activityWeight", value)} />
         </div>
-        <button className="primary-button save-button" onClick={saveDraft}>
-          <Settings size={17} />
-          Saqlash
+        <button className="primary-button" onClick={handleSaveSettings} disabled={busy} style={{ marginTop: "16px" }}>
+          {busy ? <Loader2 size={17} className="spinner" /> : <Settings size={17} />}
+          Sozlamalarni saqlash
+        </button>
+      </section>
+
+      <section className="panel">
+        <PanelHeader icon={Clock3} title="Xavfsizlik" subtitle="Parolni yangilash" />
+        <div className="settings-grid">
+          <label className="setting-field">
+            <span>Yangi parol</span>
+            <div style={{ position: "relative" }}>
+              <input 
+                type={showPassword ? "text" : "password"} 
+                value={newPassword} 
+                onChange={(e) => setNewPassword(e.target.value)} 
+                placeholder="Kamida 6 ta belgi" 
+                style={{ padding: "10px", borderRadius: "8px", border: "1px solid #e2e8f0", marginTop: "4px", width: "100%", paddingRight: "40px" }} 
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{ position: "absolute", right: "12px", top: "calc(50% + 2px)", transform: "translateY(-50%)", background: "none", border: "none", color: "#64748b", cursor: "pointer", display: "flex", alignItems: "center" }}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </label>
+        </div>
+        <button className="danger-button" onClick={handleChangePassword} disabled={busy || !newPassword} style={{ marginTop: "16px" }}>
+          {busy ? <Loader2 size={17} className="spinner" /> : <CheckCircle2 size={17} />}
+          Parolni o'zgartirish
         </button>
       </section>
     </div>
@@ -1481,6 +1572,7 @@ function AuthPage({ login, normalizePhone, resetPassword }) {
   const [form, setForm] = useState({ name: "", phone: "", password: "" });
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   function update(key, value) {
     setForm((current) => ({ ...current, [key]: key === "phone" ? normalizePhone(value) : value }));
@@ -1540,17 +1632,27 @@ function AuthPage({ login, normalizePhone, resetPassword }) {
             </div>
           </label>
 
-          {mode === "login" && (
+          {(mode === "login" || mode === "register") && (
             <label>
               <span>Parol</span>
-              <input
-                type="password"
-                minLength="6"
-                value={form.password}
-                onChange={(event) => update("password", event.target.value)}
-                placeholder="Kamida 6 ta belgi"
-                required
-              />
+              <div style={{ position: "relative" }}>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  minLength="6"
+                  value={form.password}
+                  onChange={(event) => update("password", event.target.value)}
+                  placeholder="Kamida 6 ta belgi"
+                  required
+                  style={{ paddingRight: "40px" }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#64748b", cursor: "pointer", display: "flex", alignItems: "center", padding: "4px" }}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </label>
           )}
 
@@ -1576,7 +1678,7 @@ function AuthPage({ login, normalizePhone, resetPassword }) {
   );
 }
 
-function DashboardApp({ teacher, logout }) {
+function DashboardApp({ teacher, logout, updateProfile, changePassword }) {
   const { students, groups, records, settings, loading, error, isDemo, addGroup, updateGroup, deleteGroup, addStudent, updateStudent, saveLessonRecords, deleteStudent, saveSettings } =
     useDashboardData();
   const [activePage, setActivePage] = useState("dashboard");
@@ -1656,7 +1758,15 @@ function DashboardApp({ teacher, logout }) {
               setDate={setDate}
             />
           )}
-          {!loading && activePage === "settings" && <SettingsPage settings={settings} saveSettings={saveSettings} />}
+          {!loading && activePage === "settings" && (
+            <SettingsPage 
+              settings={settings} 
+              saveSettings={saveSettings} 
+              teacher={teacher}
+              updateProfile={updateProfile}
+              changePassword={changePassword}
+            />
+          )}
           {!loading && activePage === "privileges" && <PrivilegesPage />}
         </main>
       </div>
@@ -1671,7 +1781,7 @@ function DashboardApp({ teacher, logout }) {
 }
 
 export default function App() {
-  const { teacher, loading, login, resetPassword, logout, normalizePhone } = useTeacherAuth();
+  const { teacher, loading, login, resetPassword, logout, normalizePhone, updateProfile, changePassword } = useTeacherAuth();
 
   if (loading) {
     return (
@@ -1685,6 +1795,6 @@ export default function App() {
     return <AuthPage login={login} resetPassword={resetPassword} normalizePhone={normalizePhone} />;
   }
 
-  return <DashboardApp teacher={teacher} logout={logout} />;
+  return <DashboardApp teacher={teacher} logout={logout} updateProfile={updateProfile} changePassword={changePassword} />;
 }
 

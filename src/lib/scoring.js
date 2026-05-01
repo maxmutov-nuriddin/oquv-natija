@@ -1,11 +1,10 @@
 import dayjs from "dayjs";
 
 export function calculateCoins(record, settings) {
-  const homeworkCoins = (Number(record.homework) / 100) * Number(settings.homeworkCoin || 0);
+  const homeworkCoins = (Number(record.homework || 0) / 100) * Number(settings.homeworkCoin || 0);
+  const attendanceCoins = (Number(record.attendance || 0) / 100) * Number(settings.attendanceCoin || 0);
   const activityCoins = (Number(record.activity || 0) / 100) * Number(settings.activityCoin || 0);
-  const lessonScore = Math.round((Number(record.homework || 0) + Number(record.attendance || 0) + Number(record.activity || 0)) / 3);
-  const highScoreBonus = lessonScore >= 90 ? Number(settings.attendanceCoin || 0) : 0;
-  return Math.round(homeworkCoins + activityCoins + highScoreBonus);
+  return Math.round(homeworkCoins + attendanceCoins + activityCoins);
 }
 
 export function finalScore(student, settings) {

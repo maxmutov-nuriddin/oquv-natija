@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signOut, updatePassword } from "firebase/auth";
 import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import { auth, db, hasFirebaseConfig } from "../firebase";
 
@@ -101,6 +101,28 @@ export function useTeacherAuth() {
       },
       async logout() {
         if (auth) await signOut(auth);
+      },
+      async updateProfile({ name }) {
+        if (!auth?.currentUser || !db) throw new Error("Tizimga kirmagansiz.");
+        if (!name?.trim()) throw new Error("Ismni kiriting.");
+        try {
+          await setDoc(doc(db, "teachers", auth.currentUser.uid), { name: name.trim() }, { merge: true });
+        } catch (error) {
+          throw new Error(messageForError(error));
+        }
+      },
+      async changePassword(newPassword) {
+        if (!hasFirebaseConfig || !auth) throw new Error("Demo rejimida parolni o'zgartirib bo'lmaydi.");
+        if (!auth.currentUser) throw new Error("Tizimga kirmagansiz.");
+        if (newPassword.length < 6) throw new Error("Parol kamida 6 ta belgidan iborat bo'lishi kerak.");
+        try {
+          await updatePassword(auth.currentUser, newPassword);
+        } catch (error) {
+          if (error.code === "auth/requires-recent-login") {
+            throw new Error("Xavfsizlik yuzasidan, parolni o'zgartirish uchun qaytadan tizimga kirishingiz kerak.");
+          }
+          throw new Error(messageForError(error));
+        }
       }
     }),
     []
