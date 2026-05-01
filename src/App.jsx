@@ -1330,7 +1330,14 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
 
       {modal === "edit-group" && activeGroupObject && (
         <Modal title="Guruhni tahrirlash" onClose={() => setModal("")}>
-          <GroupForm initialData={activeGroupObject} onSubmit={(values) => updateGroup(activeGroupObject.id, values)} onSaved={() => setModal("")} />
+          <GroupForm 
+            initialData={activeGroupObject} 
+            onSubmit={(values) => {
+              updateGroup(activeGroupObject.id, values);
+              if (values.name) setActiveGroup(values.name);
+            }} 
+            onSaved={() => setModal("")} 
+          />
         </Modal>
       )}
 

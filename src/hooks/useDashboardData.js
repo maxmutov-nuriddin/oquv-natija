@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { addDoc, collection, deleteDoc, doc, onSnapshot, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot, query, serverTimestamp, setDoc, updateDoc, where, writeBatch } from "firebase/firestore";
 import { db, ensureAdminSession, hasFirebaseConfig } from "../firebase";
 import { defaultSettings } from "../data/demoData";
 import { calculateCoins } from "../lib/scoring";
@@ -168,25 +168,43 @@ export function useDashboardData() {
         }));
       },
       async updateGroup(groupId, values) {
-        setData((current) => ({
-          ...current,
-          groups: current.groups.map((group) => (group.id === groupId ? { ...group, ...values } : group)),
-          // If name changed, we also need to update all students with the old name
-          students: current.students.map((student) => {
-            const group = current.groups.find(g => g.id === groupId);
-            if (values.name && group && student.group === group.name) {
-              return { ...student, group: values.name };
-            }
-            return student;
-          })
-        }));
-
         if (hasFirebaseConfig && db) {
           await ensureAdminSession();
-          await updateDoc(doc(db, "groups", groupId), values);
+          const groupRef = doc(db, "groups", groupId);
+          const groupSnap = await getDoc(groupRef);
+          const oldName = groupSnap.data()?.name;
+          const newName = values.name;
+
+          const batch = writeBatch(db);
+          batch.update(groupRef, values);
+
+          if (newName && oldName && newName !== oldName) {
+            const q = query(collection(db, "students"), where("group", "==", oldName));
+            const snapshot = await getDocs(q);
+            snapshot.forEach((studentDoc) => {
+              batch.update(studentDoc.ref, { group: newName });
+            });
+          }
           
-          // Note: Full student group name update in Firebase would require a batch write,
-          // but for simplicity we assume groups are mostly edited for time/days.
+          await batch.commit();
+          // Local state will be updated by onSnapshot automatically
+        } else {
+          // Local-only mode
+          setData((current) => {
+            const group = current.groups.find(g => g.id === groupId);
+            const oldName = group?.name;
+            const newName = values.name;
+            return {
+              ...current,
+              groups: current.groups.map((g) => (g.id === groupId ? { ...g, ...values } : g)),
+              students: current.students.map((s) => {
+                if (newName && oldName && s.group === oldName) {
+                  return { ...s, group: newName };
+                }
+                return s;
+              })
+            };
+          });
         }
       },
       async deleteGroup(groupId) {
