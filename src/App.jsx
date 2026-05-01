@@ -102,49 +102,49 @@ const privilegesData = {
 const vipData = {
   senior: {
     monthly: [
-      { id: "homework_25", name: "Vazifani 25% qilish", uses: 2 },
-      { id: "free_mode", name: "Free mode", uses: 2 },
-      { id: "remove_bad_mark", name: "Past bahoni o‘chirish", uses: 2 },
-      { id: "coin_boost_2x", name: "2x coin boost", uses: 1 },
-      { id: "skip_task", name: "1 ta vazifa skip", uses: 1 },
-      { id: "no_question", name: "Savol bermaslik huquqi", uses: 1 },
-      { id: "choose_question", name: "Savolni o‘zi tanlaydi", uses: 2 },
-      { id: "extend_time", name: "Topshiriq vaqtini uzaytirish", uses: 2 },
-      { id: "escape_punishment", name: "Jazodan qutilish", uses: 1 },
-      { id: "gift_coin", name: "Do‘stiga coin 2x qilish", uses: 1 },
-      { id: "mystery_box", name: "MISTIRIY BOX", uses: 1 }
+      { id: "homework_25", name: "Vazifani 25% qilish", type: "effect", effect: "reduce_homework", value: 25, uses: 2, count: 2 },
+      { id: "free_mode", name: "Free mode", type: "effect", effect: "free_mode", uses: 2, count: 2 },
+      { id: "remove_bad_mark", name: "Past bahoni o‘chirish", type: "effect", effect: "remove_mark", uses: 2, count: 2 },
+      { id: "coin_boost_2x", name: "2x coin boost", type: "effect", effect: "coin_boost", value: 2, duration: { value: 2, unit: "week" }, count: 6 },
+      { id: "skip_task", name: "1 ta vazifa skip", type: "effect", effect: "skip_task", uses: 1, count: 1 },
+      { id: "no_question", name: "Savol bermaslik huquqi", type: "effect", effect: "mute", uses: 1, count: 1 },
+      { id: "choose_question", name: "Savolni o‘zi tanlaydi", type: "effect", effect: "choose_question", uses: 2, count: 2 },
+      { id: "extend_time", name: "Topshiriq vaqtini uzaytirish", type: "effect", effect: "extend_time", uses: 2, count: 2 },
+      { id: "escape_punishment", name: "Jazodan qutilish", type: "effect", effect: "escape", uses: 1, count: 1 },
+      { id: "gift_coin", name: "Do‘stiga coin 2x qilish", type: "effect", effect: "gift_boost", value: 2, uses: 1, count: 1 },
+      { id: "mystery_box", name: "MISTIRIY BOX", type: "random", pool: ["senior_monthly", "senior_weekly", "shop_senior"], uses: 1, count: 1 }
     ],
     weekly: [
-      { id: "homework_50", name: "Vazifani 50% qilish", uses: 1 },
-      { id: "choose_question", name: "Savolni o‘zi tanlaydi", uses: 1 },
-      { id: "homework_15", name: "1 ta vazifani 15% qilish", uses: 1 },
-      { id: "coin_boost_2x", name: "2x coin boost", uses: 2 },
-      { id: "free_mode", name: "Free mode", uses: 1 },
-      { id: "skip_task", name: "1 ta vazifa skip", uses: 1 },
-      { id: "mystery_box", name: "MISTIRIY BOX", uses: 1 }
+      { id: "homework_50", name: "Vazifani 50% qilish", type: "effect", effect: "reduce_homework", value: 50, uses: 1, count: 1 },
+      { id: "homework_15", name: "1 ta vazifani 15% qilish", type: "effect", effect: "reduce_homework", value: 15, uses: 1, count: 1 },
+      { id: "choose_question", name: "Savolni o‘zi tanlaydi", type: "effect", effect: "choose_question", uses: 1, count: 1 },
+      { id: "coin_boost_2x", name: "2x coin boost", type: "effect", effect: "coin_boost", value: 2, uses: 2, count: 2 },
+      { id: "free_mode", name: "Free mode", type: "effect", effect: "free_mode", uses: 1, count: 1 },
+      { id: "skip_task", name: "1 ta vazifa skip", type: "effect", effect: "skip_task", uses: 1, count: 1 },
+      { id: "mystery_box", name: "MISTIRIY BOX", type: "random", pool: ["senior_weekly", "shop_senior"], uses: 1, count: 1 }
     ]
   },
   junior: {
     monthly: [
-      { id: "homework_25", name: "Vazifani 25% qilish", uses: 2 },
-      { id: "free_mode", name: "Free mode", uses: 2 },
-      { id: "remove_bad_mark", name: "Past bahoni o‘chirish", uses: 2 },
-      { id: "coin_boost_2x", name: "2x coin boost", uses: 1 },
-      { id: "skip_task", name: "1 ta vazifa skip", uses: 1 },
-      { id: "no_question", name: "Savol bermaslik huquqi", uses: 1 },
-      { id: "choose_question", name: "Savolni o‘zi tanlaydi", uses: 2 },
-      { id: "extend_time", name: "Topshiriq vaqtini uzaytirish", uses: 2 },
-      { id: "gift_coin", name: "Do‘stiga coin 2x qilish", uses: 1 },
-      { id: "mystery_box", name: "MISTIRIY BOX", uses: 1 }
+      { id: "homework_25", name: "Vazifani 25% qilish", type: "effect", effect: "reduce_homework", value: 25, uses: 2, count: 2 },
+      { id: "free_mode", name: "Free mode", type: "effect", effect: "free_mode", uses: 2, count: 2 },
+      { id: "remove_bad_mark", name: "Past bahoni o‘chirish", type: "effect", effect: "remove_mark", uses: 2, count: 2 },
+      { id: "coin_boost_2x", name: "2x coin boost", type: "effect", effect: "coin_boost", value: 2, duration: { value: 2, unit: "week" }, count: 6 },
+      { id: "skip_task", name: "1 ta vazifa skip", type: "effect", effect: "skip_task", uses: 1, count: 1 },
+      { id: "no_question", name: "Savol bermaslik huquqi", type: "effect", effect: "mute", duration: { value: 1, unit: "day" }, count: 1 },
+      { id: "choose_question", name: "Savolni o‘zi tanlaydi", type: "effect", effect: "choose_question", uses: 2, count: 2 },
+      { id: "extend_time", name: "Topshiriq vaqtini uzaytirish", type: "effect", effect: "extend_time", uses: 2, count: 2 },
+      { id: "gift_coin", name: "Do‘stiga coin 2x qilish", type: "effect", effect: "gift_boost", value: 2, uses: 1, count: 1 },
+      { id: "mystery_box", name: "MISTIRIY BOX", type: "random", pool: ["junior_monthly", "junior_weekly", "shop_junior"], uses: 1, count: 1 }
     ],
     weekly: [
-      { id: "homework_50", name: "Vazifani 50% qilish", uses: 1 },
-      { id: "choose_question", name: "Savolni o‘zi tanlaydi", uses: 1 },
-      { id: "homework_15", name: "1 ta vazifani 15% qilish", uses: 1 },
-      { id: "coin_boost_2x", name: "2x coin boost", uses: 2 },
-      { id: "free_mode", name: "Free mode", uses: 1 },
-      { id: "skip_task", name: "1 ta vazifa skip", uses: 1 },
-      { id: "mystery_box", name: "MISTIRIY BOX", uses: 1 }
+      { id: "homework_50", name: "Vazifani 50% qilish", type: "effect", effect: "reduce_homework", value: 50, uses: 1, count: 1 },
+      { id: "homework_15", name: "1 ta vazifani 15% qilish", type: "effect", effect: "reduce_homework", value: 15, uses: 1, count: 1 },
+      { id: "choose_question", name: "Savolni o‘zi tanlaydi", type: "effect", effect: "choose_question", uses: 1, count: 1 },
+      { id: "coin_boost_2x", name: "2x coin boost", type: "effect", effect: "coin_boost", value: 2, uses: 2, count: 2 },
+      { id: "free_mode", name: "Free mode", type: "effect", effect: "free_mode", uses: 1, count: 1 },
+      { id: "skip_task", name: "1 ta vazifa skip", type: "effect", effect: "skip_task", uses: 1, count: 1 },
+      { id: "mystery_box", name: "MISTIRIY BOX", type: "random", pool: ["junior_weekly", "shop_junior"], uses: 1, count: 1 }
     ]
   }
 };
@@ -1567,7 +1567,8 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
                           })}
                           {vipPerks.map((vp, idx) => {
                             const usedCount = s.usedVipPerks?.[`${vp.source}_${vp.id}`] || 0;
-                            const remaining = vp.uses ? vp.uses - usedCount : 1;
+                            const maxUses = vp.count !== undefined ? vp.count : (vp.uses || 1);
+                            const remaining = maxUses - usedCount;
                             if (remaining <= 0) return null;
 
                             return (
