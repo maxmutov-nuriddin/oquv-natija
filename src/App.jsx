@@ -23,6 +23,8 @@ import {
   UserPlus,
   UserRound,
   Users,
+  User,
+  Star,
   X
 } from "lucide-react";
 import {
@@ -43,7 +45,8 @@ import { getPeriodLeader, getPreviousMonthRange, getPreviousWeekRange, groupForD
 const navItems = [
   { id: "dashboard", label: "Bosh sahifa", icon: LayoutDashboard },
   { id: "groups", label: "Guruhlar", icon: Users },
-  { id: "settings", label: "Sozlamalar", icon: Settings }
+  { id: "settings", label: "Sozlamalar", icon: Settings },
+  { id: "privileges", label: "Privelegiya", icon: Star }
 ];
 
 const scoreFields = [
@@ -388,6 +391,66 @@ function StudentForm({ groups, initialData, onSubmit, selectedGroup, onSaved }) 
   );
 }
 
+function PrivilegesPage() {
+  const [selectedImage, setSelectedImage] = useState(null);
+  const privileges = [
+    { title: "Senior UZ", image: "/senior-privilegiya-uz.png" },
+    { title: "Senior RU", image: "/senior-привилегия-ru.png" },
+    { title: "Junior UZ", image: "/junior-privilegiya-uz.png" },
+    { title: "Junior RU", image: "/junior-привилегия-ru.png" }
+  ];
+
+  return (
+    <div className="privileges-layout page-stack">
+      <div className="current-lesson">
+        <div className="current-lesson-icon">
+          <Star size={32} />
+        </div>
+        <div>
+          <span className="eyebrow">Imtiyozlar</span>
+          <h3>O'quvchilar uchun privelegiyalar</h3>
+          <p>Rasmni kattalashtirish uchun ustiga bosing.</p>
+        </div>
+      </div>
+
+      <div className="privileges-grid">
+        {privileges.map((item, index) => (
+          <article 
+            key={index} 
+            className="privilege-card panel" 
+            onClick={() => setSelectedImage(item)}
+            style={{ cursor: "zoom-in" }}
+          >
+            <div className="panel-header">
+              <div className="panel-title">
+                <span>{index + 1}</span>
+                <h3>{item.title}</h3>
+              </div>
+            </div>
+            <div className="privilege-image-container">
+              <img src={item.image} alt={item.title} loading="lazy" />
+            </div>
+          </article>
+        ))}
+      </div>
+
+      {selectedImage && (
+        <div className="image-modal-backdrop" onClick={() => setSelectedImage(null)}>
+          <div className="image-modal-content">
+            <button className="modal-close-btn" onClick={() => setSelectedImage(null)}>
+              <X size={32} />
+            </button>
+            <img src={selectedImage.image} alt={selectedImage.title} />
+            <div className="image-modal-caption">
+              <h3>{selectedImage.title}</h3>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Modal({ title, children, onClose }) {
   useEffect(() => {
     const originalStyle = window.getComputedStyle(document.body).overflow;
@@ -415,16 +478,12 @@ function Modal({ title, children, onClose }) {
 
 function LoadingState({ compact = false }) {
   return (
-    <section className={cx("panel loading-panel", compact && "loading-panel-compact")}>
-      <div className="loading-head">
-        <div className="loading-spinner" aria-hidden="true" />
-        <div>
-          <span className="eyebrow">Yuklanmoqda</span>
-          <h3>Ma'lumotlar yuklanmoqda...</h3>
-          <p>Iltimos, kuting...</p>
-        </div>
+    <div className={cx("loading-container", compact && "loading-compact")}>
+      <div className="loading-content">
+        <div className="loading-box" />
+        <h3>Yuklanmoqda...</h3>
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -1408,6 +1467,7 @@ function DashboardApp({ teacher, logout }) {
             />
           )}
           {!loading && activePage === "settings" && <SettingsPage settings={settings} saveSettings={saveSettings} />}
+          {!loading && activePage === "privileges" && <PrivilegesPage />}
         </main>
       </div>
 
