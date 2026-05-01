@@ -420,23 +420,10 @@ function LoadingState({ compact = false }) {
         <div className="loading-spinner" aria-hidden="true" />
         <div>
           <span className="eyebrow">Yuklanmoqda</span>
-          <h3>Ma'lumotlar tayyorlanmoqda</h3>
-          <p>Guruhlar, o'quvchilar va natijalar sinxronlanmoqda.</p>
+          <h3>Ma'lumotlar yuklanmoqda...</h3>
+          <p>Iltimos, kuting...</p>
         </div>
       </div>
-      <div className="loading-skeleton-grid" aria-hidden="true">
-        <span />
-        <span />
-        <span />
-        {!compact && <span />}
-      </div>
-      {!compact && (
-        <div className="loading-skeleton-wide" aria-hidden="true">
-          <span />
-          <span />
-          <span />
-        </div>
-      )}
     </section>
   );
 }
