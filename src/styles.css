@@ -320,16 +320,37 @@ button {
   position: absolute;
   bottom: -2px;
   right: -2px;
-  background: var(--gold);
+  background: linear-gradient(135deg, #FFD700, #FFA500);
   color: white;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   border: 2px solid white;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  box-shadow: 0 3px 6px rgba(0,0,0,0.25);
+  z-index: 2;
+  animation: vip-pulse 2s infinite;
+}
+
+.vip-text-badge {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #7c2d12;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid rgba(124, 45, 18, 0.2);
+  box-shadow: 0 2px 4px rgba(251, 191, 36, 0.3);
+}
+
+@keyframes vip-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
 }
 
 .avatar {

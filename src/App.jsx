@@ -606,7 +606,7 @@ function ProgressLine({ label, value, tone }) {
   );
 }
 
-function StudentCard({ student, onDelete, onEdit, index, date, records, settings, saveLessonRecords, isLessonDay = true, onWarningReset, onUpdateStudent }) {
+function StudentCard({ student, onDelete, onEdit, index, date, records, settings, saveLessonRecords, isLessonDay = true, onWarningReset, onUpdateStudent, weeklyWinner, monthlyWinner }) {
   const todayRecord = records?.find((r) => r.studentId === student.id && r.date === date);
   const hw = todayRecord ? todayRecord.homework : 0;
   const att = todayRecord ? todayRecord.attendance : 0;
@@ -631,7 +631,9 @@ function StudentCard({ student, onDelete, onEdit, index, date, records, settings
   const needsWarning = zeroRecords.length >= 3;
 
   const gifts = student.gifts || [];
-  const isVip = gifts.some(g => g.type === "vip" && g.count > 0);
+  const isWeeklyWinner = student.id === weeklyWinner?.id;
+  const isMonthlyWinner = student.id === monthlyWinner?.id;
+  const isVip = gifts.some(g => g.type === "vip" && g.count > 0) || isWeeklyWinner || isMonthlyWinner;
 
   function useGift(giftId, e) {
     if (e) e.stopPropagation();
@@ -652,7 +654,14 @@ function StudentCard({ student, onDelete, onEdit, index, date, records, settings
             {isVip && <div className="vip-badge-icon"><Star size={12} fill="currentColor" /></div>}
           </div>
           <div>
-            <h3>{student.name}</h3>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+              <h3 style={{ margin: 0 }}>{student.name}</h3>
+              {isWeeklyWinner && <span className="vip-text-badge" style={{ background: "linear-gradient(135deg, #60a5fa, #2563eb)", color: "white" }}>Hafta G'olibi</span>}
+              {isMonthlyWinner && <span className="vip-text-badge" style={{ background: "linear-gradient(135deg, #f472b6, #db2777)", color: "white" }}>Oy G'olibi</span>}
+              {gifts.filter(g => g.type === "vip").map((g, i) => (
+                <span key={i} className="vip-text-badge">{g.name}</span>
+              ))}
+            </div>
             <p>{student.group} · {rankText(student.weeklyRank)} hafta</p>
           </div>
         </div>
@@ -888,6 +897,9 @@ function LessonEntryPanel({ group, students, records, date, settings, saveLesson
 }
 
 function DashboardPage({ groups, students, records, settings, selectedGroup, currentGroup, currentTime, date, query, onEditStudent, onDeleteStudent, saveLessonRecords, updateStudent }) {
+  const weeklyWinner = useMemo(() => getPeriodLeader(students.filter(s => s.group === selectedGroup), records, settings, getPreviousWeekRange(date)), [students, selectedGroup, records, settings, date]);
+  const monthlyWinner = useMemo(() => getPeriodLeader(students.filter(s => s.group === selectedGroup), records, settings, getPreviousMonthRange(date)), [students, selectedGroup, records, settings, date]);
+
   const isLessonDay = useMemo(() => {
     const groupObj = groups?.find(g => g.name === selectedGroup);
     return groupObj ? groupObj.weekdays?.includes(dayjs(date).day()) : false;
@@ -984,6 +996,8 @@ function DashboardPage({ groups, students, records, settings, selectedGroup, cur
                 isLessonDay={isLessonDay}
                 onWarningReset={(studentId, newIgnoredDates) => updateStudent(studentId, { ignoredZeroDates: newIgnoredDates })}
                 onUpdateStudent={updateStudent}
+                weeklyWinner={weeklyWinner}
+                monthlyWinner={monthlyWinner}
               />
             ))}
           </div>
@@ -995,6 +1009,9 @@ function DashboardPage({ groups, students, records, settings, selectedGroup, cur
 
 function GroupsPage({ groups, students, records, settings, date, query, addGroup, updateGroup, deleteGroup, addStudent, updateStudent, saveLessonRecords, deleteStudent, selectedGroup, setDate }) {
   const [activeGroup, setActiveGroup] = useState(groups[0]?.name || "");
+  const activeGroupStudents = useMemo(() => students.filter(s => s.group === activeGroup), [students, activeGroup]);
+  const weeklyWinner = useMemo(() => getPeriodLeader(activeGroupStudents, records, settings, getPreviousWeekRange(date)), [activeGroupStudents, records, settings, date]);
+  const monthlyWinner = useMemo(() => getPeriodLeader(activeGroupStudents, records, settings, getPreviousMonthRange(date)), [activeGroupStudents, records, settings, date]);
   const [modal, setModal] = useState("");
   const [editingStudent, setEditingStudent] = useState(null);
   const [expandedDate, setExpandedDate] = useState(null);
@@ -1008,7 +1025,6 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
   }, [activeGroup, groups, selectedGroup]);
 
   const activeGroupObject = useMemo(() => groups.find((group) => group.name === activeGroup), [groups, activeGroup]);
-  const activeGroupStudents = useMemo(() => students.filter((student) => student.group === activeGroup), [students, activeGroup]);
   const activeLessonTime =
     activeGroupObject?.lessonStart && activeGroupObject?.lessonEnd ? `${activeGroupObject.lessonStart} - ${activeGroupObject.lessonEnd}` : "Vaqt belgilanmagan";
   const activeLessonDays =
@@ -1222,14 +1238,19 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
                           <span className="leader-rank">{medalLabel(index)}</span>
                           <div className="avatar avatar-small">
                             {initials(student.name)}
-                            {student.gifts?.some(g => g.type === "vip") && (
+                            {(student.gifts?.some(g => g.type === "vip") || student.id === weeklyWinner?.id || student.id === monthlyWinner?.id) && (
                               <div className="vip-badge-icon" style={{ width: "14px", height: "14px", border: "1px solid white", bottom: "-1px", right: "-1px" }}>
                                 <Star size={8} fill="currentColor" />
                               </div>
                             )}
                           </div>
                           <div>
-                            <strong>{student.name}</strong>
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                              <strong style={{ margin: 0 }}>{student.name}</strong>
+                              {student.id === weeklyWinner?.id && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px", background: "linear-gradient(135deg, #60a5fa, #2563eb)", color: "white" }}>Hafta G'olibi</span>}
+                              {student.id === monthlyWinner?.id && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px", background: "linear-gradient(135deg, #f472b6, #db2777)", color: "white" }}>Oy G'olibi</span>}
+                              {student.gifts?.some(g => g.type === "vip") && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px" }}>VIP</span>}
+                            </div>
                             <p>Weekly {student.weeklyCoins} coin · Monthly {student.monthlyCoins} coin</p>
                           </div>
                         </div>
@@ -1263,6 +1284,9 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
                       <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                         <div className="avatar avatar-small">{initials(s.name)}</div>
                         <strong>{s.name}</strong>
+                        {s.id === weeklyWinner?.id && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px", background: "linear-gradient(135deg, #60a5fa, #2563eb)", color: "white" }}>Hafta G'olibi</span>}
+                        {s.id === monthlyWinner?.id && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px", background: "linear-gradient(135deg, #f472b6, #db2777)", color: "white" }}>Oy G'olibi</span>}
+                        {s.gifts?.some(g => g.type === "vip") && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px" }}>VIP</span>}
                       </div>
                       <div className="student-gifts" style={{ marginTop: 0 }}>
                         {s.gifts.map((g, idx) => {
