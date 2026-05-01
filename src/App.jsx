@@ -75,6 +75,30 @@ const availableGifts = [
   { id: "vip_monthly", name: "VIP Oylik", icon: Award, color: "var(--gold)", type: "vip" }
 ];
 
+const privilegesData = {
+  senior: [
+    { id: "homework_75", name: "Vazifani 75% qilish", price: 3000, type: "percent" },
+    { id: "choose_question", name: "Savolni o‘zi tanlaydi", price: 600, type: "ability" },
+    { id: "extend_time", name: "Topshiriq vaqtini uzaytirish", price: 600, type: "time" },
+    { id: "remove_bad_mark", name: "Past bahoni o‘chirish", price: 1000, type: "reset" },
+    { id: "skip_task", name: "1 ta vazifa skip", price: 500, type: "skip" },
+    { id: "no_question", name: "Savol bermaslik huquqi", price: 1000, type: "mute" },
+    { id: "escape_punishment", name: "Jazodan qutilish", price: 900, type: "protection" },
+    { id: "gift_coin", name: "Do‘stiga coin 2x qilish", price: 900, type: "boost" },
+    { id: "mystery_box", name: "MISTIRIY BOX", price: 3000, type: "random" }
+  ],
+  junior: [
+    { id: "homework_75", name: "Vazifani 75% qilish", price: 3000, type: "percent" },
+    { id: "choose_question", name: "Savolni o‘zi tanlaydi", price: 600, type: "ability" },
+    { id: "extend_time", name: "Topshiriq vaqtini uzaytirish", price: 600, type: "time" },
+    { id: "remove_bad_mark", name: "Past bahoni o‘chirish", price: 1000, type: "reset" },
+    { id: "skip_task", name: "1 ta vazifa skip", price: 500, type: "skip" },
+    { id: "no_question", name: "Savol bermaslik huquqi", price: 1000, type: "mute" },
+    { id: "gift_coin", name: "Do‘stiga coin 2x qilish", price: 900, type: "boost" },
+    { id: "mystery_box", name: "MISTIRIY BOX", price: 3000, type: "random" }
+  ]
+};
+
 const lessonStartOptions = Array.from({ length: 20 }, (_, index) => {
   const totalMinutes = 9 * 60 + index * 30;
   const hour = String(Math.floor(totalMinutes / 60)).padStart(2, "0");
@@ -469,9 +493,16 @@ function BuyGiftModal({ groups, students, onBuy, onClose }) {
   });
 
   const groupStudents = students.filter(s => s.group === form.group);
+  const isSenior = form.group.toLowerCase().includes("senior");
+  const isJunior = form.group.toLowerCase().includes("junior");
+  const privilegeList = isSenior ? privilegesData.senior : (isJunior ? privilegesData.junior : privilegesData.junior);
 
   function update(key, value) {
-    setForm(curr => ({ ...curr, [key]: value }));
+    if (key === "group") {
+      setForm(curr => ({ ...curr, group: value, studentId: "", giftName: "" }));
+    } else {
+      setForm(curr => ({ ...curr, [key]: value }));
+    }
   }
 
   return (
@@ -491,7 +522,10 @@ function BuyGiftModal({ groups, students, onBuy, onClose }) {
       </label>
       <label>
         <span>Sovg'a / Privelegiya nomi</span>
-        <input value={form.giftName} onChange={(e) => update("giftName", e.target.value)} placeholder="Masalan: VIP Haftalik yoki Stiker" required />
+        <select value={form.giftName} onChange={(e) => update("giftName", e.target.value)} required>
+          <option value="">Tanlang</option>
+          {privilegeList.map(p => <option key={p.id} value={p.name}>{p.name} ({p.price} coin)</option>)}
+        </select>
       </label>
       <label>
         <span>Soni</span>
