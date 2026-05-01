@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import dayjs from "dayjs";
 import {
@@ -148,6 +148,20 @@ const vipData = {
     ]
   }
 };
+
+const mysteryBoxData = {
+  senior_monthly: { pool: ["homework_25", "free_mode", "remove_bad_mark", "coin_boost_2x", "skip_task", "no_question", "choose_question", "extend_time", "escape_punishment", "gift_coin"] },
+  senior_weekly: { pool: ["homework_50", "homework_15", "choose_question", "coin_boost_2x", "free_mode", "skip_task"] },
+  junior_monthly: { pool: ["homework_25", "free_mode", "remove_bad_mark", "coin_boost_2x", "skip_task", "no_question", "choose_question", "extend_time", "gift_coin"] },
+  junior_weekly: { pool: ["homework_50", "homework_15", "choose_question", "coin_boost_2x", "free_mode", "skip_task"] },
+  shop_senior: { pool: ["homework_75", "choose_question", "extend_time", "remove_bad_mark", "skip_task", "no_question", "escape_punishment", "gift_coin"] },
+  shop_junior: { pool: ["homework_75", "choose_question", "extend_time", "remove_bad_mark", "skip_task", "no_question", "gift_coin"] }
+};
+
+const allPrivileges = [...privilegesData.senior, ...privilegesData.junior, ...vipData.senior.monthly, ...vipData.senior.weekly, ...vipData.junior.monthly, ...vipData.junior.weekly];
+function getPrivilegeInfo(id) {
+  return allPrivileges.find(p => p.id === id) || { id, name: id };
+}
 
 const lessonStartOptions = Array.from({ length: 20 }, (_, index) => {
   const totalMinutes = 9 * 60 + index * 30;
@@ -586,6 +600,143 @@ function BuyGiftModal({ groups, students, onBuy, onClose }) {
         Sotib olish / Qo'shish
       </button>
     </form>
+  );
+}
+
+function getWeightedRandomItem(poolIds) {
+  const items = poolIds.map(id => {
+    const info = getPrivilegeInfo(id);
+    const price = info.price || 1000; // default price if none
+    return { ...info, weight: 1 / price };
+  });
+  
+  const totalWeight = items.reduce((sum, item) => sum + item.weight, 0);
+  let random = Math.random() * totalWeight;
+  
+  for (const item of items) {
+    if (random <= item.weight) {
+      return item;
+    }
+    random -= item.weight;
+  }
+  return items[items.length - 1];
+}
+
+function MysteryBoxModal({ activeMystery, onClose, onReward }) {
+  const [spinning, setSpinning] = useState(false);
+  const [result, setResult] = useState(null);
+  const [trackItems, setTrackItems] = useState([]);
+  const trackRef = useRef(null);
+
+  const poolIds = mysteryBoxData[activeMystery.mysteryType]?.pool || [];
+
+  useEffect(() => {
+    // Generate initial track just for display
+    const initialTrack = Array.from({ length: 15 }, () => getPrivilegeInfo(poolIds[Math.floor(Math.random() * poolIds.length)]));
+    setTrackItems(initialTrack);
+  }, [poolIds]);
+
+  function handleStart() {
+    setSpinning(true);
+    const winItem = getWeightedRandomItem(poolIds);
+    
+    // Create a track of 100 items. The winner will be at index 85.
+    const newTrack = Array.from({ length: 100 }, (_, i) => {
+      if (i === 85) return winItem;
+      return getWeightedRandomItem(poolIds); // Use weighted random for filler too to look realistic
+    });
+    setTrackItems(newTrack);
+
+    setTimeout(() => {
+      if (trackRef.current) {
+        // Each item is 140px wide + 12px gap = 152px. Center of screen is approx offsetWidth / 2
+        const itemWidth = 152;
+        const containerWidth = trackRef.current.parentElement.offsetWidth;
+        const targetOffset = (85 * itemWidth) - (containerWidth / 2) + (itemWidth / 2) + (Math.random() * 80 - 40);
+        
+        trackRef.current.style.transition = 'transform 6s cubic-bezier(0.05, 0.9, 0.1, 1)';
+        trackRef.current.style.transform = `translate3d(-${targetOffset}px, 0, 0)`;
+      }
+    }, 100);
+
+    setTimeout(() => {
+      setResult(winItem);
+      setTimeout(() => {
+        onReward(winItem, activeMystery);
+      }, 2500);
+    }, 6200);
+  }
+
+  return (
+    <div style={{ textAlign: "center", padding: "20px 0", overflow: "hidden", position: "relative" }}>
+      <div style={{ fontSize: "32px", marginBottom: "16px" }}>🎁</div>
+      <h3 style={{ marginBottom: "24px" }}>MISTIRIY BOX</h3>
+      
+      <div style={{ 
+        position: "relative", 
+        width: "100%", 
+        height: "120px", 
+        background: "#0f172a", 
+        borderRadius: "12px", 
+        overflow: "hidden",
+        marginBottom: "24px",
+        boxShadow: "inset 0 0 20px rgba(0,0,0,0.5)"
+      }}>
+        {/* Center line indicator */}
+        <div style={{
+          position: "absolute",
+          left: "50%",
+          top: 0,
+          bottom: 0,
+          width: "4px",
+          background: "#eab308",
+          transform: "translateX(-50%)",
+          zIndex: 10,
+          boxShadow: "0 0 10px #eab308"
+        }} />
+        
+        <div ref={trackRef} style={{ 
+          display: "flex", 
+          gap: "12px", 
+          padding: "10px 0", 
+          willChange: "transform",
+          transform: "translate3d(0, 0, 0)"
+        }}>
+          {trackItems.map((item, idx) => (
+            <div key={idx} style={{
+              flexShrink: 0,
+              width: "140px",
+              height: "100px",
+              background: "#1e293b",
+              border: "2px solid #334155",
+              borderRadius: "8px",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "10px",
+              color: "#f8fafc",
+              fontSize: "13px",
+              fontWeight: "600",
+              textAlign: "center"
+            }}>
+              <Star size={24} style={{ color: "#eab308", marginBottom: "8px" }} />
+              <span style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{item.name}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {result ? (
+         <div style={{ fontSize: "18px", fontWeight: "bold", color: "#16a34a", padding: "16px", background: "#f0fdf4", borderRadius: "8px", animation: "popIn 0.5s ease" }}>
+           Tabriklaymiz! Sizga tushdi: <br/> <span style={{ fontSize: "22px" }}>{result.name}</span>
+         </div>
+      ) : (
+         <button className="primary-button" onClick={handleStart} disabled={spinning} style={{ width: "100%", justifyContent: "center", padding: "14px", fontSize: "16px" }}>
+           {spinning ? "Ochilmoqda..." : "Boshlash"}
+         </button>
+      )}
+    </div>
   );
 }
 
@@ -1104,6 +1255,7 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
   const [modal, setModal] = useState("");
   const [editingStudent, setEditingStudent] = useState(null);
   const [expandedDate, setExpandedDate] = useState(null);
+  const [activeMystery, setActiveMystery] = useState(null);
   useEffect(() => {
     if (!activeGroup && (selectedGroup || groups[0]?.name)) {
       setActiveGroup(selectedGroup || groups[0]?.name || "");
@@ -1374,10 +1526,10 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
                     const tier = isSenior ? "senior" : (isJunior ? "junior" : "junior");
                     const vipPerks = [];
                     if (s.id === monthlyWinner?.id) {
-                      vipPerks.push(...vipData[tier].monthly);
+                      vipPerks.push(...vipData[tier].monthly.map(p => ({ ...p, source: "monthly" })));
                     }
                     if (s.id === weeklyWinner?.id) {
-                      vipPerks.push(...vipData[tier].weekly);
+                      vipPerks.push(...vipData[tier].weekly.map(p => ({ ...p, source: "weekly" })));
                     }
 
                     return (
@@ -1394,8 +1546,13 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
                             const giftMeta = availableGifts.find(ag => ag.id === g.id) || { icon: Award, color: g.type === "vip" ? "var(--rose)" : "var(--blue)" };
                             const GiftIcon = giftMeta.icon;
                             return (
-                            <button key={idx} type="button" className="gift-tag" style={{ "--gift-color": giftMeta.color }} title="Ishlatish uchun bosing" onClick={(e) => {
+                            <button key={idx} type="button" className="gift-tag" style={{ "--gift-color": giftMeta.color }} title={g.id === "mystery_box" ? "Ochish uchun bosing" : "Ishlatish uchun bosing"} onClick={(e) => {
                               e.stopPropagation();
+                              if (g.id === "mystery_box" || g.id === "mistiriy_box") {
+                                setActiveMystery({ studentId: s.id, type: "shop", mysteryType: `shop_${tier}`, giftItem: g });
+                                setModal("mystery-box");
+                                return;
+                              }
                               const nextGifts = s.gifts.map(item => {
                                 const currentCount = Number(item.count || 0);
                                 if (item.id === g.id) return { ...item, count: currentCount - 1 };
@@ -1408,12 +1565,24 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
                             </button>
                             );
                           })}
-                          {vipPerks.map((vp, idx) => (
-                            <div key={`vip-${idx}`} className="gift-tag" style={{ "--gift-color": "var(--rose)", cursor: "default" }}>
-                              <Star size={12} />
-                              <span>{vp.name} {vp.uses ? `x${vp.uses}` : ""}</span>
-                            </div>
-                          ))}
+                          {vipPerks.map((vp, idx) => {
+                            const usedCount = s.usedVipPerks?.[`${vp.source}_${vp.id}`] || 0;
+                            const remaining = vp.uses ? vp.uses - usedCount : 1;
+                            if (remaining <= 0) return null;
+
+                            return (
+                              <button key={`vip-${idx}`} type="button" className="gift-tag" style={{ "--gift-color": "var(--rose)", cursor: vp.id === "mystery_box" ? "pointer" : "default" }} onClick={(e) => {
+                                e.stopPropagation();
+                                if (vp.id === "mystery_box") {
+                                  setActiveMystery({ studentId: s.id, type: vp.source, mysteryType: `${tier}_${vp.source}`, vipPerk: vp });
+                                  setModal("mystery-box");
+                                }
+                              }}>
+                                <Star size={12} />
+                                <span>{vp.name} {remaining > 1 ? `x${remaining}` : ""}</span>
+                              </button>
+                            );
+                          })}
                         </div>
                       </div>
                     );
@@ -1466,8 +1635,9 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
               if (!student) return;
               
               const currentGifts = student.gifts || [];
-              const giftId = form.giftName.toLowerCase().replace(/\s+/g, "_");
-              const existingGift = currentGifts.find(g => g.name.toLowerCase() === form.giftName.toLowerCase());
+              const selectedPrivilege = allPrivileges.find(p => p.name === form.giftName) || availableGifts.find(g => g.name === form.giftName);
+              const giftId = selectedPrivilege ? selectedPrivilege.id : form.giftName.toLowerCase().replace(/\s+/g, "_");
+              const existingGift = currentGifts.find(g => g.id === giftId);
               
               let nextGifts;
               const isVip = form.giftName.toUpperCase().includes("VIP");
@@ -1486,6 +1656,44 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
               updateStudent(student.id, { gifts: nextGifts });
               setModal("");
             }} 
+          />
+        </Modal>
+      )}
+
+      {modal === "mystery-box" && activeMystery && (
+        <Modal title="MISTIRIY BOX OCHILISHI" onClose={() => setModal("")}>
+          <MysteryBoxModal 
+            activeMystery={activeMystery} 
+            onClose={() => setModal("")} 
+            onReward={(rewardItem, mystery) => {
+              const student = students.find(s => s.id === mystery.studentId);
+              if (!student) {
+                setModal("");
+                return;
+              }
+              const currentGifts = student.gifts || [];
+              const existingGift = currentGifts.find(g => g.id === rewardItem.id);
+              let nextGifts;
+              if (existingGift) {
+                nextGifts = currentGifts.map(g => g.id === rewardItem.id ? { ...g, count: Number(g.count || 0) + 1 } : g);
+              } else {
+                nextGifts = [...currentGifts, { id: rewardItem.id, name: rewardItem.name, count: 1, type: "gift" }];
+              }
+
+              if (mystery.type === "shop") {
+                nextGifts = nextGifts.map(item => {
+                  if (item.id === mystery.giftItem.id) return { ...item, count: Number(item.count || 0) - 1 };
+                  return item;
+                }).filter(item => item.count > 0);
+                updateStudent(student.id, { gifts: nextGifts });
+              } else {
+                const perkKey = `${mystery.vipPerk.source}_${mystery.vipPerk.id}`;
+                const usedVipPerks = student.usedVipPerks || {};
+                usedVipPerks[perkKey] = (usedVipPerks[perkKey] || 0) + 1;
+                updateStudent(student.id, { gifts: nextGifts, usedVipPerks });
+              }
+              setModal("");
+            }}
           />
         </Modal>
       )}
