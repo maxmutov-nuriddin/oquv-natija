@@ -862,7 +862,7 @@ function DashboardPage({ groups, students, records, settings, selectedGroup, cur
   );
 }
 
-function GroupsPage({ groups, students, records, settings, date, query, addGroup, updateGroup, deleteGroup, addStudent, updateStudent, saveLessonRecords, deleteStudent, selectedGroup }) {
+function GroupsPage({ groups, students, records, settings, date, query, addGroup, updateGroup, deleteGroup, addStudent, updateStudent, saveLessonRecords, deleteStudent, selectedGroup, setDate }) {
   const [activeGroup, setActiveGroup] = useState(groups[0]?.name || "");
   const [modal, setModal] = useState("");
   const [editingStudent, setEditingStudent] = useState(null);
@@ -897,6 +897,22 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
   }, [students, activeGroup, query, records, settings, date]);
 
   const monthly = ranked.map((student) => ({ name: student.name.split(" ")[0], monthly: student.monthlyCoins }));
+
+  const historyDates = useMemo(() => {
+    const groupStudentIds = new Set(activeGroupStudents.map(s => s.id));
+    const datesMap = new Map();
+    records.forEach(r => {
+      if (groupStudentIds.has(r.studentId)) {
+         if (!datesMap.has(r.date)) datesMap.set(r.date, { count: 0, coins: 0 });
+         const stats = datesMap.get(r.date);
+         stats.count++;
+         stats.coins += Number(r.coinsEarned || 0);
+      }
+    });
+    return Array.from(datesMap.entries())
+      .map(([d, stats]) => ({ date: d, ...stats }))
+      .sort((a, b) => b.date.localeCompare(a.date));
+  }, [activeGroupStudents, records]);
 
   return (
     <div className="groups-layout">
@@ -985,6 +1001,34 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
             settings={settings}
             saveLessonRecords={saveLessonRecords}
           />
+        )}
+
+        {activeGroupObject && (
+          <section className="panel">
+            <PanelHeader icon={CalendarDays} title="Darslar tarixi" subtitle="Oldingi darslar natijalarini ko'rish va tahrirlash (sanani tanlang)" />
+            {!historyDates.length && <EmptyState title="Tarix yo'q" text="Bu guruhda hali dars o'tilmagan." />}
+            {!!historyDates.length && (
+              <div className="history-list" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {historyDates.map(h => (
+                  <button 
+                    key={h.date} 
+                    className={cx("secondary-button", date === h.date && "nav-button-active")} 
+                    style={{ justifyContent: 'space-between', padding: '12px', width: '100%', background: date === h.date ? '#eff6ff' : '#f8fafc', border: `1px solid ${date === h.date ? '#bfdbfe' : '#e2e8f0'}`, textAlign: 'left' }}
+                    onClick={() => setDate(h.date)}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <CalendarDays size={18} color={date === h.date ? "#2563eb" : "#64748b"} />
+                      <strong style={{ color: date === h.date ? '#1e40af' : '#0f172a' }}>{dayjs(h.date).format("DD MMMM YYYY")}</strong>
+                    </div>
+                    <div style={{ display: 'flex', gap: '16px', color: date === h.date ? '#1e40af' : '#64748b', fontSize: '13px' }}>
+                      <span>{h.count} o'quvchi</span>
+                      <span>{h.coins} coin</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </section>
         )}
 
       <section className="panel">
@@ -1344,6 +1388,7 @@ function DashboardApp({ teacher, logout }) {
               saveLessonRecords={saveLessonRecords}
               deleteStudent={handleDeleteStudent}
               selectedGroup={selectedGroup}
+              setDate={setDate}
             />
           )}
           {!loading && activePage === "settings" && <SettingsPage settings={settings} saveSettings={saveSettings} />}
