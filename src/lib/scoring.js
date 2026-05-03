@@ -25,43 +25,57 @@ export function getWindowRecords(records, days, date = dayjs()) {
 }
 
 export function getRecordsInRange(records, start, end) {
+  const s = start.format("YYYY-MM-DD");
+  const e = end.format("YYYY-MM-DD");
   return records.filter((record) => {
-    const recordDate = dayjs(record.date);
-    return recordDate.isAfter(start.subtract(1, "millisecond")) && recordDate.isBefore(end.add(1, "millisecond"));
+    const d = dayjs(record.date).format("YYYY-MM-DD");
+    return d >= s && d <= e;
   });
 }
 
 export function getPreviousWeekRange(date = dayjs()) {
-  const current = dayjs(date).startOf("day");
-  const mondayOffset = (current.day() + 6) % 7;
-  const currentWeekStart = current.subtract(mondayOffset, "day");
-  const start = currentWeekStart.subtract(7, "day");
-  return { start, end: start.add(6, "day").endOf("day") };
+  const d = dayjs(date).startOf("day");
+  const day = d.day(); // 0 is Sunday
+  // If it's Sunday, the "previous" week for the user is the one ending today.
+  // Otherwise, it's the week that ended on the most recent Sunday.
+  const diff = day === 0 ? 6 : day + 6;
+  const start = d.subtract(diff, "day").startOf("day");
+  const end = start.add(6, "day").endOf("day");
+  return { start, end };
 }
 
 export function getPreviousMonthRange(date = dayjs()) {
-  const start = dayjs(date).subtract(1, "month").startOf("month");
-  return { start, end: start.endOf("month") };
+  const d = dayjs(date).startOf("day");
+  const start = d.subtract(1, "month").startOf("month");
+  const end = start.endOf("month");
+  return { start, end };
 }
 
 export function getPeriodLeader(students, records, settings, range) {
+  if (!students || !students.length) return null;
+
   const results = students.map((student) => {
     const periodRecords = getRecordsInRange(
       records.filter((record) => record.studentId === student.id),
       range.start,
       range.end
     );
-    const coins = periodRecords.reduce((sum, record) => sum + (Number(record.coinsEarned) || calculateCoins(record, settings)), 0);
+    const coins = periodRecords.reduce((sum, record) => {
+      const earned = Number(record.coinsEarned);
+      const val = !isNaN(earned) ? earned : calculateCoins(record, settings);
+      return sum + val;
+    }, 0);
     return { ...student, periodCoins: coins };
   });
 
-  const leader = results.sort((a, b) => {
+  const leader = [...results].sort((a, b) => {
     if (b.periodCoins !== a.periodCoins) {
       return b.periodCoins - a.periodCoins;
     }
     return finalScore(b, settings) - finalScore(a, settings);
-  })[0] || null;
-  return leader?.periodCoins > 0 ? leader : null;
+  })[0];
+
+  return (leader && leader.periodCoins > 0) ? leader : null;
 }
 
 export function summarizeStudent(student, records, settings, date = dayjs()) {
