@@ -647,30 +647,71 @@ function BonusDrumModal({ onReward, onClose }) {
   const [trackItems, setTrackItems] = useState([]);
   const trackRef = useRef(null);
 
-  const pool = [10, 50, 100, 150, 200];
+  const pool = [1, 10, 50, 100, 150, 200];
+  const itemColors = {
+    1: { bg: "#f8fafc", border: "#64748b", text: "#0f172a" },
+    10: { bg: "#fef08a", border: "#ca8a04", text: "#854d0e" },
+    50: { bg: "#a7f3d0", border: "#059669", text: "#065f46" },
+    100: { bg: "#bfdbfe", border: "#2563eb", text: "#1e3a8a" },
+    150: { bg: "#fbcfe8", border: "#db2777", text: "#831843" },
+    200: { bg: "#e9d5ff", border: "#9333ea", text: "#581c87" }
+  };
+
+  function getWeightedDrumItem(exclude = null) {
+    const weights = { 1: 60, 10: 30, 50: 15, 100: 5, 150: 2, 200: 1 };
+    let available = pool;
+    if (exclude !== null) {
+      available = pool.filter(v => v !== exclude);
+    }
+    const totalWeight = available.reduce((sum, v) => sum + weights[v], 0);
+    let r = Math.random() * totalWeight;
+    for (const v of available) {
+      r -= weights[v];
+      if (r <= 0) return v;
+    }
+    return available[available.length - 1];
+  }
 
   useEffect(() => {
-    const initialTrack = Array.from({ length: 15 }, () => pool[Math.floor(Math.random() * pool.length)]);
+    let last = null;
+    const initialTrack = Array.from({ length: 15 }, () => {
+      const item = getWeightedDrumItem(last);
+      last = item;
+      return item;
+    });
     setTrackItems(initialTrack);
   }, []);
 
   function handleStart() {
     setSpinning(true);
-    const winItem = pool[Math.floor(Math.random() * pool.length)];
+    const winItem = getWeightedDrumItem();
     
-    const newTrack = Array.from({ length: 100 }, (_, i) => {
-      if (i === 85) return winItem;
-      return pool[Math.floor(Math.random() * pool.length)];
-    });
-    setTrackItems(newTrack);
+    let generatedTrack = [];
+    let prev = null;
+    for(let i = 0; i < 100; i++) {
+       if (i === 85) {
+          generatedTrack.push(winItem);
+          prev = winItem;
+       } else if (i === 84) {
+          let item = getWeightedDrumItem(prev);
+          while (item === winItem) item = getWeightedDrumItem(prev);
+          generatedTrack.push(item);
+          prev = item;
+       } else {
+          let item = getWeightedDrumItem(prev);
+          generatedTrack.push(item);
+          prev = item;
+       }
+    }
+    setTrackItems(generatedTrack);
 
     setTimeout(() => {
       if (trackRef.current) {
-        const itemWidth = 152;
+        const itemWidth = 160; // 144px width + 16px gap
         const containerWidth = trackRef.current.parentElement.offsetWidth;
-        const targetOffset = (85 * itemWidth) - (containerWidth / 2) + (itemWidth / 2) + (Math.random() * 80 - 40);
+        const targetOffset = (85 * itemWidth) - (containerWidth / 2) + (itemWidth / 2) + (Math.random() * 60 - 30);
         
-        trackRef.current.style.transition = 'transform 6s cubic-bezier(0.05, 0.9, 0.1, 1)';
+        trackRef.current.style.transition = 'transform 6s cubic-bezier(0.15, 0.85, 0.15, 1)';
         trackRef.current.style.transform = `translate3d(-${targetOffset}px, 0, 0)`;
       }
     }, 100);
@@ -684,71 +725,94 @@ function BonusDrumModal({ onReward, onClose }) {
   }
 
   return (
-    <div style={{ textAlign: "center", padding: "20px 0", overflow: "hidden", position: "relative" }}>
-      <div style={{ fontSize: "32px", marginBottom: "16px" }}>🎰</div>
-      <h3 style={{ marginBottom: "24px" }}>Guruh uchun kunlik bonus!</h3>
+    <div style={{ textAlign: "center", padding: "20px 0", overflow: "hidden", position: "relative", fontFamily: "'Outfit', sans-serif" }}>
+      <div style={{ fontSize: "48px", marginBottom: "8px", textShadow: "0 4px 0px rgba(0,0,0,0.2)" }}>🎁</div>
+      <h3 style={{ marginBottom: "24px", fontSize: "28px", fontWeight: "900", color: "#1e293b", textTransform: "uppercase", letterSpacing: "1px" }}>Omad Barabani!</h3>
       
       <div style={{ 
         position: "relative", 
         width: "100%", 
-        height: "120px", 
-        background: "#0f172a", 
-        borderRadius: "12px", 
+        height: "160px", 
+        background: "linear-gradient(180deg, #1e293b 0%, #0f172a 100%)", 
+        borderRadius: "24px", 
         overflow: "hidden",
-        marginBottom: "24px",
-        boxShadow: "inset 0 0 20px rgba(0,0,0,0.5)"
+        marginBottom: "32px",
+        border: "4px solid #334155",
+        boxShadow: "inset 0 10px 30px rgba(0,0,0,0.8), 0 8px 0px #0f172a, 0 12px 20px rgba(0,0,0,0.3)"
       }}>
+        {/* Center Pointer (Top and Bottom Triangles) */}
         <div style={{
-          position: "absolute",
-          left: "50%",
-          top: 0,
-          bottom: 0,
-          width: "4px",
-          background: "#eab308",
-          transform: "translateX(-50%)",
-          zIndex: 10,
-          boxShadow: "0 0 10px #eab308"
+          position: "absolute", left: "50%", top: "-4px", transform: "translateX(-50%)", zIndex: 10,
+          width: 0, height: 0, borderLeft: "16px solid transparent", borderRight: "16px solid transparent", borderTop: "24px solid #ef4444", filter: "drop-shadow(0 4px 4px rgba(0,0,0,0.5))"
+        }} />
+        <div style={{
+          position: "absolute", left: "50%", bottom: "-4px", transform: "translateX(-50%)", zIndex: 10,
+          width: 0, height: 0, borderLeft: "16px solid transparent", borderRight: "16px solid transparent", borderBottom: "24px solid #ef4444", filter: "drop-shadow(0 -4px 4px rgba(0,0,0,0.5))"
         }} />
         
         <div ref={trackRef} style={{ 
           display: "flex", 
-          gap: "12px", 
-          padding: "10px 0", 
+          gap: "16px", 
+          padding: "20px 0", 
           willChange: "transform",
-          transform: "translate3d(0, 0, 0)"
+          transform: "translate3d(0, 0, 0)",
+          alignItems: "center"
         }}>
-          {trackItems.map((item, idx) => (
-            <div key={idx} style={{
-              flexShrink: 0,
-              width: "140px",
-              height: "100px",
-              background: "#1e293b",
-              border: "2px solid #334155",
-              borderRadius: "8px",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "10px",
-              color: "#f8fafc",
-              fontSize: "18px",
-              fontWeight: "bold",
-              textAlign: "center"
-            }}>
-              <Coins size={24} style={{ color: "#eab308", marginBottom: "8px" }} />
-              <span>{item} coin</span>
-            </div>
-          ))}
+          {trackItems.map((item, idx) => {
+            const colors = itemColors[item] || itemColors[10];
+            return (
+              <div key={idx} style={{
+                flexShrink: 0,
+                width: "144px",
+                height: "110px",
+                background: colors.bg,
+                border: `3px solid ${colors.border}`,
+                borderRadius: "20px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "10px",
+                color: colors.text,
+                fontSize: "26px",
+                fontWeight: "900",
+                textAlign: "center",
+                boxShadow: `0 8px 0px ${colors.border}, inset 0 -4px 10px rgba(0,0,0,0.1)`,
+                transform: "translateY(-4px)"
+              }}>
+                <Coins size={32} style={{ color: colors.border, marginBottom: "8px", filter: "drop-shadow(0 2px 0px rgba(0,0,0,0.2))" }} />
+                <span style={{ textShadow: "0 2px 0px rgba(255,255,255,0.4)" }}>{item}</span>
+              </div>
+            );
+          })}
         </div>
       </div>
 
       {result ? (
-         <div style={{ fontSize: "18px", fontWeight: "bold", color: "#16a34a", padding: "16px", background: "#f0fdf4", borderRadius: "8px", animation: "popIn 0.5s ease" }}>
-           Tabriklaymiz! Guruhdagi barchaga tushdi: <br/> <span style={{ fontSize: "22px" }}>{result} coin</span>
+         <div style={{ fontSize: "20px", fontWeight: "900", color: "#ffffff", padding: "24px", background: "linear-gradient(135deg, #10b981, #059669)", borderRadius: "20px", animation: "popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)", border: "3px solid #047857", boxShadow: "0 8px 0px #047857", transform: "translateY(-8px)" }}>
+           🎉 TABRIKLAYMIZ! 🎉 <br/> <br/> <span style={{ fontSize: "36px", textShadow: "0 4px 0px rgba(0,0,0,0.2)" }}>{result} COIN</span>
          </div>
       ) : (
-         <button className="primary-button" onClick={handleStart} disabled={spinning} style={{ width: "100%", justifyContent: "center", padding: "14px", fontSize: "16px" }}>
-           {spinning ? "Aylanmoqda..." : "Aylantirish"}
+         <button 
+           className="primary-button" 
+           onClick={handleStart} 
+           disabled={spinning} 
+           style={{ 
+             width: "100%", 
+             justifyContent: "center", 
+             padding: "18px", 
+             fontSize: "20px", 
+             fontWeight: "900",
+             background: spinning ? "#94a3b8" : "linear-gradient(135deg, #3b82f6, #2563eb)",
+             border: spinning ? "none" : "3px solid #1d4ed8",
+             boxShadow: spinning ? "none" : "0 6px 0px #1d4ed8",
+             borderRadius: "16px",
+             color: "#fff",
+             transform: spinning ? "translateY(6px)" : "translateY(0)",
+             transition: "all 0.1s ease"
+           }}
+         >
+           {spinning ? "AYLANMOQDA..." : "OMADNI SINASH! 🚀"}
          </button>
       )}
     </div>
@@ -1273,6 +1337,55 @@ function LessonEntryPanel({ group, students, records, date, settings, saveLesson
   );
 }
 
+function FunModal({ children, onClose }) {
+  useEffect(() => {
+    const originalStyle = window.getComputedStyle(document.body).overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalStyle;
+    };
+  }, []);
+
+  return createPortal(
+    <div className="modal-backdrop" onMouseDown={onClose} style={{ zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+      <div 
+        onMouseDown={(e) => e.stopPropagation()} 
+        style={{
+          background: "linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)",
+          borderRadius: "32px",
+          padding: "8px",
+          border: "6px solid #b45309",
+          boxShadow: "0 20px 40px rgba(0,0,0,0.5), inset 0 6px 0px rgba(255,255,255,0.4)",
+          maxWidth: "480px",
+          width: "100%",
+          position: "relative",
+          animation: "popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)"
+        }}
+      >
+        <button 
+          onClick={onClose} 
+          style={{
+            position: "absolute", top: "-15px", right: "-15px",
+            background: "#ef4444", border: "4px solid #991b1b", color: "white",
+            borderRadius: "50%", width: "44px", height: "44px",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", boxShadow: "0 4px 0px #991b1b", zIndex: 10,
+            transition: "transform 0.1s"
+          }}
+          onMouseDown={(e) => e.currentTarget.style.transform = "translateY(4px)"}
+          onMouseUp={(e) => e.currentTarget.style.transform = "translateY(0)"}
+        >
+          <X size={24} style={{ strokeWidth: 3 }} />
+        </button>
+        <div style={{ background: "#ffffff", borderRadius: "24px", padding: "24px", boxShadow: "inset 0 4px 10px rgba(0,0,0,0.05)" }}>
+          {children}
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 function DashboardPage({ groups, students, records, settings, selectedGroup, currentGroup, currentTime, date, query, onEditStudent, onDeleteStudent, saveLessonRecords, updateStudent }) {
   const monthlyWinner = useMemo(() => getPeriodLeader(students.filter(s => s.group === selectedGroup), records, settings, getPreviousMonthRange(date)), [students, selectedGroup, records, settings, date]);
   const weeklyWinner = useMemo(() => {
@@ -1426,9 +1539,9 @@ function DashboardPage({ groups, students, records, settings, selectedGroup, cur
       </section>
 
       {showBonusDrum && (
-        <Modal title="Kunlik Bonus" onClose={() => setShowBonusDrum(false)}>
+        <FunModal onClose={() => setShowBonusDrum(false)}>
           <BonusDrumModal onReward={handleBonusReward} onClose={() => setShowBonusDrum(false)} />
-        </Modal>
+        </FunModal>
       )}
     </div>
   );
