@@ -884,6 +884,19 @@ function MysteryBoxModal({ activeMystery, onClose, onReward }) {
 
   const poolIds = mysteryBoxData[activeMystery.mysteryType]?.pool || [];
 
+  const probabilities = useMemo(() => {
+    const items = poolIds.map(id => {
+      const info = getPrivilegeInfo(id);
+      const price = info.price || 1000;
+      return { ...info, weight: 1 / price };
+    });
+    const totalWeight = items.reduce((sum, item) => sum + item.weight, 0);
+    return items.map(item => ({
+      name: item.name,
+      percent: ((item.weight / totalWeight) * 100).toFixed(1)
+    }));
+  }, [poolIds]);
+
   // Har xil ranglar to'plami
   const cardColors = [
     { bg: "#ffffff", border: "#3b82f6", text: "#1e3a8a", shadow: "#1d4ed8" },
@@ -937,7 +950,49 @@ function MysteryBoxModal({ activeMystery, onClose, onReward }) {
   return (
     <div style={{ textAlign: "center", padding: "10px 0", position: "relative", fontFamily: "'Outfit', sans-serif" }}>
       <div style={{ fontSize: "56px", marginBottom: "8px", filter: "drop-shadow(0 4px 10px rgba(0,0,0,0.3))" }}>✨🎁✨</div>
-      <h3 style={{ marginBottom: "24px", fontSize: "32px", fontWeight: "950", color: "#1e293b", textTransform: "uppercase", letterSpacing: "2px", textShadow: "0 2px 0 white" }}>MISTIRIY BOX</h3>
+      
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "12px", marginBottom: "24px" }}>
+        <h3 style={{ fontSize: "32px", fontWeight: "950", color: "#1e293b", textTransform: "uppercase", letterSpacing: "2px", textShadow: "0 2px 0 white", margin: 0 }}>MISTIRIY BOX</h3>
+        
+        <div 
+          style={{ position: "relative", display: "inline-flex" }}
+          onMouseEnter={(e) => e.currentTarget.lastChild.style.opacity = "1"}
+          onMouseLeave={(e) => e.currentTarget.lastChild.style.opacity = "0"}
+        >
+          <Info size={24} color="#64748b" style={{ cursor: "help", transition: "color 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.color = "#3b82f6"} onMouseLeave={(e) => e.currentTarget.style.color = "#64748b"} />
+          
+          <div style={{
+            position: "absolute",
+            top: "100%",
+            left: "50%",
+            transform: "translateX(-50%)",
+            marginTop: "12px",
+            background: "#1e293b",
+            color: "white",
+            padding: "16px",
+            borderRadius: "12px",
+            width: "max-content",
+            maxWidth: "280px",
+            boxShadow: "0 10px 25px rgba(0,0,0,0.3)",
+            opacity: 0,
+            pointerEvents: "none",
+            transition: "opacity 0.2s ease-in-out",
+            zIndex: 50,
+            textAlign: "left",
+            fontSize: "14px",
+            lineHeight: "1.6"
+          }}>
+            <div style={{ position: "absolute", top: "-6px", left: "50%", transform: "translateX(-50%)", width: 0, height: 0, borderLeft: "6px solid transparent", borderRight: "6px solid transparent", borderBottom: "6px solid #1e293b" }} />
+            <strong style={{ display: "block", marginBottom: "8px", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "4px", fontSize: "15px", color: "#eab308" }}>Tushish ehtimolligi:</strong>
+            {probabilities.map((p, i) => (
+              <div key={i} style={{ display: "flex", justifyContent: "space-between", gap: "20px", marginBottom: "4px" }}>
+                <span style={{ opacity: 0.9 }}>{p.name}:</span>
+                <strong style={{ color: "#34d399" }}>{p.percent}%</strong>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
       
       <div style={{ 
         position: "relative", 
