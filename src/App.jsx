@@ -1096,7 +1096,7 @@ function ProgressLine({ label, value, tone }) {
   );
 }
 
-function StudentCard({ student, onDelete, onEdit, index, date, records, settings, saveLessonRecords, isLessonDay = true, onWarningReset, onUpdateStudent, weeklyWinner, monthlyWinner }) {
+function StudentCard({ student, onDelete, onEdit, index, date, records, settings, saveLessonRecords, isLessonDay = true, onWarningReset, onUpdateStudent, weeklyWinner, monthlyWinner, hideGifts = false }) {
   const todayRecord = records?.find((r) => r.studentId === student.id && r.date === date);
   const hw = todayRecord ? todayRecord.homework : 0;
   const att = todayRecord ? todayRecord.attendance : 0;
@@ -1165,7 +1165,7 @@ function StudentCard({ student, onDelete, onEdit, index, date, records, settings
         </div>
       </div>
 
-      {gifts.length > 0 && (
+      {gifts.length > 0 && !hideGifts && (
         <div className="student-gifts">
           {gifts.map(g => {
             const giftMeta = availableGifts.find(ag => ag.id === g.id) || { icon: Trophy, color: "var(--muted)" };
@@ -1589,6 +1589,7 @@ function DashboardPage({ groups, students, records, settings, selectedGroup, cur
                 onUpdateStudent={updateStudent}
                 weeklyWinner={weeklyWinner}
                 monthlyWinner={monthlyWinner}
+                hideGifts={true}
               />
             ))}
           </div>
