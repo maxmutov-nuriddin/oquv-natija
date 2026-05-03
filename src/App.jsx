@@ -884,9 +884,21 @@ function MysteryBoxModal({ activeMystery, onClose, onReward }) {
 
   const poolIds = mysteryBoxData[activeMystery.mysteryType]?.pool || [];
 
+  // Har xil ranglar to'plami
+  const cardColors = [
+    { bg: "#ffffff", border: "#3b82f6", text: "#1e3a8a", shadow: "#1d4ed8" },
+    { bg: "#ffffff", border: "#10b981", text: "#065f46", shadow: "#047857" },
+    { bg: "#ffffff", border: "#f59e0b", text: "#7c2d12", shadow: "#b45309" },
+    { bg: "#ffffff", border: "#ef4444", text: "#7f1d1d", shadow: "#991b1b" },
+    { bg: "#ffffff", border: "#8b5cf6", text: "#4c1d95", shadow: "#6d28d9" }
+  ];
+
   useEffect(() => {
-    // Generate initial track just for display
-    const initialTrack = Array.from({ length: 15 }, () => getPrivilegeInfo(poolIds[Math.floor(Math.random() * poolIds.length)]));
+    // Generate initial track
+    const initialTrack = Array.from({ length: 15 }, (_, i) => ({
+      ...getPrivilegeInfo(poolIds[Math.floor(Math.random() * poolIds.length)]),
+      color: cardColors[i % cardColors.length]
+    }));
     setTrackItems(initialTrack);
   }, [poolIds]);
 
@@ -894,21 +906,22 @@ function MysteryBoxModal({ activeMystery, onClose, onReward }) {
     setSpinning(true);
     const winItem = getWeightedRandomItem(poolIds);
     
-    // Create a track of 100 items. The winner will be at index 85.
     const newTrack = Array.from({ length: 100 }, (_, i) => {
-      if (i === 85) return winItem;
-      return getWeightedRandomItem(poolIds); // Use weighted random for filler too to look realistic
+      const item = (i === 85) ? winItem : getPrivilegeInfo(poolIds[Math.floor(Math.random() * poolIds.length)]);
+      return {
+        ...item,
+        color: cardColors[i % cardColors.length]
+      };
     });
     setTrackItems(newTrack);
 
     setTimeout(() => {
       if (trackRef.current) {
-        // Each item is 140px wide + 12px gap = 152px. Center of screen is approx offsetWidth / 2
         const itemWidth = 152;
         const containerWidth = trackRef.current.parentElement.offsetWidth;
         const targetOffset = (85 * itemWidth) - (containerWidth / 2) + (itemWidth / 2) + (Math.random() * 80 - 40);
         
-        trackRef.current.style.transition = 'transform 6s cubic-bezier(0.05, 0.9, 0.1, 1)';
+        trackRef.current.style.transition = 'transform 6s cubic-bezier(0.15, 0.85, 0.15, 1)';
         trackRef.current.style.transform = `translate3d(-${targetOffset}px, 0, 0)`;
       }
     }, 100);
@@ -922,72 +935,93 @@ function MysteryBoxModal({ activeMystery, onClose, onReward }) {
   }
 
   return (
-    <div style={{ textAlign: "center", padding: "20px 0", overflow: "hidden", position: "relative" }}>
-      <div style={{ fontSize: "32px", marginBottom: "16px" }}>🎁</div>
-      <h3 style={{ marginBottom: "24px" }}>MISTIRIY BOX</h3>
+    <div style={{ textAlign: "center", padding: "10px 0", position: "relative", fontFamily: "'Outfit', sans-serif" }}>
+      <div style={{ fontSize: "56px", marginBottom: "8px", filter: "drop-shadow(0 4px 10px rgba(0,0,0,0.3))" }}>✨🎁✨</div>
+      <h3 style={{ marginBottom: "24px", fontSize: "32px", fontWeight: "950", color: "#1e293b", textTransform: "uppercase", letterSpacing: "2px", textShadow: "0 2px 0 white" }}>MISTIRIY BOX</h3>
       
       <div style={{ 
         position: "relative", 
         width: "100%", 
-        height: "120px", 
-        background: "#0f172a", 
-        borderRadius: "12px", 
+        height: "170px", 
+        background: "linear-gradient(180deg, #1e293b 0%, #0f172a 100%)", 
+        borderRadius: "32px", 
         overflow: "hidden",
-        marginBottom: "24px",
-        boxShadow: "inset 0 0 20px rgba(0,0,0,0.5)"
+        marginBottom: "32px",
+        border: "6px solid #334155",
+        boxShadow: "inset 0 10px 40px rgba(0,0,0,0.9), 0 8px 0px #0f172a"
       }}>
-        {/* Center line indicator */}
+        {/* Neon Pointers */}
         <div style={{
-          position: "absolute",
-          left: "50%",
-          top: 0,
-          bottom: 0,
-          width: "4px",
-          background: "#eab308",
-          transform: "translateX(-50%)",
-          zIndex: 10,
-          boxShadow: "0 0 10px #eab308"
+          position: "absolute", left: "50%", top: "-4px", transform: "translateX(-50%)", zIndex: 10,
+          width: 0, height: 0, borderLeft: "20px solid transparent", borderRight: "20px solid transparent", borderTop: "28px solid #facc15", filter: "drop-shadow(0 0 10px #eab308)"
+        }} />
+        <div style={{
+          position: "absolute", left: "50%", bottom: "-4px", transform: "translateX(-50%)", zIndex: 10,
+          width: 0, height: 0, borderLeft: "20px solid transparent", borderRight: "20px solid transparent", borderBottom: "28px solid #facc15", filter: "drop-shadow(0 0 10px #eab308)"
         }} />
         
         <div ref={trackRef} style={{ 
           display: "flex", 
           gap: "12px", 
-          padding: "10px 0", 
+          padding: "25px 0", 
           willChange: "transform",
-          transform: "translate3d(0, 0, 0)"
+          transform: "translate3d(0, 0, 0)",
+          alignItems: "center"
         }}>
           {trackItems.map((item, idx) => (
             <div key={idx} style={{
               flexShrink: 0,
               width: "140px",
-              height: "100px",
-              background: "#1e293b",
-              border: "2px solid #334155",
-              borderRadius: "8px",
+              height: "115px",
+              background: item.color.bg,
+              border: `4px solid ${item.color.border}`,
+              borderRadius: "24px",
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
               padding: "10px",
-              color: "#f8fafc",
-              fontSize: "13px",
-              fontWeight: "600",
-              textAlign: "center"
+              color: item.color.text,
+              fontSize: "14px",
+              fontWeight: "900",
+              textAlign: "center",
+              boxShadow: `0 8px 0px ${item.color.shadow}, inset 0 -4px 10px rgba(0,0,0,0.05)`,
+              transform: "translateY(-4px)"
             }}>
-              <Star size={24} style={{ color: "#eab308", marginBottom: "8px" }} />
-              <span style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{item.name}</span>
+              <Star size={26} fill={item.color.border} style={{ color: item.color.border, marginBottom: "8px" }} />
+              <span style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", lineHeight: "1.1" }}>{item.name}</span>
             </div>
           ))}
         </div>
       </div>
 
       {result ? (
-         <div style={{ fontSize: "18px", fontWeight: "bold", color: "#16a34a", padding: "16px", background: "#f0fdf4", borderRadius: "8px", animation: "popIn 0.5s ease" }}>
-           Tabriklaymiz! Sizga tushdi: <br/> <span style={{ fontSize: "22px" }}>{result.name}</span>
+         <div style={{ fontSize: "22px", fontWeight: "950", color: "#ffffff", padding: "28px", background: "linear-gradient(135deg, #10b981, #059669)", borderRadius: "24px", animation: "popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)", border: "4px solid #047857", boxShadow: "0 10px 0px #047857" }}>
+           🎊 TABRIKLAYMIZ! 🎊 <br/> <br/> <span style={{ fontSize: "26px", textShadow: "0 4px 0px rgba(0,0,0,0.2)" }}>{result.name}</span>
          </div>
       ) : (
-         <button className="primary-button" onClick={handleStart} disabled={spinning} style={{ width: "100%", justifyContent: "center", padding: "14px", fontSize: "16px" }}>
-           {spinning ? "Ochilmoqda..." : "Boshlash"}
+         <button 
+           className="primary-button" 
+           onClick={handleStart} 
+           disabled={spinning} 
+           style={{ 
+             width: "100%", 
+             justifyContent: "center", 
+             padding: "20px", 
+             fontSize: "24px", 
+             fontWeight: "950",
+             background: spinning ? "#94a3b8" : "linear-gradient(135deg, #f59e0b, #d97706)",
+             border: spinning ? "none" : "4px solid #b45309",
+             boxShadow: spinning ? "none" : "0 8px 0px #b45309",
+             borderRadius: "20px",
+             color: "#fff",
+             transform: spinning ? "translateY(8px)" : "translateY(0)",
+             transition: "all 0.1s ease",
+             textTransform: "uppercase",
+             letterSpacing: "1px"
+           }}
+         >
+           {spinning ? "OCHILMOQDA..." : "QUTINI OCHISH! 🚀"}
          </button>
       )}
     </div>
@@ -2032,7 +2066,7 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
       )}
 
       {modal === "mystery-box" && activeMystery && (
-        <Modal title="MISTIRIY BOX OCHILISHI" onClose={() => setModal("")}>
+        <FunModal onClose={() => setModal("")}>
           <MysteryBoxModal 
             activeMystery={activeMystery} 
             onClose={() => setModal("")} 
@@ -2066,7 +2100,7 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
               setModal("");
             }}
           />
-        </Modal>
+        </FunModal>
       )}
 
       {modal === "gift-coin" && activeGiftCoin && (
