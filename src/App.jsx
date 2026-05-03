@@ -42,7 +42,7 @@ import {
 } from "recharts";
 import { useDashboardData } from "./hooks/useDashboardData";
 import { useTeacherAuth } from "./hooks/useTeacherAuth";
-import { getPeriodLeader, getPreviousMonthRange, getPreviousWeekRange, groupForDateTime, rankStudents } from "./lib/scoring";
+import { calculateCoins, getPeriodLeader, getPreviousMonthRange, getPreviousWeekRange, groupForDateTime, rankStudents } from "./lib/scoring";
 
 const navItems = [
   { id: "dashboard", label: "Bosh sahifa", icon: LayoutDashboard },
@@ -641,6 +641,120 @@ function getWeightedRandomItem(poolIds) {
   return items[items.length - 1];
 }
 
+function BonusDrumModal({ onReward, onClose }) {
+  const [spinning, setSpinning] = useState(false);
+  const [result, setResult] = useState(null);
+  const [trackItems, setTrackItems] = useState([]);
+  const trackRef = useRef(null);
+
+  const pool = [10, 50, 100, 150, 200];
+
+  useEffect(() => {
+    const initialTrack = Array.from({ length: 15 }, () => pool[Math.floor(Math.random() * pool.length)]);
+    setTrackItems(initialTrack);
+  }, []);
+
+  function handleStart() {
+    setSpinning(true);
+    const winItem = pool[Math.floor(Math.random() * pool.length)];
+    
+    const newTrack = Array.from({ length: 100 }, (_, i) => {
+      if (i === 85) return winItem;
+      return pool[Math.floor(Math.random() * pool.length)];
+    });
+    setTrackItems(newTrack);
+
+    setTimeout(() => {
+      if (trackRef.current) {
+        const itemWidth = 152;
+        const containerWidth = trackRef.current.parentElement.offsetWidth;
+        const targetOffset = (85 * itemWidth) - (containerWidth / 2) + (itemWidth / 2) + (Math.random() * 80 - 40);
+        
+        trackRef.current.style.transition = 'transform 6s cubic-bezier(0.05, 0.9, 0.1, 1)';
+        trackRef.current.style.transform = `translate3d(-${targetOffset}px, 0, 0)`;
+      }
+    }, 100);
+
+    setTimeout(() => {
+      setResult(winItem);
+      setTimeout(() => {
+        onReward(winItem);
+      }, 2500);
+    }, 6200);
+  }
+
+  return (
+    <div style={{ textAlign: "center", padding: "20px 0", overflow: "hidden", position: "relative" }}>
+      <div style={{ fontSize: "32px", marginBottom: "16px" }}>🎰</div>
+      <h3 style={{ marginBottom: "24px" }}>Guruh uchun kunlik bonus!</h3>
+      
+      <div style={{ 
+        position: "relative", 
+        width: "100%", 
+        height: "120px", 
+        background: "#0f172a", 
+        borderRadius: "12px", 
+        overflow: "hidden",
+        marginBottom: "24px",
+        boxShadow: "inset 0 0 20px rgba(0,0,0,0.5)"
+      }}>
+        <div style={{
+          position: "absolute",
+          left: "50%",
+          top: 0,
+          bottom: 0,
+          width: "4px",
+          background: "#eab308",
+          transform: "translateX(-50%)",
+          zIndex: 10,
+          boxShadow: "0 0 10px #eab308"
+        }} />
+        
+        <div ref={trackRef} style={{ 
+          display: "flex", 
+          gap: "12px", 
+          padding: "10px 0", 
+          willChange: "transform",
+          transform: "translate3d(0, 0, 0)"
+        }}>
+          {trackItems.map((item, idx) => (
+            <div key={idx} style={{
+              flexShrink: 0,
+              width: "140px",
+              height: "100px",
+              background: "#1e293b",
+              border: "2px solid #334155",
+              borderRadius: "8px",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "10px",
+              color: "#f8fafc",
+              fontSize: "18px",
+              fontWeight: "bold",
+              textAlign: "center"
+            }}>
+              <Coins size={24} style={{ color: "#eab308", marginBottom: "8px" }} />
+              <span>{item} coin</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {result ? (
+         <div style={{ fontSize: "18px", fontWeight: "bold", color: "#16a34a", padding: "16px", background: "#f0fdf4", borderRadius: "8px", animation: "popIn 0.5s ease" }}>
+           Tabriklaymiz! Guruhdagi barchaga tushdi: <br/> <span style={{ fontSize: "22px" }}>{result} coin</span>
+         </div>
+      ) : (
+         <button className="primary-button" onClick={handleStart} disabled={spinning} style={{ width: "100%", justifyContent: "center", padding: "14px", fontSize: "16px" }}>
+           {spinning ? "Aylanmoqda..." : "Aylantirish"}
+         </button>
+      )}
+    </div>
+  );
+}
+
 function MysteryBoxModal({ activeMystery, onClose, onReward }) {
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState(null);
@@ -1193,9 +1307,50 @@ function DashboardPage({ groups, students, records, settings, selectedGroup, cur
     [groupStudents, records, settings, date, previousMonthLeader]
   );
 
+  const todayGroupRecords = useMemo(() => records.filter(r => r.date === date && groupStudents.some(s => s.id === r.studentId)), [records, date, groupStudents]);
+  const alreadySpun = todayGroupRecords.some(r => r.dailyBonus);
+  const [showBonusDrum, setShowBonusDrum] = useState(false);
+
+  async function handleBonusReward(coins) {
+    setShowBonusDrum(false);
+    const updatedStudents = groupStudents.map(student => {
+      const existingRecord = todayGroupRecords.find(r => r.studentId === student.id) || {};
+      const currentCoins = Number(existingRecord.coinsEarned) || calculateCoins({
+         homework: existingRecord.homework || 0,
+         attendance: existingRecord.attendance || 0,
+         activity: existingRecord.activity || 0
+      }, settings);
+      
+      return {
+        ...student,
+        homeworkScore: existingRecord.homework || 0,
+        attendanceScore: existingRecord.attendance || 0,
+        activityScore: existingRecord.activity || 0,
+        coinsEarned: currentCoins, // Coinlarni qo'shmaymiz
+        dailyBonus: coins // Faqat baraban aylantirilganini bilish uchun saqlaymiz
+      };
+    });
+    await saveLessonRecords({ date, settings, students: updatedStudents });
+  }
+
   return (
     <div className="page-stack">
       <CurrentLessonBanner group={currentGroup} date={date} time={currentTime} />
+
+      {selectedGroup && isLessonDay && !alreadySpun && (
+        <section className="panel" style={{ padding: "16px" }}>
+          <button 
+            className="primary-button" 
+            style={{ width: "100%", justifyContent: "center", padding: "16px", background: "linear-gradient(135deg, #eab308, #d97706)", fontSize: "16px", boxShadow: "0 4px 15px rgba(234, 179, 8, 0.4)", border: "none" }}
+            onClick={() => setShowBonusDrum(true)}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontSize: "20px" }}>🎰</span>
+              <span>Guruh uchun kunlik bonus barabanini aylantirish</span>
+            </div>
+          </button>
+        </section>
+      )}
 
       <section className="stats-grid">
         <StatCard icon={Users} label="O'quvchilar" value={ranked.length} hint={selectedGroup} />
@@ -1269,6 +1424,12 @@ function DashboardPage({ groups, students, records, settings, selectedGroup, cur
           </div>
         )}
       </section>
+
+      {showBonusDrum && (
+        <Modal title="Kunlik Bonus" onClose={() => setShowBonusDrum(false)}>
+          <BonusDrumModal onReward={handleBonusReward} onClose={() => setShowBonusDrum(false)} />
+        </Modal>
+      )}
     </div>
   );
 }
