@@ -36,9 +36,10 @@ export function getRecordsInRange(records, start, end) {
 export function getPreviousWeekRange(date = dayjs()) {
   const d = dayjs(date).startOf("day");
   const day = d.day(); // 0 is Sunday
-  // If it's Sunday, the "previous" week for the user is the one ending today.
-  // Otherwise, it's the week that ended on the most recent Sunday.
-  const diff = day === 0 ? 6 : day + 6;
+  // To get the previously COMPLETED week (Mon-Sun):
+  // If it's Sunday, the current week hasn't ended yet, so the previous week is 13 days ago (Monday).
+  // Otherwise, it's (day + 6) days ago (Monday).
+  const diff = day === 0 ? 13 : day + 6;
   const start = d.subtract(diff, "day").startOf("day");
   const end = start.add(6, "day").endOf("day");
   return { start, end };

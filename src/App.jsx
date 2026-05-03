@@ -886,9 +886,13 @@ function StudentCard({ student, onDelete, onEdit, index, date, records, settings
   const needsWarning = zeroRecords.length >= 3;
 
   const gifts = student.gifts || [];
+  const isStartOfWeek = dayjs(date).day() === 1; // 1 is Monday
+  const isStartOfMonth = dayjs(date).date() === 1; // 1st day of the month
   const isWeeklyWinner = student.id === weeklyWinner?.id;
   const isMonthlyWinner = student.id === monthlyWinner?.id;
-  const isVip = gifts.some(g => g.type === "vip" && g.count > 0) || isWeeklyWinner || isMonthlyWinner;
+  
+  // VIP status depends on whether they have a gift, OR if it's the announcement day and they are the winner.
+  const isVip = gifts.some(g => g.type === "vip" && g.count > 0) || (isWeeklyWinner && isStartOfWeek) || (isMonthlyWinner && isStartOfMonth);
 
   function useGift(giftId, e) {
     if (e) e.stopPropagation();
@@ -911,13 +915,13 @@ function StudentCard({ student, onDelete, onEdit, index, date, records, settings
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
               <h3 style={{ margin: 0 }}>{student.name}</h3>
-              {isWeeklyWinner && <span className="vip-text-badge" style={{ background: "linear-gradient(135deg, #60a5fa, #2563eb)", color: "white" }}>Hafta G'olibi</span>}
-              {isMonthlyWinner && <span className="vip-text-badge" style={{ background: "linear-gradient(135deg, #f472b6, #db2777)", color: "white" }}>Oy G'olibi</span>}
+              {isWeeklyWinner && isStartOfWeek && <span className="vip-text-badge" style={{ background: "linear-gradient(135deg, #60a5fa, #2563eb)", color: "white" }}>Hafta G'olibi</span>}
+              {isMonthlyWinner && isStartOfMonth && <span className="vip-text-badge" style={{ background: "linear-gradient(135deg, #f472b6, #db2777)", color: "white" }}>Oy G'olibi</span>}
               {gifts.filter(g => g.type === "vip").map((g, i) => (
                 <span key={i} className="vip-text-badge">{g.name}</span>
               ))}
             </div>
-            <p>{student.group} · {rankText(student.weeklyRank)} hafta</p>
+            <p>{student.group} · {isStartOfWeek ? `${rankText(student.weeklyRank)} hafta` : "Natija kutilmoqda"}</p>
           </div>
         </div>
         <div className="coin-badge">
@@ -957,8 +961,8 @@ function StudentCard({ student, onDelete, onEdit, index, date, records, settings
       </div>
 
       <div className="rank-chips">
-        <span>Hafta: {rankText(student.weeklyRank)}</span>
-        <span>Oy: {rankText(student.monthlyRank)}</span>
+        <span>Hafta: {isStartOfWeek ? rankText(student.weeklyRank) : "Kutilmoqda"}</span>
+        <span>Oy: {isStartOfMonth ? rankText(student.monthlyRank) : "Kutilmoqda"}</span>
       </div>
 
       <div className="quick-edit">
