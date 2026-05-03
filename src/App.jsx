@@ -1156,8 +1156,11 @@ function LessonEntryPanel({ group, students, records, date, settings, saveLesson
 }
 
 function DashboardPage({ groups, students, records, settings, selectedGroup, currentGroup, currentTime, date, query, onEditStudent, onDeleteStudent, saveLessonRecords, updateStudent }) {
-  const weeklyWinner = useMemo(() => getPeriodLeader(students.filter(s => s.group === selectedGroup), records, settings, getPreviousWeekRange(date)), [students, selectedGroup, records, settings, date]);
   const monthlyWinner = useMemo(() => getPeriodLeader(students.filter(s => s.group === selectedGroup), records, settings, getPreviousMonthRange(date)), [students, selectedGroup, records, settings, date]);
+  const weeklyWinner = useMemo(() => {
+    const candidates = students.filter(s => s.group === selectedGroup && s.id !== monthlyWinner?.id);
+    return getPeriodLeader(candidates, records, settings, getPreviousWeekRange(date));
+  }, [students, selectedGroup, records, settings, date, monthlyWinner]);
 
   const isLessonDay = useMemo(() => {
     const groupObj = groups?.find(g => g.name === selectedGroup);
@@ -1177,13 +1180,13 @@ function DashboardPage({ groups, students, records, settings, selectedGroup, cur
   }));
   const totalCoins = ranked.reduce((sum, student) => sum + student.coins, 0);
   const averageScore = ranked.length ? Math.round(ranked.reduce((sum, student) => sum + student.finalScore, 0) / ranked.length) : 0;
-  const previousWeekLeader = useMemo(
-    () => getPeriodLeader(groupStudents, records, settings, getPreviousWeekRange(date)),
-    [groupStudents, records, settings, date]
-  );
   const previousMonthLeader = useMemo(
     () => getPeriodLeader(groupStudents, records, settings, getPreviousMonthRange(date)),
     [groupStudents, records, settings, date]
+  );
+  const previousWeekLeader = useMemo(
+    () => getPeriodLeader(groupStudents.filter(s => s.id !== previousMonthLeader?.id), records, settings, getPreviousWeekRange(date)),
+    [groupStudents, records, settings, date, previousMonthLeader]
   );
 
   return (
@@ -1269,8 +1272,11 @@ function DashboardPage({ groups, students, records, settings, selectedGroup, cur
 function GroupsPage({ groups, students, records, settings, date, query, addGroup, updateGroup, deleteGroup, addStudent, updateStudent, saveLessonRecords, deleteStudent, selectedGroup, setDate }) {
   const [activeGroup, setActiveGroup] = useState(groups[0]?.name || "");
   const activeGroupStudents = useMemo(() => students.filter(s => s.group === activeGroup), [students, activeGroup]);
-  const weeklyWinner = useMemo(() => getPeriodLeader(activeGroupStudents, records, settings, getPreviousWeekRange(date)), [activeGroupStudents, records, settings, date]);
   const monthlyWinner = useMemo(() => getPeriodLeader(activeGroupStudents, records, settings, getPreviousMonthRange(date)), [activeGroupStudents, records, settings, date]);
+  const weeklyWinner = useMemo(() => {
+    const candidates = activeGroupStudents.filter(s => s.id !== monthlyWinner?.id);
+    return getPeriodLeader(candidates, records, settings, getPreviousWeekRange(date));
+  }, [activeGroupStudents, records, settings, date, monthlyWinner]);
   const [modal, setModal] = useState("");
   const [editingStudent, setEditingStudent] = useState(null);
   const [expandedDate, setExpandedDate] = useState(null);
