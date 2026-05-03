@@ -13,6 +13,7 @@ import {
   Download,
   LayoutDashboard,
   Loader2,
+  Info,
   Medal,
   Plus,
   Search,
@@ -657,12 +658,12 @@ function BonusDrumModal({ onReward, onClose }) {
     200: { bg: "#e9d5ff", border: "#9333ea", text: "#581c87" }
   };
 
-  function getWeightedDrumItem(exclude = null) {
-    const weights = { 1: 60, 10: 30, 50: 15, 100: 5, 150: 2, 200: 1 };
-    let available = pool;
-    if (exclude !== null) {
-      available = pool.filter(v => v !== exclude);
-    }
+  function getWeightedDrumItem(excludeArray = []) {
+    const weights = { 1: 40, 10: 25, 50: 15, 100: 10, 150: 6, 200: 4 };
+    let available = pool.filter(v => !excludeArray.includes(v));
+    
+    if (available.length === 0) available = pool;
+
     const totalWeight = available.reduce((sum, v) => sum + weights[v], 0);
     let r = Math.random() * totalWeight;
     for (const v of available) {
@@ -673,12 +674,12 @@ function BonusDrumModal({ onReward, onClose }) {
   }
 
   useEffect(() => {
-    let last = null;
-    const initialTrack = Array.from({ length: 15 }, () => {
-      const item = getWeightedDrumItem(last);
-      last = item;
-      return item;
-    });
+    let bag = [];
+    function getFromBag() {
+      if (bag.length === 0) bag = [...pool].sort(() => Math.random() - 0.5);
+      return bag.shift();
+    }
+    const initialTrack = Array.from({ length: 15 }, () => getFromBag());
     setTrackItems(initialTrack);
   }, []);
 
@@ -687,22 +688,35 @@ function BonusDrumModal({ onReward, onClose }) {
     const winItem = getWeightedDrumItem();
     
     let generatedTrack = [];
-    let prev = null;
-    for(let i = 0; i < 100; i++) {
+    let bag = [];
+    
+    function getFromBag(recentItems = []) {
+      if (bag.length === 0) {
+        bag = [...pool].sort(() => Math.random() - 0.5);
+      }
+      
+      const index = bag.findIndex(item => !recentItems.includes(item));
+      if (index !== -1) {
+        const item = bag[index];
+        bag.splice(index, 1);
+        return item;
+      }
+      return bag.shift();
+    }
+
+    let recent = [];
+    for (let i = 0; i < 100; i++) {
        if (i === 85) {
           generatedTrack.push(winItem);
-          prev = winItem;
-       } else if (i === 84) {
-          let item = getWeightedDrumItem(prev);
-          while (item === winItem) item = getWeightedDrumItem(prev);
-          generatedTrack.push(item);
-          prev = item;
+          recent = [winItem, ...recent].slice(0, 2);
+          bag = bag.filter(x => x !== winItem);
        } else {
-          let item = getWeightedDrumItem(prev);
+          let item = getFromBag(recent);
           generatedTrack.push(item);
-          prev = item;
+          recent = [item, ...recent].slice(0, 2);
        }
     }
+    
     setTrackItems(generatedTrack);
 
     setTimeout(() => {
@@ -725,9 +739,52 @@ function BonusDrumModal({ onReward, onClose }) {
   }
 
   return (
-    <div style={{ textAlign: "center", padding: "20px 0", overflow: "hidden", position: "relative", fontFamily: "'Outfit', sans-serif" }}>
+    <div style={{ textAlign: "center", padding: "20px 0", position: "relative", fontFamily: "'Outfit', sans-serif" }}>
       <div style={{ fontSize: "48px", marginBottom: "8px", textShadow: "0 4px 0px rgba(0,0,0,0.2)" }}>🎁</div>
-      <h3 style={{ marginBottom: "24px", fontSize: "28px", fontWeight: "900", color: "#1e293b", textTransform: "uppercase", letterSpacing: "1px" }}>Omad Barabani!</h3>
+      
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "12px", marginBottom: "24px" }}>
+        <h3 style={{ fontSize: "28px", fontWeight: "900", color: "#1e293b", textTransform: "uppercase", letterSpacing: "1px", margin: 0 }}>Omad Barabani!</h3>
+        
+        <div 
+          style={{ position: "relative", display: "inline-flex" }}
+          onMouseEnter={(e) => e.currentTarget.lastChild.style.opacity = "1"}
+          onMouseLeave={(e) => e.currentTarget.lastChild.style.opacity = "0"}
+        >
+          <Info size={24} color="#64748b" style={{ cursor: "help", transition: "color 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.color = "#3b82f6"} onMouseLeave={(e) => e.currentTarget.style.color = "#64748b"} />
+          
+          <div style={{
+            position: "absolute",
+            top: "100%",
+            left: "50%",
+            transform: "translateX(-50%)",
+            marginTop: "12px",
+            background: "#1e293b",
+            color: "white",
+            padding: "16px",
+            borderRadius: "12px",
+            width: "max-content",
+            boxShadow: "0 10px 25px rgba(0,0,0,0.3)",
+            opacity: 0,
+            pointerEvents: "none",
+            transition: "opacity 0.2s ease-in-out",
+            zIndex: 50,
+            textAlign: "left",
+            fontSize: "14px",
+            lineHeight: "1.6"
+          }}>
+            <div style={{ position: "absolute", top: "-6px", left: "50%", transform: "translateX(-50%)", width: 0, height: 0, borderLeft: "6px solid transparent", borderRight: "6px solid transparent", borderBottom: "6px solid #1e293b" }} />
+            <strong style={{ display: "block", marginBottom: "8px", color: "#fbbf24" }}>Tushish ehtimolligi:</strong>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 16px" }}>
+              <span>🪙 1 coin: 40%</span>
+              <span>🪙 10 coin: 25%</span>
+              <span>🪙 50 coin: 15%</span>
+              <span>🪙 100 coin: 10%</span>
+              <span>🪙 150 coin: 6%</span>
+              <span>🪙 200 coin: 4%</span>
+            </div>
+          </div>
+        </div>
+      </div>
       
       <div style={{ 
         position: "relative", 
