@@ -1220,9 +1220,10 @@ function StudentCard({ student, onDelete, onEdit, index, date, records, settings
 
   function useGift(giftId, e) {
     if (e) e.stopPropagation();
-    const nextGifts = gifts.map(g => {
+    const currentGifts = student.gifts || [];
+    const nextGifts = currentGifts.map(g => {
       const currentCount = Number(g.count || 0);
-      if (g.id === giftId) return { ...g, count: currentCount - 1 };
+      if (g.id === giftId) return { ...g, count: Math.max(0, currentCount - 1) };
       return g;
     }).filter(g => g.count > 0);
     onUpdateStudent?.(student.id, { gifts: nextGifts });
@@ -2009,9 +2010,11 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
                                 setModal("gift-coin");
                                 return;
                               }
-                              const nextGifts = s.gifts.map(item => {
+                              
+                              const currentGifts = s.gifts || [];
+                              const nextGifts = currentGifts.map(item => {
                                 const currentCount = Number(item.count || 0);
-                                if (item.id === g.id) return { ...item, count: currentCount - 1 };
+                                if (item.id === g.id) return { ...item, count: Math.max(0, currentCount - 1) };
                                 return item;
                               }).filter(item => item.count > 0);
                               updateStudent(s.id, { gifts: nextGifts });
@@ -2028,7 +2031,7 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
                             if (remaining <= 0) return null;
 
                             return (
-                              <button key={`vip-${idx}`} type="button" className="gift-tag" style={{ "--gift-color": "var(--rose)", cursor: (vp.id === "mystery_box" || vp.id === "gift_coin") ? "pointer" : "default" }} onClick={(e) => {
+                              <button key={`vip-${idx}`} type="button" className="gift-tag" style={{ "--gift-color": "var(--rose)", cursor: "pointer" }} title="Ishlatish uchun bosing" onClick={(e) => {
                                 e.stopPropagation();
                                 if (vp.id === "mystery_box") {
                                   setActiveMystery({ studentId: s.id, type: vp.source, mysteryType: `${tier}_${vp.source}`, vipPerk: vp });
@@ -2036,6 +2039,11 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
                                 } else if (vp.id === "gift_coin") {
                                   setActiveGiftCoin({ studentId: s.id, type: vp.source, vipPerk: vp });
                                   setModal("gift-coin");
+                                } else {
+                                  const perkKey = `${vp.source}_${vp.id}`;
+                                  const usedVipPerks = { ...(s.usedVipPerks || {}) };
+                                  usedVipPerks[perkKey] = (usedVipPerks[perkKey] || 0) + 1;
+                                  updateStudent(s.id, { usedVipPerks });
                                 }
                               }}>
                                 <Star size={12} />
@@ -2142,13 +2150,13 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
 
               if (mystery.type === "shop") {
                 nextGifts = nextGifts.map(item => {
-                  if (item.id === mystery.giftItem.id) return { ...item, count: Number(item.count || 0) - 1 };
+                  if (item.id === mystery.giftItem.id) return { ...item, count: Math.max(0, Number(item.count || 0) - 1) };
                   return item;
                 }).filter(item => item.count > 0);
                 updateStudent(student.id, { gifts: nextGifts });
               } else {
                 const perkKey = `${mystery.vipPerk.source}_${mystery.vipPerk.id}`;
-                const usedVipPerks = student.usedVipPerks || {};
+                const usedVipPerks = { ...(student.usedVipPerks || {}) };
                 usedVipPerks[perkKey] = (usedVipPerks[perkKey] || 0) + 1;
                 updateStudent(student.id, { gifts: nextGifts, usedVipPerks });
               }
@@ -2182,13 +2190,13 @@ function GroupsPage({ groups, students, records, settings, date, query, addGroup
               if (givingStudent) {
                 if (giftData.type === "shop") {
                   const newGifts = givingStudent.gifts.map(item => {
-                    if (item.id === "gift_coin") return { ...item, count: (item.count || 0) - 1 };
+                    if (item.id === "gift_coin") return { ...item, count: Math.max(0, (item.count || 0) - 1) };
                     return item;
                   }).filter(item => item.count > 0);
                   updateStudent(givingStudent.id, { gifts: newGifts });
                 } else {
                   const perkKey = `${giftData.type}_${giftData.vipPerk.id}`;
-                  const usedVipPerks = givingStudent.usedVipPerks || {};
+                  const usedVipPerks = { ...(givingStudent.usedVipPerks || {}) };
                   usedVipPerks[perkKey] = (usedVipPerks[perkKey] || 0) + 1;
                   updateStudent(givingStudent.id, { usedVipPerks });
                 }
