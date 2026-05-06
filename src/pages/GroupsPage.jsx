@@ -253,7 +253,7 @@ export function GroupsPage({ groups, students, records, settings, date, query, a
                           <div>
                             <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
                               <strong style={{ margin: 0 }}>{student.name}</strong>
-                              {(() => { const lv = getLevel(student.coins || 0); return <span style={{ fontSize: "10px", fontWeight: 600, padding: "1px 6px", borderRadius: "999px", background: lv.bg, color: lv.color, border: `1px solid ${lv.color}40` }}>{lv.emoji} {lv.name}</span>; })()}
+                              {(() => { const lv = getLevel(student.monthlyCoins || 0); return <span style={{ fontSize: "10px", fontWeight: 600, padding: "1px 6px", borderRadius: "999px", background: lv.bg, color: lv.color, border: `1px solid ${lv.color}40` }}>{lv.emoji} {lv.name}</span>; })()}
                               {student.id === weeklyWinner?.id && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px", background: "linear-gradient(135deg, #60a5fa, #2563eb)", color: "white" }}>Hafta G'olibi</span>}
                               {student.id === monthlyWinner?.id && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px", background: "linear-gradient(135deg, #f472b6, #db2777)", color: "white" }}>Oy G'olibi</span>}
                               {student.gifts?.some(g => g.type === "vip") && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px" }}>VIP</span>}

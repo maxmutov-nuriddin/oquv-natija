@@ -38,11 +38,12 @@ export function StudentCard({ student, onDelete, onEdit, index, date, records, s
 
   const isVip = gifts.some(g => g.type === "vip" && g.count > 0) || (isWeeklyWinner && isStartOfWeek) || (isMonthlyWinner && isStartOfMonth);
 
-  const level = getLevel(student.coins || 0);
+  const monthlyCoins = student.monthlyCoins || 0;
+  const level = getLevel(monthlyCoins);
   const levelIndex = LEVELS.indexOf(level);
   const nextLevel = LEVELS[levelIndex + 1] || null;
   const levelProgress = nextLevel
-    ? Math.round(((student.coins - level.min) / (nextLevel.min - level.min)) * 100)
+    ? Math.round(((monthlyCoins - level.min) / (nextLevel.min - level.min)) * 100)
     : 100;
 
   function useGift(giftId, e) {
@@ -131,9 +132,9 @@ export function StudentCard({ student, onDelete, onEdit, index, date, records, s
 
       <div style={{ marginTop: "10px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "#64748b", marginBottom: "4px" }}>
-          <span style={{ fontWeight: 600, color: level.color }}>{level.emoji} {level.name} · {student.coins || 0} coin</span>
+          <span style={{ fontWeight: 600, color: level.color }}>{level.emoji} {level.name} · {monthlyCoins} coin (bu oy)</span>
           {nextLevel
-            ? <span>{nextLevel.min - (student.coins || 0)} coin → {nextLevel.emoji} {nextLevel.name}</span>
+            ? <span>{nextLevel.min - monthlyCoins} coin → {nextLevel.emoji} {nextLevel.name}</span>
             : <span style={{ color: level.color, fontWeight: 600 }}>MAX DARAJA 🏆</span>
           }
         </div>
