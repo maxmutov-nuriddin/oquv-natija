@@ -1,4 +1,11 @@
-import { allPrivileges } from "../constants";
+import { allPrivileges, LEVELS } from "../constants";
+
+export function getLevel(coins) {
+  for (let i = LEVELS.length - 1; i >= 0; i--) {
+    if (coins >= LEVELS[i].min) return LEVELS[i];
+  }
+  return LEVELS[0];
+}
 
 export function cx(...classes) {
   return classes.filter(Boolean).join(" ");

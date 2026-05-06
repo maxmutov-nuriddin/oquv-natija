@@ -4,7 +4,7 @@ import { Award, CalendarDays, Plus, Settings, Star, Trash2, Trophy, UserPlus, Us
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { availableGifts, vipData, weekDays, allPrivileges } from "../constants";
 import { getPeriodLeader, getPreviousMonthRange, getPreviousWeekRange, rankStudents } from "../lib/scoring";
-import { cx, initials, medalLabel, rankText } from "../lib/utils";
+import { cx, getLevel, initials, medalLabel, rankText } from "../lib/utils";
 import { GiftCoinModal } from "../components/forms/GiftCoinModal";
 import { GroupForm } from "../components/forms/GroupForm";
 import { BuyGiftModal } from "../components/forms/BuyGiftModal";
@@ -251,8 +251,9 @@ export function GroupsPage({ groups, students, records, settings, date, query, a
                             )}
                           </div>
                           <div>
-                            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
                               <strong style={{ margin: 0 }}>{student.name}</strong>
+                              {(() => { const lv = getLevel(student.coins || 0); return <span style={{ fontSize: "10px", fontWeight: 600, padding: "1px 6px", borderRadius: "999px", background: lv.bg, color: lv.color, border: `1px solid ${lv.color}40` }}>{lv.emoji} {lv.name}</span>; })()}
                               {student.id === weeklyWinner?.id && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px", background: "linear-gradient(135deg, #60a5fa, #2563eb)", color: "white" }}>Hafta G'olibi</span>}
                               {student.id === monthlyWinner?.id && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px", background: "linear-gradient(135deg, #f472b6, #db2777)", color: "white" }}>Oy G'olibi</span>}
                               {student.gifts?.some(g => g.type === "vip") && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px" }}>VIP</span>}

@@ -121,6 +121,13 @@ export const lessonStartOptions = Array.from({ length: 20 }, (_, index) => {
   return `${hour}:${minute}`;
 });
 
+export const LEVELS = [
+  { name: "Yangi",   emoji: "🌱", min: 0,    max: 499,      color: "#64748b", bg: "#f1f5f9" },
+  { name: "O'rta",   emoji: "⚡", min: 500,  max: 1999,     color: "#2563eb", bg: "#dbeafe" },
+  { name: "Ustoz",   emoji: "🔥", min: 2000, max: 4999,     color: "#d97706", bg: "#fef9c3" },
+  { name: "Legend",  emoji: "👑", min: 5000, max: Infinity,  color: "#7c3aed", bg: "#ede9fe" },
+];
+
 export const allPrivileges = [
   ...privilegesData.senior,
   ...privilegesData.junior,

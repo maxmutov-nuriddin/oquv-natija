@@ -1,7 +1,8 @@
 import dayjs from "dayjs";
 import { Coins, Settings, Star, Trash2, Trophy } from "lucide-react";
 import { availableGifts, scoreFields } from "../../constants";
-import { cx, initials, numberInputValue, parsePercentInput, rankText } from "../../lib/utils";
+import { LEVELS } from "../../constants";
+import { cx, getLevel, initials, numberInputValue, parsePercentInput, rankText } from "../../lib/utils";
 import { ProgressLine } from "../ui/ProgressLine";
 
 export function StudentCard({ student, onDelete, onEdit, index, date, records, settings, saveLessonRecords, isLessonDay = true, onWarningReset, onUpdateStudent, weeklyWinner, monthlyWinner, hideGifts = false }) {
@@ -37,6 +38,13 @@ export function StudentCard({ student, onDelete, onEdit, index, date, records, s
 
   const isVip = gifts.some(g => g.type === "vip" && g.count > 0) || (isWeeklyWinner && isStartOfWeek) || (isMonthlyWinner && isStartOfMonth);
 
+  const level = getLevel(student.coins || 0);
+  const levelIndex = LEVELS.indexOf(level);
+  const nextLevel = LEVELS[levelIndex + 1] || null;
+  const levelProgress = nextLevel
+    ? Math.round(((student.coins - level.min) / (nextLevel.min - level.min)) * 100)
+    : 100;
+
   function useGift(giftId, e) {
     if (e) e.stopPropagation();
     if (isPenalized) return;
@@ -60,6 +68,9 @@ export function StudentCard({ student, onDelete, onEdit, index, date, records, s
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
               <h3 style={{ margin: 0 }}>{student.name}</h3>
+              <span style={{ fontSize: "11px", fontWeight: 600, padding: "2px 6px", borderRadius: "999px", background: level.bg, color: level.color, border: `1px solid ${level.color}30`, flexShrink: 0 }}>
+                {level.emoji} {level.name}
+              </span>
               {isWeeklyWinner && isStartOfWeek && <span className="vip-text-badge" style={{ background: "linear-gradient(135deg, #60a5fa, #2563eb)", color: "white" }}>Hafta G'olibi</span>}
               {isMonthlyWinner && isStartOfMonth && <span className="vip-text-badge" style={{ background: "linear-gradient(135deg, #f472b6, #db2777)", color: "white" }}>Oy G'olibi</span>}
               {gifts.filter(g => g.type === "vip").map((g, i) => (
@@ -116,6 +127,19 @@ export function StudentCard({ student, onDelete, onEdit, index, date, records, s
       <div className="rank-chips">
         <span>Hafta: {isStartOfWeek ? rankText(student.weeklyRank) : "Kutilmoqda"}</span>
         <span>Oy: {isStartOfMonth ? rankText(student.monthlyRank) : "Kutilmoqda"}</span>
+      </div>
+
+      <div style={{ marginTop: "10px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "#64748b", marginBottom: "4px" }}>
+          <span style={{ fontWeight: 600, color: level.color }}>{level.emoji} {level.name} · {student.coins || 0} coin</span>
+          {nextLevel
+            ? <span>{nextLevel.min - (student.coins || 0)} coin → {nextLevel.emoji} {nextLevel.name}</span>
+            : <span style={{ color: level.color, fontWeight: 600 }}>MAX DARAJA 🏆</span>
+          }
+        </div>
+        <div style={{ height: "5px", background: "#e2e8f0", borderRadius: "99px", overflow: "hidden" }}>
+          <div style={{ height: "100%", width: `${levelProgress}%`, background: level.color, borderRadius: "99px", transition: "width 0.4s ease" }} />
+        </div>
       </div>
 
       <div className="quick-edit">
