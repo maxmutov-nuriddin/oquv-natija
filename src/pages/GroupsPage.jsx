@@ -295,6 +295,9 @@ export function GroupsPage({ groups, students, records, settings, date, query, a
                     if (s.id === weeklyWinner?.id) {
                       vipPerks.push(...vipData[tier].weekly.map(p => ({ ...p, source: "weekly" })));
                     }
+                    const sIgnoredDates = s.ignoredZeroDates || [];
+                    const sZeroCount = records.filter(r => r.studentId === s.id && r.homework === 0 && !sIgnoredDates.includes(r.date)).length;
+                    const sIsPenalized = sZeroCount >= 2;
 
                     return (
                       <div key={s.id} className="summary-gift-row">
@@ -310,8 +313,9 @@ export function GroupsPage({ groups, students, records, settings, date, query, a
                             const giftMeta = availableGifts.find(ag => ag.id === g.id) || { icon: Award, color: g.type === "vip" ? "var(--rose)" : "var(--blue)" };
                             const GiftIcon = giftMeta.icon;
                             return (
-                              <button key={idx} type="button" className="gift-tag" style={{ "--gift-color": giftMeta.color }} title={g.id === "mystery_box" ? "Ochish uchun bosing" : "Ishlatish uchun bosing"} onClick={(e) => {
+                              <button key={idx} type="button" className="gift-tag" style={{ "--gift-color": giftMeta.color, opacity: sIsPenalized ? 0.45 : 1, cursor: sIsPenalized ? "not-allowed" : "pointer" }} title={sIsPenalized ? "Privelegiyalar bloklangan" : g.id === "mystery_box" ? "Ochish uchun bosing" : "Ishlatish uchun bosing"} disabled={sIsPenalized} onClick={(e) => {
                                 e.stopPropagation();
+                                if (sIsPenalized) return;
                                 if (g.id === "mystery_box" || g.id === "mistiriy_box") {
                                   setActiveMystery({ studentId: s.id, type: "shop", mysteryType: `shop_${tier}`, giftItem: g });
                                   setModal("mystery-box");
@@ -341,8 +345,9 @@ export function GroupsPage({ groups, students, records, settings, date, query, a
                             const remaining = maxUses - usedCount;
                             if (remaining <= 0) return null;
                             return (
-                              <button key={`vip-${idx}`} type="button" className="gift-tag" style={{ "--gift-color": "var(--rose)", cursor: "pointer" }} title="Ishlatish uchun bosing" onClick={(e) => {
+                              <button key={`vip-${idx}`} type="button" className="gift-tag" style={{ "--gift-color": "var(--rose)", cursor: sIsPenalized ? "not-allowed" : "pointer", opacity: sIsPenalized ? 0.45 : 1 }} title={sIsPenalized ? "Privelegiyalar bloklangan" : "Ishlatish uchun bosing"} disabled={sIsPenalized} onClick={(e) => {
                                 e.stopPropagation();
+                                if (sIsPenalized) return;
                                 if (vp.id === "mystery_box") {
                                   setActiveMystery({ studentId: s.id, type: vp.source, mysteryType: `${tier}_${vp.source}`, vipPerk: vp });
                                   setModal("mystery-box");

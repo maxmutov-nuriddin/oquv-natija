@@ -83,7 +83,8 @@ export function summarizeStudent(student, records, settings, date = dayjs()) {
   const studentRecords = records.filter((record) => record.studentId === student.id);
   const weeklyRecords = getWindowRecords(studentRecords, 7, date);
   const monthlyRecords = getWindowRecords(studentRecords, 30, date);
-  const coins = studentRecords.reduce((sum, record) => sum + (Number(record.coinsEarned) || calculateCoins(record, settings)), 0);
+  const rawCoins = studentRecords.reduce((sum, record) => sum + (Number(record.coinsEarned) || calculateCoins(record, settings)), 0);
+  const coins = Math.max(0, rawCoins - (student.homeworkFines || 0));
   const weeklyCoins = weeklyRecords.reduce((sum, record) => sum + (Number(record.coinsEarned) || calculateCoins(record, settings)), 0);
   const monthlyCoins = monthlyRecords.reduce((sum, record) => sum + (Number(record.coinsEarned) || calculateCoins(record, settings)), 0);
   return {

@@ -26,7 +26,8 @@ export function StudentCard({ student, onDelete, onEdit, index, date, records, s
 
   const ignoredZeroDates = student.ignoredZeroDates || [];
   const zeroRecords = records?.filter((r) => r.studentId === student.id && r.homework === 0 && !ignoredZeroDates.includes(r.date)) || [];
-  const needsWarning = zeroRecords.length >= 3;
+  const zeroCount = zeroRecords.length;
+  const isPenalized = zeroCount >= 2;
 
   const gifts = student.gifts || [];
   const isStartOfWeek = dayjs(date).day() === 1;
@@ -38,6 +39,7 @@ export function StudentCard({ student, onDelete, onEdit, index, date, records, s
 
   function useGift(giftId, e) {
     if (e) e.stopPropagation();
+    if (isPenalized) return;
     const currentGifts = student.gifts || [];
     const nextGifts = currentGifts.map(g => {
       const currentCount = Number(g.count || 0);
@@ -79,7 +81,15 @@ export function StudentCard({ student, onDelete, onEdit, index, date, records, s
             const giftMeta = availableGifts.find(ag => ag.id === g.id) || { icon: Trophy, color: "var(--muted)" };
             const GiftIcon = giftMeta.icon;
             return (
-              <button key={g.id} type="button" className="gift-tag" style={{ "--gift-color": giftMeta.color }} onClick={(e) => useGift(g.id, e)} title="Ishlatish uchun bosing">
+              <button
+                key={g.id}
+                type="button"
+                className="gift-tag"
+                style={{ "--gift-color": giftMeta.color, opacity: isPenalized ? 0.45 : 1, cursor: isPenalized ? "not-allowed" : "pointer" }}
+                onClick={(e) => useGift(g.id, e)}
+                title={isPenalized ? "Privelegiyalar bloklangan" : "Ishlatish uchun bosing"}
+                disabled={isPenalized}
+              >
                 <GiftIcon size={12} />
                 <span>{g.name} x{g.count}</span>
               </button>
@@ -142,17 +152,38 @@ export function StudentCard({ student, onDelete, onEdit, index, date, records, s
         </button>
       </div>
 
-      {needsWarning && (
+      {zeroCount === 2 && (
+        <div style={{ background: "#fef9c3", color: "#92400e", padding: "10px", borderRadius: "8px", marginTop: "12px", fontSize: "13px", display: "flex", flexDirection: "column", gap: "8px", border: "1px solid #fde68a" }}>
+          <strong style={{ display: "flex", alignItems: "center", gap: "6px" }}>⚠️ 2 marta uy vazifasi yo'q!</strong>
+          <span>Barcha privelegiyalar bloklangan. Aktivlashtirish uchun 500 coin shtraf to'lang.</span>
+          <button
+            type="button"
+            className="primary-button"
+            style={{ width: "100%", padding: "8px", justifyContent: "center", marginTop: "4px", background: "#d97706", borderColor: "#d97706" }}
+            onClick={() => {
+              const newDates = [...ignoredZeroDates, ...zeroRecords.map(r => r.date)];
+              onUpdateStudent?.(student.id, { homeworkFines: (student.homeworkFines || 0) + 500, ignoredZeroDates: newDates });
+            }}
+          >
+            To'lash (500 coin)
+          </button>
+        </div>
+      )}
+
+      {zeroCount >= 3 && (
         <div style={{ background: "#fee2e2", color: "#b91c1c", padding: "10px", borderRadius: "8px", marginTop: "12px", fontSize: "13px", display: "flex", flexDirection: "column", gap: "8px", border: "1px solid #fca5a5" }}>
-          <strong style={{ display: "flex", alignItems: "center", gap: "6px" }}>⚠️ 3 marta uy vazifasi yo'q!</strong>
-          <span>Uydilariga aloqaga chiqish lozim.</span>
+          <strong style={{ display: "flex", alignItems: "center", gap: "6px" }}>🚨 3 marta uy vazifasi yo'q!</strong>
+          <span>Privelegiyalar bloklangan. Coin bilan aktivlashtirish mumkin emas — ota-onasiga aloqaga chiqing.</span>
           <button
             type="button"
             className="danger-button"
             style={{ width: "100%", padding: "8px", justifyContent: "center", marginTop: "4px" }}
-            onClick={() => onWarningReset?.(student.id, [...ignoredZeroDates, ...zeroRecords.map(r => r.date)])}
+            onClick={() => {
+              const newDates = [...ignoredZeroDates, ...zeroRecords.map(r => r.date)];
+              onUpdateStudent?.(student.id, { ignoredZeroDates: newDates });
+            }}
           >
-            Ogohlantirildi
+            Aloqaga chiqildi
           </button>
         </div>
       )}
