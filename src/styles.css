@@ -544,6 +544,16 @@ button {
 .phone-field input, .auth-form input[type="password"], .auth-form input[type="text"] { border: none; padding: 16px 20px; font-weight: 900; font-size: 18px; outline: none; background: transparent; width: 100%; }
 .auth-form input:focus, .phone-field:focus-within { border-color: var(--blue); border-bottom-color: var(--blue-dark); background: white; }
 
+/* App startup loading (clearly different from login page) */
+.app-loading-screen {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  background: var(--sidebar);
+}
+.app-loading-screen .loading-content h3 { color: #ffffff; }
+.app-loading-screen .loading-box { background: #ffffff; }
+
 /* Loading */
 .loading-container {
   display: flex;

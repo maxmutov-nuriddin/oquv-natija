@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAnalytics, isSupported } from "firebase/analytics";
-import { getAuth } from "firebase/auth";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -21,6 +21,15 @@ export const auth = app ? getAuth(app) : null;
 export const analyticsPromise = app ? isSupported().then((supported) => (supported ? getAnalytics(app) : null)) : Promise.resolve(null);
 
 export async function ensureAdminSession() {
-  if (!auth || auth.currentUser) return auth?.currentUser ?? null;
-  throw new Error("Login qilinmagan. Avval tizimga kiring.");
+  if (!auth) return null;
+  if (auth.currentUser) return auth.currentUser;
+
+  // Auth state hali tiklanmagan bo'lishi mumkin — tayyor bo'lgunicha kutamiz
+  return new Promise((resolve, reject) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      unsubscribe();
+      if (user) resolve(user);
+      else reject(new Error("Login qilinmagan. Avval tizimga kiring."));
+    });
+  });
 }
