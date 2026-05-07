@@ -90,6 +90,20 @@ export function getScoreSummary(studentId, records, days, date = dayjs()) {
   return { avgHw, avgAtt, avgAct, count };
 }
 
+export function isDeclineTrend(studentId, records, settings) {
+  const hw  = Number(settings?.homeworkWeight  || 0.4);
+  const att = Number(settings?.attendanceWeight || 0.3);
+  const act = Number(settings?.activityWeight   || 0.3);
+  const attended = records
+    .filter(r => r.studentId === studentId && (r.homework > 0 || r.attendance > 0 || r.activity > 0))
+    .sort((a, b) => (a.date > b.date ? 1 : -1));
+  if (attended.length < 3) return false;
+  const [s1, s2, s3] = attended.slice(-3).map(r =>
+    (r.homework || 0) * hw + (r.attendance || 0) * att + (r.activity || 0) * act
+  );
+  return s2 < s1 && s3 < s2;
+}
+
 export function summarizeStudent(student, records, settings, date = dayjs()) {
   const studentRecords = records.filter((record) => record.studentId === student.id);
   const weeklyRecords = getWindowRecords(studentRecords, 7, date);

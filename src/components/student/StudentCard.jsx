@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import { Coins, Settings, Star, Trash2, Trophy, User } from "lucide-react";
 import { availableGifts, scoreFields } from "../../constants";
 import { LEVELS } from "../../constants";
-import { getScoreSummary } from "../../lib/scoring";
+import { getScoreSummary, isDeclineTrend } from "../../lib/scoring";
 import { cx, getLevel, getPerformanceStatus, initials, numberInputValue, parsePercentInput, rankText } from "../../lib/utils";
 import { ProgressLine } from "../ui/ProgressLine";
 
@@ -39,6 +39,7 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
   const isMonthlyWinner = student.id === monthlyWinner?.id;
 
   const isVip = gifts.some(g => g.type === "vip" && g.count > 0) || (isWeeklyWinner && isStartOfWeek) || (isMonthlyWinner && isStartOfMonth);
+  const declining = isDeclineTrend(student.id, records, settings);
 
   const monthlyCoins = student.monthlyCoins || 0;
   const level = getLevel(monthlyCoins);
@@ -76,6 +77,7 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
               </span>
               {isWeeklyWinner && isStartOfWeek && <span className="vip-text-badge" style={{ background: "linear-gradient(135deg, #60a5fa, #2563eb)", color: "white" }}>Hafta G'olibi</span>}
               {isMonthlyWinner && isStartOfMonth && <span className="vip-text-badge" style={{ background: "linear-gradient(135deg, #f472b6, #db2777)", color: "white" }}>Oy G'olibi</span>}
+              {declining && <span className="vip-text-badge" style={{ background: "#fef9c3", color: "#92400e", border: "1px solid #fde68a" }}>⚠️ e'tibor</span>}
               {gifts.filter(g => g.type === "vip").map((g, i) => (
                 <span key={i} className="vip-text-badge">{g.name}</span>
               ))}
