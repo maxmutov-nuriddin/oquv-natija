@@ -51,6 +51,7 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
 
   async function handleBonusReward(coins) {
     setShowBonusDrum(false);
+    const isPenalty = coins === "minus_half";
     const updatedStudents = groupStudents.map(student => {
       const existingRecord = todayGroupRecords.find(r => r.studentId === student.id) || {};
       const currentCoins = Number(existingRecord.coinsEarned) || calculateCoins({
@@ -58,13 +59,14 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
         attendance: existingRecord.attendance || 0,
         activity: existingRecord.activity || 0
       }, settings);
+      const bonus = isPenalty ? 0 : coins;
       return {
         ...student,
         homeworkScore: existingRecord.homework || 0,
         attendanceScore: existingRecord.attendance || 0,
         activityScore: existingRecord.activity || 0,
         coinsEarned: currentCoins,
-        dailyBonus: coins
+        dailyBonus: bonus
       };
     });
     await saveLessonRecords({ date, settings, students: updatedStudents });

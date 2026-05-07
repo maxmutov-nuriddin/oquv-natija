@@ -79,6 +79,17 @@ export function getPeriodLeader(students, records, settings, range) {
   return (leader && leader.periodCoins > 0) ? leader : null;
 }
 
+export function getScoreSummary(studentId, records, days, date = dayjs()) {
+  const studentRecords = records.filter((r) => r.studentId === studentId);
+  const periodRecords = getWindowRecords(studentRecords, days, date);
+  if (!periodRecords.length) return null;
+  const count = periodRecords.length;
+  const avgHw  = Math.round(periodRecords.reduce((s, r) => s + Number(r.homework   || 0), 0) / count);
+  const avgAtt = Math.round(periodRecords.reduce((s, r) => s + Number(r.attendance || 0), 0) / count);
+  const avgAct = Math.round(periodRecords.reduce((s, r) => s + Number(r.activity   || 0), 0) / count);
+  return { avgHw, avgAtt, avgAct, count };
+}
+
 export function summarizeStudent(student, records, settings, date = dayjs()) {
   const studentRecords = records.filter((record) => record.studentId === student.id);
   const weeklyRecords = getWindowRecords(studentRecords, 7, date);

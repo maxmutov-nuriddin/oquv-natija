@@ -2,7 +2,8 @@ import dayjs from "dayjs";
 import { Coins, Settings, Star, Trash2, Trophy } from "lucide-react";
 import { availableGifts, scoreFields } from "../../constants";
 import { LEVELS } from "../../constants";
-import { cx, getLevel, initials, numberInputValue, parsePercentInput, rankText } from "../../lib/utils";
+import { getScoreSummary } from "../../lib/scoring";
+import { cx, getLevel, getPerformanceStatus, initials, numberInputValue, parsePercentInput, rankText } from "../../lib/utils";
 import { ProgressLine } from "../ui/ProgressLine";
 
 export function StudentCard({ student, onDelete, onEdit, index, date, records, settings, saveLessonRecords, isLessonDay = true, onWarningReset, onUpdateStudent, weeklyWinner, monthlyWinner, hideGifts = false }) {
@@ -11,6 +12,7 @@ export function StudentCard({ student, onDelete, onEdit, index, date, records, s
   const att = todayRecord ? todayRecord.attendance : 0;
   const act = todayRecord ? todayRecord.activity : 0;
   const todayCoins = todayRecord ? (todayRecord.coinsEarned ?? 0) : 0;
+  const attended = hw > 0 || att > 0 || act > 0;
 
   async function handleQuickUpdate(key, value) {
     const updatedStudent = {
@@ -120,15 +122,17 @@ export function StudentCard({ student, onDelete, onEdit, index, date, records, s
       </div>
 
       <div className="student-progress">
-        <ProgressLine label="Uy vazifa" value={hw} tone="tone-homework" />
-        <ProgressLine label="Yuqori natija" value={att} tone="tone-result" />
-        <ProgressLine label="Aktivlik" value={act} tone="tone-activity" />
+        <ProgressLine label="Uy vazifa" value={hw} tone="tone-homework" showStatus={attended} />
+        <ProgressLine label="Yuqori natija" value={att} tone="tone-result" showStatus={attended} />
+        <ProgressLine label="Aktivlik" value={act} tone="tone-activity" showStatus={attended} />
       </div>
 
       <div className="rank-chips">
         <span>Hafta: {isStartOfWeek ? rankText(student.weeklyRank) : "Kutilmoqda"}</span>
         <span>Oy: {isStartOfMonth ? rankText(student.monthlyRank) : "Kutilmoqda"}</span>
       </div>
+
+      <PeriodSummary studentId={student.id} records={records} date={date} settings={settings} />
 
       <div style={{ marginTop: "10px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "#64748b", marginBottom: "4px" }}>
@@ -213,5 +217,38 @@ export function StudentCard({ student, onDelete, onEdit, index, date, records, s
         </div>
       )}
     </article>
+  );
+}
+
+function periodFinal(data, settings) {
+  const hw  = Number(settings?.homeworkWeight  ?? 0.4);
+  const att = Number(settings?.attendanceWeight ?? 0.3);
+  const act = Number(settings?.activityWeight   ?? 0.3);
+  return Math.round(data.avgHw * hw + data.avgAtt * att + data.avgAct * act);
+}
+
+function PeriodSummary({ studentId, records, date, settings }) {
+  const weekly  = getScoreSummary(studentId, records, 7,  date);
+  const monthly = getScoreSummary(studentId, records, 30, date);
+
+  if (!weekly && !monthly) return null;
+
+  return (
+    <div className="period-summary-row">
+      {weekly  && <PeriodChip title="Haftalik" count={weekly.count}  score={periodFinal(weekly,  settings)} />}
+      {monthly && <PeriodChip title="Oylik"    count={monthly.count} score={periodFinal(monthly, settings)} />}
+    </div>
+  );
+}
+
+function PeriodChip({ title, count, score }) {
+  const st = getPerformanceStatus(score);
+  return (
+    <div className="period-chip" style={{ borderColor: st.border, background: st.bg }}>
+      <span className="period-chip-title">{title}</span>
+      <span className="period-chip-count">{count} dars</span>
+      <span className="period-chip-badge" style={{ color: st.color }}>{st.label}</span>
+      <span className="period-chip-score" style={{ color: st.color }}>{score}%</span>
+    </div>
   );
 }
