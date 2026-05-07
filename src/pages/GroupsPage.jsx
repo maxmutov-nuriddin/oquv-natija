@@ -251,7 +251,7 @@ export function GroupsPage({ groups, students, records, settings, date, query, a
                 icon={Trophy}
                 title={`${activeGroup} ranking`}
                 subtitle="Coin bo'yicha tartiblangan haftalik va oylik natijalar"
-                action={<ExportButton rows={ranked} groupName={activeGroup} />}
+                action={<ExportButton rows={ranked} groupName={activeGroup} records={records} settings={settings} />}
               />
               {!activeGroup && <EmptyState title="Ranking bo'sh" text="Avval guruh va o'quvchi qo'shing." />}
               {activeGroup && !ranked.length && <EmptyState title="Bu guruhda o'quvchi yo'q" text="Chap paneldan o'quvchi qo'shsangiz ranking paydo bo'ladi." />}
