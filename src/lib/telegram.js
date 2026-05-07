@@ -1,10 +1,17 @@
 import dayjs from "dayjs";
 import { calculateCoins } from "./scoring";
 
+const introSentFor = new Set(); // prevents double-send within same session
+
 export async function sendIntroMessage({ group, settings }) {
   const token  = String(settings?.telegramBotToken || "").trim();
   const chatId = String(group?.telegramChatId      || "").trim();
   if (!token || !chatId) return;
+
+  const key = `${chatId}`;
+  if (introSentFor.has(key)) return;
+  introSentFor.add(key);
+  setTimeout(() => introSentFor.delete(key), 10000); // allow re-link after 10s
 
   const name = group.name || "";
   const text =
