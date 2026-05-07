@@ -18,9 +18,34 @@ import { FunModal } from "../components/ui/FunModal";
 import { Modal } from "../components/ui/Modal";
 import { PanelHeader } from "../components/ui/PanelHeader";
 
+function getGroupActivityStatus(score) {
+  if (score >= 80) return { label: "Aktiv",    color: "#16a34a", bg: "#dcfce7", border: "#bbf7d0" };
+  if (score >= 50) return { label: "O'rtacha", color: "#d97706", bg: "#fef9c3", border: "#fde68a" };
+  return             { label: "Sust",      color: "#dc2626", bg: "#fee2e2", border: "#fca5a5" };
+}
+
 export function GroupsPage({ groups, students, records, settings, date, query, addGroup, updateGroup, deleteGroup, addStudent, updateStudent, saveLessonRecords, deleteStudent, selectedGroup, setDate }) {
   const [activeGroup, setActiveGroup] = useState(groups[0]?.name || "");
   const activeGroupStudents = useMemo(() => students.filter(s => s.group === activeGroup), [students, activeGroup]);
+
+  const groupActivityMap = useMemo(() => {
+    const hw  = Number(settings?.homeworkWeight  || 0.4);
+    const att = Number(settings?.attendanceWeight || 0.3);
+    const act = Number(settings?.activityWeight   || 0.3);
+    const cutoff = dayjs(date).subtract(30, "day").format("YYYY-MM-DD");
+    const map = {};
+    groups.forEach(group => {
+      const gs = students.filter(s => s.group === group.name);
+      if (!gs.length) { map[group.name] = null; return; }
+      const ids = new Set(gs.map(s => s.id));
+      const recs = records.filter(r => ids.has(r.studentId) && r.date >= cutoff);
+      if (!recs.length) { map[group.name] = null; return; }
+      map[group.name] = Math.round(
+        recs.reduce((sum, r) => sum + (r.homework || 0) * hw + (r.attendance || 0) * att + (r.activity || 0) * act, 0) / recs.length
+      );
+    });
+    return map;
+  }, [groups, students, records, settings, date]);
   const monthlyWinner = useMemo(() => getPeriodLeader(activeGroupStudents, records, settings, getPreviousMonthRange(date)), [activeGroupStudents, records, settings, date]);
   const weeklyWinner = useMemo(() => {
     const candidates = activeGroupStudents.filter(s => s.id !== monthlyWinner?.id);
@@ -109,12 +134,19 @@ export function GroupsPage({ groups, students, records, settings, date, query, a
           <div className="group-list">
             {groups.map((group) => {
               const count = students.filter((student) => student.group === group.name).length;
+              const avgScore = groupActivityMap[group.name];
+              const actSt = avgScore != null ? getGroupActivityStatus(avgScore) : null;
               return (
                 <button key={group.id} className={cx("group-card", activeGroup === group.name && "group-card-active")} onClick={() => setActiveGroup(group.name)}>
                   <div>
                     <strong>{group.name}</strong>
                     <span>{count} o'quvchi</span>
                     <span>{group.lessonStart && group.lessonEnd ? `${group.lessonStart} - ${group.lessonEnd}` : "Vaqt belgilanmagan"}</span>
+                    {actSt && (
+                      <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 7px", borderRadius: "999px", background: actSt.bg, color: actSt.color, border: `1px solid ${actSt.border}`, display: "inline-block", marginTop: "4px" }}>
+                        {actSt.label} · {avgScore}%
+                      </span>
+                    )}
                   </div>
                   <Users size={18} />
                 </button>
