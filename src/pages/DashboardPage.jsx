@@ -5,6 +5,7 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 import { calculateCoins, getPeriodLeader, getPreviousMonthRange, getPreviousWeekRange, rankStudents } from "../lib/scoring";
 import { BonusDrumModal } from "../components/games/BonusDrumModal";
 import { StudentCard } from "../components/student/StudentCard";
+import { StudentProfileModal } from "../components/student/StudentProfileModal";
 import { TimerPanel } from "../components/ui/TimerPanel";
 import { CurrentLessonBanner } from "../components/ui/CurrentLessonBanner";
 import { EmptyState } from "../components/ui/EmptyState";
@@ -49,6 +50,7 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
   const todayGroupRecords = useMemo(() => records.filter(r => r.date === date && groupStudents.some(s => s.id === r.studentId)), [records, date, groupStudents]);
   const alreadySpun = todayGroupRecords.some(r => r.dailyBonus);
   const [showBonusDrum, setShowBonusDrum] = useState(false);
+  const [profileStudent, setProfileStudent] = useState(null);
 
   async function handleBonusReward(coins) {
     setShowBonusDrum(false);
@@ -156,6 +158,7 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
                 records={records}
                 settings={settings}
                 saveLessonRecords={saveLessonRecords}
+                onProfile={setProfileStudent}
                 isLessonDay={isLessonDay}
                 onWarningReset={(studentId, newIgnoredDates) => updateStudent(studentId, { ignoredZeroDates: newIgnoredDates })}
                 onUpdateStudent={updateStudent}
@@ -172,6 +175,16 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
         <FunModal onClose={() => setShowBonusDrum(false)}>
           <BonusDrumModal onReward={handleBonusReward} onClose={() => setShowBonusDrum(false)} />
         </FunModal>
+      )}
+
+      {profileStudent && (
+        <StudentProfileModal
+          student={profileStudent}
+          records={records}
+          settings={settings}
+          groups={groups}
+          onClose={() => setProfileStudent(null)}
+        />
       )}
     </div>
   );

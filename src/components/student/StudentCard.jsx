@@ -1,12 +1,12 @@
 import dayjs from "dayjs";
-import { Coins, Settings, Star, Trash2, Trophy } from "lucide-react";
+import { Coins, Settings, Star, Trash2, Trophy, User } from "lucide-react";
 import { availableGifts, scoreFields } from "../../constants";
 import { LEVELS } from "../../constants";
 import { getScoreSummary } from "../../lib/scoring";
 import { cx, getLevel, getPerformanceStatus, initials, numberInputValue, parsePercentInput, rankText } from "../../lib/utils";
 import { ProgressLine } from "../ui/ProgressLine";
 
-export function StudentCard({ student, onDelete, onEdit, index, date, records, settings, saveLessonRecords, isLessonDay = true, onWarningReset, onUpdateStudent, weeklyWinner, monthlyWinner, hideGifts = false }) {
+export function StudentCard({ student, onDelete, onEdit, onProfile, index, date, records, settings, saveLessonRecords, isLessonDay = true, onWarningReset, onUpdateStudent, weeklyWinner, monthlyWinner, hideGifts = false }) {
   const todayRecord = records?.find((r) => r.studentId === student.id && r.date === date);
   const hw = todayRecord ? todayRecord.homework : 0;
   const att = todayRecord ? todayRecord.attendance : 0;
@@ -170,15 +170,21 @@ export function StudentCard({ student, onDelete, onEdit, index, date, records, s
           );
         })}
       </div>
-      <div className="student-actions" style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
-        <button className="secondary-button" type="button" onClick={() => onEdit?.(student)} style={{ flex: 1, padding: "8px", fontSize: "13px" }}>
-          <Settings size={15} />
-          Tahrirlash
+      <div className="student-actions" style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "12px" }}>
+        <button className="secondary-button" type="button" onClick={() => onProfile?.(student)} style={{ width: "100%", justifyContent: "center", padding: "9px", fontSize: "13px" }}>
+          <User size={15} />
+          Profil
         </button>
-        <button className="danger-button" type="button" onClick={() => onDelete(student)} style={{ flex: 1, padding: "8px", fontSize: "13px" }}>
-          <Trash2 size={15} />
-          O'chirish
-        </button>
+        <div style={{ display: "flex", gap: "6px" }}>
+          <button className="secondary-button" type="button" onClick={() => onEdit?.(student)} style={{ flex: 1, justifyContent: "center", padding: "8px", fontSize: "13px" }}>
+            <Settings size={15} />
+            Tahrirlash
+          </button>
+          <button className="danger-button" type="button" onClick={() => onDelete(student)} style={{ flex: 1, justifyContent: "center", padding: "8px", fontSize: "13px" }}>
+            <Trash2 size={15} />
+            O'chirish
+          </button>
+        </div>
       </div>
 
       {zeroCount === 2 && (

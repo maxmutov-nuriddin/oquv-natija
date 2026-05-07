@@ -538,6 +538,45 @@ button {
 /* Modals */
 .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: grid; place-items: center; z-index: 100; padding: 24px; }
 .modal-panel { width: 100%; max-width: 500px; background: white; border: 2px solid var(--line); border-bottom: 8px solid var(--line-dark); border-radius: var(--radius); overflow: hidden; }
+.profile-modal-panel { max-width: 760px; }
+.profile-body { padding: 28px 32px; display: flex; flex-direction: column; gap: 28px; max-height: 80vh; overflow-y: auto; }
+
+/* Identity */
+.profile-identity { display: flex; gap: 20px; align-items: flex-start; }
+.profile-avatar { width: 72px; height: 72px; border-radius: 20px; background: var(--blue); color: white; font-size: 24px; font-weight: 900; display: grid; place-items: center; flex-shrink: 0; border: 3px solid var(--blue-dark); }
+.profile-identity-info { flex: 1; }
+.profile-name { margin: 0 0 2px; font-size: 24px; font-weight: 900; }
+.profile-group { margin: 0 0 10px; color: var(--muted); font-size: 14px; font-weight: 600; }
+.profile-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.profile-level-badge { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; }
+.profile-level-bar { height: 6px; background: #e2e8f0; border-radius: 99px; overflow: hidden; }
+.profile-level-bar div { height: 100%; border-radius: 99px; transition: width 0.4s ease; }
+.profile-level-progress { margin-top: 6px; }
+
+/* Stats row */
+.profile-stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+.profile-stat-card { background: #f8fafc; border: 1.5px solid var(--line); border-radius: 12px; padding: 12px 10px; display: flex; flex-direction: column; gap: 3px; align-items: center; text-align: center; }
+.profile-stat-label { font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--muted); }
+.profile-stat-value { font-size: 20px; font-weight: 900; line-height: 1; }
+.profile-stat-unit { font-size: 10px; font-weight: 600; color: var(--muted); }
+.profile-stat-badge { font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 999px; border: 1px solid; text-transform: uppercase; margin-top: 2px; }
+
+/* Sections */
+.profile-section { display: flex; flex-direction: column; gap: 12px; }
+.profile-section-title { margin: 0; font-size: 13px; font-weight: 800; text-transform: uppercase; color: var(--muted); letter-spacing: 0.04em; }
+
+/* Heatmap */
+.profile-heatmap { display: grid; grid-template-columns: repeat(28, 1fr); gap: 3px; }
+.profile-heat-cell { aspect-ratio: 1; border-radius: 3px; min-width: 10px; }
+.profile-heatmap-legend { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--muted); }
+
+/* Recent lessons */
+.profile-recent { display: flex; flex-direction: column; gap: 6px; }
+.profile-recent-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #f8fafc; border: 1.5px solid var(--line); border-radius: 10px; flex-wrap: wrap; }
+.profile-recent-date { font-size: 13px; font-weight: 700; color: var(--text); min-width: 90px; }
+.profile-recent-scores { display: flex; gap: 10px; flex: 1; font-size: 12px; font-weight: 700; color: var(--muted); }
+.profile-recent-badge { font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 999px; border: 1px solid; }
+.profile-recent-coins { font-size: 13px; font-weight: 800; color: var(--gold-dark); margin-left: auto; }
 .modal-header { padding: 24px; border-bottom: 2px solid var(--line); display: flex; justify-content: space-between; align-items: center; background: #f8fafc; }
 .modal-header h3 { font-size: 24px; font-weight: 900; margin: 0; }
 .modal-close { width: 48px; height: 48px; border-radius: 50%; border: 2px solid var(--line); border-bottom: 4px solid var(--line-dark); background: white; color: var(--muted); display: grid; place-items: center; font-weight: 900; cursor: pointer; transition: 0.1s; }
