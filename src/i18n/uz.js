@@ -186,6 +186,7 @@ export const uz = {
   lesson_save: "Dars natijasini saqlash",
   lesson_saving: "Saqlanmoqda...",
   lesson_saved: "Dars natijalari saqlandi.",
+  lesson_auto_saved: "✅ Dars avtomatik saqlandi",
   lesson_error: "Saqlanmadi:",
 
   // Group form
@@ -266,6 +267,29 @@ export const uz = {
   comic_save: "Saqlash",
   comic_panel_title: "Haftalik dars komiksi",
   comic_panel_sub: "Bu hafta bo'lgan qiziqarli sahnalar",
+
+  // Telegram
+  tg_title: "Telegram",
+  tg_sub: "Dars tugagach natijalarni guruh chatga avtomatik yuborish",
+  tg_token_label: "Bot Token",
+  tg_token_ph: "110201543:AAHdqTcvCH1vGWJxfSeofSs4tRepyk1SqIA",
+  tg_token_hint: "1. Telegramda @BotFather → /newbot → token oling\n2. Botni har bir guruh chatiga admin qilib qo'shing",
+  tg_chatid_label: "Guruh Chat ID",
+  tg_chatid_ph: "-1001234567890",
+  tg_chatid_hint: "Guruh chatiga @userinfobot qo'shing — u yozgan ID ni ko'chiring",
+  tg_save_token: "Token saqlash",
+  tg_saved: "✓ Bot token saqlandi",
+  tg_sent: "Telegram'ga yuborildi ✓",
+  tg_fail: "Telegram xato:",
+  tg_fetch_btn: "Bot qo'shilgan guruhlarni ko'rish",
+  tg_fetch_hint: "Avval har bir guruh chatiga istalgan xabar yozing, so'ng tugmani bosing",
+  tg_fetch_loading: "Tekshirilmoqda...",
+  tg_fetch_empty: "Guruh topilmadi. Botni guruhga qo'shib, u yerda biror xabar yozing.",
+  tg_fetch_error: "Token noto'g'ri yoki tarmoq xatosi",
+  tg_copy: "Nusxalash",
+  tg_copied: "✓",
+  tg_chats_title: "Bot a'zo guruhlar",
+  tg_connected: "TG ulangan",
 
   // Week day short labels
   weekday_short: ["Ya", "Du", "Se", "Ch", "Pa", "Ju", "Sh"],

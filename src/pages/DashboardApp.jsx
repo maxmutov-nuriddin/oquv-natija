@@ -89,6 +89,7 @@ export function DashboardApp({ teacher, logout, updateProfile, changePassword })
               records={records}
               settings={settings}
               date={date}
+              currentTime={currentTime}
               query={query}
               addGroup={addGroup}
               updateGroup={updateGroup}

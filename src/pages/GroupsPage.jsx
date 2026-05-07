@@ -4,6 +4,7 @@ import { Award, CalendarDays, Plus, Settings, Star, Trash2, Trophy, UserPlus, Us
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { availableGifts, vipData, weekDays, allPrivileges } from "../constants";
 import { getPeriodLeader, getPreviousMonthRange, getPreviousWeekRange, rankStudents } from "../lib/scoring";
+import { sendIntroMessage } from "../lib/telegram";
 import { useT } from "../i18n/index.jsx";
 import { cx, getLevel, initials, medalLabel } from "../lib/utils";
 import { GiftCoinModal } from "../components/forms/GiftCoinModal";
@@ -25,7 +26,7 @@ function getGroupActivityStatus(score) {
   return             { key: "weak",    color: "#dc2626", bg: "#fee2e2", border: "#fca5a5" };
 }
 
-export function GroupsPage({ groups, students, records, settings, date, query, addGroup, updateGroup, deleteGroup, addStudent, updateStudent, saveLessonRecords, deleteStudent, selectedGroup, setDate }) {
+export function GroupsPage({ groups, students, records, settings, date, currentTime, query, addGroup, updateGroup, deleteGroup, addStudent, updateStudent, saveLessonRecords, deleteStudent, selectedGroup, setDate }) {
   const { t } = useT();
   const [activeGroup, setActiveGroup] = useState(groups[0]?.name || "");
   const activeGroupStudents = useMemo(() => students.filter(s => s.group === activeGroup), [students, activeGroup]);
@@ -144,11 +145,18 @@ export function GroupsPage({ groups, students, records, settings, date, query, a
                     <strong>{group.name}</strong>
                     <span>{t.groups_students(count)}</span>
                     <span>{group.lessonStart && group.lessonEnd ? `${group.lessonStart} - ${group.lessonEnd}` : t.groups_no_time}</span>
-                    {actSt && (
-                      <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 7px", borderRadius: "999px", background: actSt.bg, color: actSt.color, border: `1px solid ${actSt.border}`, display: "inline-block", marginTop: "4px" }}>
-                        {t[`group_${actSt.key}`]} · {avgScore}%
-                      </span>
-                    )}
+                    <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginTop: "4px" }}>
+                      {actSt && (
+                        <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 7px", borderRadius: "999px", background: actSt.bg, color: actSt.color, border: `1px solid ${actSt.border}` }}>
+                          {t[`group_${actSt.key}`]} · {avgScore}%
+                        </span>
+                      )}
+                      {group.telegramChatId && (
+                        <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 7px", borderRadius: "999px", background: "#e0f2fe", color: "#0369a1", border: "1px solid #bae6fd" }}>
+                          ✈️ {t.tg_connected}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <Users size={18} />
                 </button>
@@ -197,6 +205,7 @@ export function GroupsPage({ groups, students, records, settings, date, query, a
               students={activeGroupStudents}
               records={records}
               date={date}
+              currentTime={currentTime}
               settings={settings}
               saveLessonRecords={saveLessonRecords}
             />
@@ -414,7 +423,15 @@ export function GroupsPage({ groups, students, records, settings, date, query, a
 
       {modal === "group" && (
         <Modal title={t.gform_add} onClose={() => setModal("")}>
-          <GroupForm onSubmit={addGroup} onSaved={() => setModal("")} />
+          <GroupForm
+            onSubmit={async (values) => {
+              await addGroup(values);
+              if (values.telegramChatId && settings?.telegramBotToken) {
+                sendIntroMessage({ group: values, settings }).catch(() => {});
+              }
+            }}
+            onSaved={() => setModal("")}
+          />
         </Modal>
       )}
 
@@ -423,8 +440,13 @@ export function GroupsPage({ groups, students, records, settings, date, query, a
           <GroupForm
             initialData={activeGroupObject}
             onSubmit={(values) => {
+              const oldChatId = activeGroupObject.telegramChatId || "";
+              const newChatId = values.telegramChatId || "";
               updateGroup(activeGroupObject.id, values);
               if (values.name) setActiveGroup(values.name);
+              if (newChatId && newChatId !== oldChatId && settings?.telegramBotToken) {
+                sendIntroMessage({ group: { ...activeGroupObject, ...values }, settings }).catch(() => {});
+              }
             }}
             onSaved={() => setModal("")}
           />

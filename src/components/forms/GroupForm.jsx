@@ -11,6 +11,7 @@ export function GroupForm({ initialData, onSubmit, onSaved }) {
   const [name, setName] = useState(initialData?.name || "");
   const [weekdays, setWeekdays] = useState(initialData?.weekdays || []);
   const [lessonStart, setLessonStart] = useState(initialData?.lessonStart || "");
+  const [chatId, setChatId] = useState(initialData?.telegramChatId || "");
   const [timeError, setTimeError] = useState("");
   const [saving, setSaving] = useState(false);
   const lessonEnd = addLessonDuration(lessonStart);
@@ -23,8 +24,8 @@ export function GroupForm({ initialData, onSubmit, onSaved }) {
     setTimeError("");
     setSaving(true);
     try {
-      await onSubmit({ name, weekdays, lessonStart, lessonEnd });
-      if (!initialData) { setName(""); setWeekdays([]); setLessonStart(""); }
+      await onSubmit({ name, weekdays, lessonStart, lessonEnd, telegramChatId: chatId.trim() });
+      if (!initialData) { setName(""); setWeekdays([]); setLessonStart(""); setChatId(""); }
       onSaved?.();
     } catch (error) {
       setTimeError(
@@ -78,6 +79,16 @@ export function GroupForm({ initialData, onSubmit, onSaved }) {
           <input value={lessonEnd || t.gform_auto} readOnly />
         </label>
       </div>
+      <label>
+        <span>{t.tg_chatid_label}</span>
+        <input
+          value={chatId}
+          onChange={(e) => setChatId(e.target.value)}
+          placeholder={t.tg_chatid_ph}
+          style={{ fontFamily: "monospace", fontSize: "13px" }}
+        />
+        <span style={{ fontSize: "11px", color: "#64748b", marginTop: "4px", display: "block" }}>{t.tg_chatid_hint}</span>
+      </label>
       {timeError && <p className="form-error">{timeError}</p>}
       <button className="primary-button" type="submit" disabled={saving}>
         {saving ? <Loader2 size={16} className="spinner" /> : <Plus size={16} />}

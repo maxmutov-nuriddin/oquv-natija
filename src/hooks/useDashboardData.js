@@ -125,6 +125,7 @@ export function useDashboardData() {
           weekdays: group.weekdays || [],
           lessonStart: group.lessonStart || "",
           lessonEnd: group.lessonEnd || "",
+          telegramChatId: group.telegramChatId || "",
           studentsCount: 0,
           createdAt: new Date().toISOString()
         };

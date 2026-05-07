@@ -186,6 +186,7 @@ export const ru = {
   lesson_save: "Сохранить результаты урока",
   lesson_saving: "Сохранение...",
   lesson_saved: "Результаты урока сохранены.",
+  lesson_auto_saved: "✅ Урок сохранён автоматически",
   lesson_error: "Не сохранено:",
 
   // Group form
@@ -266,6 +267,29 @@ export const ru = {
   comic_save: "Сохранить",
   comic_panel_title: "Еженедельный комикс урока",
   comic_panel_sub: "Интересные сцены этой недели",
+
+  // Telegram
+  tg_title: "Telegram",
+  tg_sub: "Автоматическая отправка результатов урока в чат группы",
+  tg_token_label: "Bot Token",
+  tg_token_ph: "110201543:AAHdqTcvCH1vGWJxfSeofSs4tRepyk1SqIA",
+  tg_token_hint: "1. В Telegram: @BotFather → /newbot → скопируйте токен\n2. Добавьте бота в каждый чат группы как администратора",
+  tg_chatid_label: "Chat ID группы",
+  tg_chatid_ph: "-1001234567890",
+  tg_chatid_hint: "Добавьте @userinfobot в чат группы — он напишет ID",
+  tg_save_token: "Сохранить токен",
+  tg_saved: "✓ Bot token сохранён",
+  tg_sent: "Отправлено в Telegram ✓",
+  tg_fail: "Ошибка Telegram:",
+  tg_fetch_btn: "Показать группы с ботом",
+  tg_fetch_hint: "Сначала отправьте любое сообщение в каждом чате группы, затем нажмите кнопку",
+  tg_fetch_loading: "Проверка...",
+  tg_fetch_empty: "Группы не найдены. Добавьте бота в группу и отправьте там сообщение.",
+  tg_fetch_error: "Неверный токен или ошибка сети",
+  tg_copy: "Копировать",
+  tg_copied: "✓",
+  tg_chats_title: "Группы с ботом",
+  tg_connected: "TG подключён",
 
   // Week day short labels
   weekday_short: ["Вск", "Пнд", "Втр", "Срд", "Чтв", "Птн", "Сбт"],
