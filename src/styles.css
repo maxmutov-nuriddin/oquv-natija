@@ -762,3 +762,65 @@ button {
   font-size: 18px;
   font-weight: 900;
 }
+
+/* ── Comic strip ───────────────────────────────────────────────────────── */
+.comic-strip {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 4px 2px 12px;
+  scrollbar-width: thin;
+}
+.comic-strip::-webkit-scrollbar { height: 4px; }
+.comic-strip::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 99px; }
+.comic-strip::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+
+.comic-panel {
+  flex-shrink: 0;
+  width: 200px;
+  background: #fffbeb;
+  border: 2.5px solid #1e293b;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.comic-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.comic-panel-day {
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.comic-panel-num {
+  font-size: 11px;
+  font-weight: 800;
+  color: #1e293b;
+  background: #fef08a;
+  padding: 1px 6px;
+  border-radius: 99px;
+  border: 1.5px solid #1e293b;
+}
+.comic-speech {
+  background: white;
+  border: 2px solid #1e293b;
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+.comic-speech-icon { font-size: 16px; }
+.comic-speech p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #1e293b;
+}

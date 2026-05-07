@@ -7,6 +7,8 @@ import { BonusDrumModal } from "../components/games/BonusDrumModal";
 import { StudentCard } from "../components/student/StudentCard";
 import { StudentProfileModal } from "../components/student/StudentProfileModal";
 import { TimerPanel } from "../components/ui/TimerPanel";
+import { ComicEntryModal } from "../components/ui/ComicEntryModal";
+import { WeeklyComicPanel } from "../components/ui/WeeklyComicPanel";
 import { CurrentLessonBanner } from "../components/ui/CurrentLessonBanner";
 import { EmptyState } from "../components/ui/EmptyState";
 import { FunModal } from "../components/ui/FunModal";
@@ -51,6 +53,16 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
   const alreadySpun = todayGroupRecords.some(r => r.dailyBonus);
   const [showBonusDrum, setShowBonusDrum] = useState(false);
   const [profileStudent, setProfileStudent] = useState(null);
+  const [showComic, setShowComic] = useState(false);
+  const [comicVersion, setComicVersion] = useState(0);
+
+  const showComicButton = useMemo(() => {
+    if (!currentGroup?.lessonEnd || !currentTime) return false;
+    const [eh, em] = currentGroup.lessonEnd.split(":").map(Number);
+    const [ch, cm] = currentTime.split(":").map(Number);
+    const diff = (eh * 60 + em) - (ch * 60 + cm);
+    return diff > 0 && diff <= 30;
+  }, [currentGroup, currentTime]);
 
   async function handleBonusReward(coins) {
     setShowBonusDrum(false);
@@ -103,6 +115,21 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
       </section>
 
       <TimerPanel />
+
+      {showComicButton && (
+        <section className="panel" style={{ padding: "16px" }}>
+          <button
+            className="primary-button"
+            style={{ width: "100%", justifyContent: "center", padding: "14px", background: "linear-gradient(135deg, #f59e0b, #d97706)", fontSize: "15px", border: "none", boxShadow: "0 4px 15px rgba(245,158,11,0.35)" }}
+            onClick={() => setShowComic(true)}
+          >
+            <span style={{ fontSize: "18px" }}>📖</span>
+            <span>Bugungi dars sahnasini yozish</span>
+          </button>
+        </section>
+      )}
+
+      <WeeklyComicPanel key={comicVersion} group={selectedGroup} date={date} />
 
       <section className="dashboard-grid">
         <div className="panel chart-panel">
@@ -175,6 +202,15 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
         <FunModal onClose={() => setShowBonusDrum(false)}>
           <BonusDrumModal onReward={handleBonusReward} onClose={() => setShowBonusDrum(false)} />
         </FunModal>
+      )}
+
+      {showComic && (
+        <ComicEntryModal
+          group={selectedGroup}
+          date={date}
+          onClose={() => setShowComic(false)}
+          onSaved={() => setComicVersion(v => v + 1)}
+        />
       )}
 
       {profileStudent && (
