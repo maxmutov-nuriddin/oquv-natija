@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Bell, BellOff, Pause, Play, RotateCcw } from "lucide-react";
+import { useT } from "../../i18n/index.jsx";
 
 const PRESETS = [
   { label: "1'",  s: 60  },
@@ -31,7 +32,6 @@ function initialState() {
   return { total: 180, baseRemaining: 180, startedAt: null, done: false };
 }
 
-// Web Audio API — 3 ta qo'ng'iroq ovozi (hech qanday fayl kerak emas)
 function playAlarm() {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -49,10 +49,11 @@ function playAlarm() {
       osc.stop(ctx.currentTime + delay + 0.4);
     });
     if (navigator.vibrate) navigator.vibrate([300, 150, 300, 150, 300]);
-  } catch { /* ovoz qo'llab-quvvatlanmasa o'tkazib yuboradi */ }
+  } catch { /* ignore */ }
 }
 
 export function TimerPanel() {
+  const { t } = useT();
   const [state,   setState]   = useState(initialState);
   const [display, setDisplay] = useState(() => calcRemaining(initialState()));
   const [custom,  setCustom]  = useState("");
@@ -140,17 +141,17 @@ export function TimerPanel() {
               ? <span className="timer-done-emoji">⏰</span>
               : <span className="timer-digits" style={{ color: ringColor }}>{mins}:{secs}</span>
             }
-            {state.done && <span className="timer-done-label">TUGADI!</span>}
+            {state.done && <span className="timer-done-label">{t.timer_done}</span>}
           </div>
         </div>
 
         <div className="timer-controls-col">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <p className="timer-section-label">Vaqt tanlang</p>
+            <p className="timer-section-label">{t.timer_select}</p>
             <button
               className="secondary-button"
               onClick={() => setMuted(m => !m)}
-              title={muted ? "Ovozni yoqish" : "Ovozni o'chirish"}
+              title={muted ? t.timer_unmute : t.timer_mute}
               style={{ padding: "5px 8px", fontSize: "12px", gap: "4px" }}
             >
               {muted ? <BellOff size={14} /> : <Bell size={14} />}
@@ -171,7 +172,7 @@ export function TimerPanel() {
 
           <div className="timer-custom-row">
             <input
-              type="number" min="1" max="99" placeholder="daqiqa"
+              type="number" min="1" max="99" placeholder={t.timer_minutes}
               className="timer-custom-input"
               value={custom}
               onChange={e => setCustom(e.target.value)}
@@ -188,7 +189,7 @@ export function TimerPanel() {
               style={isRunning ? { background: "#ef4444", borderColor: "#b91c1c", boxShadow: "0 4px 0 #b91c1c" } : {}}
             >
               {isRunning ? <Pause size={16} /> : <Play size={16} />}
-              {isRunning ? "To'xtatish" : "Boshlash"}
+              {isRunning ? t.timer_stop : t.timer_start}
             </button>
             <button className="secondary-button timer-reset-btn" onClick={handleReset} title="Reset">
               <RotateCcw size={16} />

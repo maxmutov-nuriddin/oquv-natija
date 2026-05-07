@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { BookOpen, X } from "lucide-react";
+import { useT } from "../../i18n/index.jsx";
 import { loadComics, saveComic } from "../../lib/comics";
 
 export function ComicEntryModal({ group, date, onClose, onSaved }) {
+  const { t } = useT();
   const existing = loadComics(group)[date]?.dialog || "";
   const [dialog, setDialog] = useState(existing);
   const taRef = useRef(null);
@@ -34,21 +36,21 @@ export function ComicEntryModal({ group, date, onClose, onSaved }) {
         <div className="modal-header">
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <BookOpen size={18} />
-            <h3>Bugungi dars sahnasi</h3>
+            <h3>{t.comic_title}</h3>
           </div>
           <button className="modal-close" type="button" onClick={onClose}><X size={18} /></button>
         </div>
 
         <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "14px" }}>
           <p style={{ margin: 0, fontSize: "13px", color: "#64748b", lineHeight: 1.6 }}>
-            Guruh bilan kelishib bugun darsda bo'lgan qiziqarli voqeani yozing. Hafta oxirida komiks bo'lib chiqadi 📖
+            {t.comic_hint}
           </p>
 
           <textarea
             ref={taRef}
             value={dialog}
             onChange={e => setDialog(e.target.value)}
-            placeholder={`Masalan: "Jasur savolga javob berishdan oldin uzoq o'yladi, oxiri Malika unga pichirlab aytib berdi..."`}
+            placeholder={t.comic_placeholder}
             rows={5}
             style={{
               width: "100%",
@@ -67,14 +69,9 @@ export function ComicEntryModal({ group, date, onClose, onSaved }) {
           />
 
           <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
-            <button className="secondary-button" type="button" onClick={onClose}>Bekor</button>
-            <button
-              className="primary-button"
-              type="button"
-              onClick={handleSave}
-              disabled={!dialog.trim()}
-            >
-              Saqlash
+            <button className="secondary-button" type="button" onClick={onClose}>{t.comic_cancel}</button>
+            <button className="primary-button" type="button" onClick={handleSave} disabled={!dialog.trim()}>
+              {t.comic_save}
             </button>
           </div>
         </div>

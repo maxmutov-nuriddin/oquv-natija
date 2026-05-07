@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { BarChart3, Coins, Medal, Trophy, Users } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { calculateCoins, getPeriodLeader, getPreviousMonthRange, getPreviousWeekRange, rankStudents } from "../lib/scoring";
+import { useT } from "../i18n/index.jsx";
 import { BonusDrumModal } from "../components/games/BonusDrumModal";
 import { StudentCard } from "../components/student/StudentCard";
 import { StudentProfileModal } from "../components/student/StudentProfileModal";
@@ -51,6 +52,7 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
 
   const todayGroupRecords = useMemo(() => records.filter(r => r.date === date && groupStudents.some(s => s.id === r.studentId)), [records, date, groupStudents]);
   const alreadySpun = todayGroupRecords.some(r => r.dailyBonus);
+  const { t } = useT();
   const [showBonusDrum, setShowBonusDrum] = useState(false);
   const [profileStudent, setProfileStudent] = useState(null);
   const [showComic, setShowComic] = useState(false);
@@ -100,18 +102,18 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
           >
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <span style={{ fontSize: "20px" }}>🎰</span>
-              <span>Guruh uchun kunlik bonus barabanini aylantirish</span>
+              <span>{t.dash_bonus_btn}</span>
             </div>
           </button>
         </section>
       )}
 
       <section className="stats-grid">
-        <StatCard icon={Users} label="O'quvchilar" value={ranked.length} hint={selectedGroup} />
-        <StatCard icon={Coins} label="Jami coin" value={totalCoins} hint="tanlangan guruh" tone="gold" />
-        <StatCard icon={BarChart3} label="O'rtacha score" value={`${averageScore}%`} hint="final formula" tone="cyan" />
-        <StatCard icon={Medal} label="O'tgan hafta lideri" value={previousWeekLeader?.name.split(" ")[0] || "-"} hint={`${previousWeekLeader?.periodCoins || 0} coin`} tone="mint" />
-        <StatCard icon={Trophy} label="O'tgan oy lideri" value={previousMonthLeader?.name.split(" ")[0] || "-"} hint={`${previousMonthLeader?.periodCoins || 0} coin`} tone="rose" />
+        <StatCard icon={Users} label={t.dash_students} value={ranked.length} hint={selectedGroup} />
+        <StatCard icon={Coins} label={t.dash_total_coins} value={totalCoins} hint={t.dash_group_hint} tone="gold" />
+        <StatCard icon={BarChart3} label={t.dash_avg_score} value={`${averageScore}%`} hint={t.dash_formula_hint} tone="cyan" />
+        <StatCard icon={Medal} label={t.dash_week_leader} value={previousWeekLeader?.name.split(" ")[0] || "-"} hint={`${previousWeekLeader?.periodCoins || 0} ${t.dash_coin_unit}`} tone="mint" />
+        <StatCard icon={Trophy} label={t.dash_month_leader} value={previousMonthLeader?.name.split(" ")[0] || "-"} hint={`${previousMonthLeader?.periodCoins || 0} ${t.dash_coin_unit}`} tone="rose" />
       </section>
 
       <TimerPanel />
@@ -124,7 +126,7 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
             onClick={() => setShowComic(true)}
           >
             <span style={{ fontSize: "18px" }}>📖</span>
-            <span>Bugungi dars sahnasini yozish</span>
+            <span>{t.dash_comic_btn}</span>
           </button>
         </section>
       )}
@@ -133,7 +135,7 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
 
       <section className="dashboard-grid">
         <div className="panel chart-panel">
-          <PanelHeader icon={BarChart3} title="Guruh statistikasi" subtitle="Coin va final score taqqoslash" />
+          <PanelHeader icon={BarChart3} title={t.dash_group_stats} subtitle={t.dash_group_stats_sub} />
           <div className="chart-box">
             <ResponsiveContainer width="100%" height={280}>
               <BarChart data={chartData}>
@@ -152,26 +154,26 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
           <div className="winner-icon">
             <Medal size={28} />
           </div>
-          <span>Oldingi davr g'oliblari</span>
+          <span>{t.dash_winners}</span>
           <div className="winner-list">
             <div>
-              <p>O'tgan hafta</p>
-              <h3>{previousWeekLeader?.name || "Hali ma'lumot yo'q"}</h3>
-              <strong>{previousWeekLeader?.periodCoins || 0} coin</strong>
+              <p>{t.dash_prev_week}</p>
+              <h3>{previousWeekLeader?.name || t.dash_no_data}</h3>
+              <strong>{previousWeekLeader?.periodCoins || 0} {t.dash_coin_unit}</strong>
             </div>
             <div>
-              <p>O'tgan oy</p>
-              <h3>{previousMonthLeader?.name || "Hali ma'lumot yo'q"}</h3>
-              <strong>{previousMonthLeader?.periodCoins || 0} coin</strong>
+              <p>{t.dash_prev_month}</p>
+              <h3>{previousMonthLeader?.name || t.dash_no_data}</h3>
+              <strong>{previousMonthLeader?.periodCoins || 0} {t.dash_coin_unit}</strong>
             </div>
           </div>
         </aside>
       </section>
 
       <section className="panel">
-        <PanelHeader icon={Users} title="O'quvchilar" subtitle="Foizlarni o'zgartirsangiz rank avtomatik yangilanadi" />
-        {!selectedGroup && <EmptyState title="Hali guruh yo'q" text="Guruhlar sahifasidan birinchi guruhingizni qo'shing." />}
-        {selectedGroup && !ranked.length && <EmptyState title="Bu guruhda o'quvchi yo'q" text="Guruhlar sahifasidan o'quvchi qo'shing." />}
+        <PanelHeader icon={Users} title={t.dash_students_section} subtitle={t.dash_students_hint} />
+        {!selectedGroup && <EmptyState title={t.dash_no_group_title} text={t.dash_no_group_text} />}
+        {selectedGroup && !ranked.length && <EmptyState title={t.dash_no_students_title} text={t.dash_no_students_text} />}
         {!!ranked.length && (
           <div className="student-grid">
             {ranked.map((student, index) => (

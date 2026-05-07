@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { Loader2, UserPlus } from "lucide-react";
 import { scoreFields } from "../../constants";
+import { useT } from "../../i18n/index.jsx";
 import { numberInputValue, parsePercentInput } from "../../lib/utils";
 
 export function StudentForm({ groups, initialData, onSubmit, selectedGroup, onSaved }) {
+  const { t } = useT();
   const [form, setForm] = useState({
     name: initialData?.name || "",
     group: initialData?.group || selectedGroup || groups[0]?.name || "",
@@ -33,8 +35,8 @@ export function StudentForm({ groups, initialData, onSubmit, selectedGroup, onSa
     } catch (submitError) {
       setError(
         submitError?.code === "permission-denied"
-          ? "Firebase ruxsat bermadi. Firestore rules yoki Anonymous Auth sozlamasini tekshiring."
-          : `O'quvchi qo'shilmadi: ${submitError?.message || "noma'lum xato"}`
+          ? "Firebase ruxsat bermadi."
+          : `${t.sform_add}: ${submitError?.message || ""}`
       );
     } finally {
       setSaving(false);
@@ -49,20 +51,18 @@ export function StudentForm({ groups, initialData, onSubmit, selectedGroup, onSa
     <form className="entry-form" onSubmit={submit}>
       <div className="entry-form-head">
         <UserPlus size={18} />
-        <strong>{initialData ? "O'quvchini tahrirlash" : "O'quvchi qo'shish"}</strong>
+        <strong>{initialData ? t.sform_edit : t.sform_add}</strong>
       </div>
       <label>
-        <span>Ism familiya</span>
-        <input value={form.name} onChange={(event) => update("name", event.target.value)} placeholder="O'quvchi ismi" required />
+        <span>{t.sform_name}</span>
+        <input value={form.name} onChange={(event) => update("name", event.target.value)} placeholder={t.sform_name_ph} required />
       </label>
       <label>
-        <span>Guruh</span>
+        <span>{t.sform_group}</span>
         <select value={form.group} onChange={(event) => update("group", event.target.value)} required disabled={!groups.length}>
-          {!groups.length && <option value="">Avval guruh qo'shing</option>}
+          {!groups.length && <option value="">{t.sform_no_groups}</option>}
           {groups.map((group) => (
-            <option key={group.id} value={group.name}>
-              {group.name}
-            </option>
+            <option key={group.id} value={group.name}>{group.name}</option>
           ))}
         </select>
       </label>
@@ -77,7 +77,7 @@ export function StudentForm({ groups, initialData, onSubmit, selectedGroup, onSa
       {error && <p className="form-error">{error}</p>}
       <button className="primary-button" type="submit" disabled={!groups.length || saving}>
         {saving ? <Loader2 size={16} className="spinner" /> : <UserPlus size={16} />}
-        {saving ? "Saqlanmoqda..." : initialData ? "Saqlash" : "Qo'shish"}
+        {saving ? t.sform_saving : initialData ? t.sform_save : t.sform_submit_add}
       </button>
     </form>
   );

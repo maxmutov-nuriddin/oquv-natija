@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Award, Eye, EyeOff, Loader2 } from "lucide-react";
+import { useT } from "../i18n/index.jsx";
 
 export function AuthPage({ login, normalizePhone, resetPassword }) {
+  const { t, lang, setLang } = useT();
   const [mode, setMode] = useState("login");
   const [form, setForm] = useState({ name: "", phone: "", password: "" });
   const [error, setError] = useState("");
@@ -22,7 +24,6 @@ export function AuthPage({ login, normalizePhone, resetPassword }) {
         setSaving(false);
       } else {
         await login(form);
-        // keep saving=true until component unmounts on redirect
       }
     } catch (submitError) {
       setError(submitError.message);
@@ -33,26 +34,34 @@ export function AuthPage({ login, normalizePhone, resetPassword }) {
   return (
     <main className="auth-page">
       <section className="auth-card">
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: "6px", marginBottom: "8px" }}>
+          {["uz", "ru"].map(l => (
+            <button key={l} onClick={() => setLang(l)} style={{ padding: "3px 10px", borderRadius: "8px", border: `2px solid ${lang === l ? "#1cb0f6" : "#e2e8f0"}`, background: lang === l ? "#e0f2fe" : "transparent", fontWeight: lang === l ? 700 : 500, fontSize: "12px", cursor: "pointer", color: lang === l ? "#0369a1" : "#64748b" }}>
+              {l.toUpperCase()}
+            </button>
+          ))}
+        </div>
+
         <div className="auth-brand">
           <div className="brand-mark">
             <Award size={24} />
           </div>
           <div>
-            <h1>O'quv natija</h1>
-            <p>O'qituvchi dashboardiga kirish</p>
+            <h1>{t.brand_title}</h1>
+            <p>{t.auth_subtitle}</p>
           </div>
         </div>
 
         <form className="auth-form" onSubmit={submit}>
           {mode === "register" && (
             <label>
-              <span>O'qituvchi ismi</span>
-              <input value={form.name} onChange={(event) => update("name", event.target.value)} placeholder="Masalan: Nuriddin" required />
+              <span>{t.auth_teacher_name}</span>
+              <input value={form.name} onChange={(event) => update("name", event.target.value)} placeholder={t.auth_name_placeholder} required />
             </label>
           )}
 
           <label>
-            <span>Telefon raqam</span>
+            <span>{t.auth_phone}</span>
             <div className="phone-field">
               <b>+998</b>
               <input
@@ -68,14 +77,14 @@ export function AuthPage({ login, normalizePhone, resetPassword }) {
 
           {(mode === "login" || mode === "register") && (
             <label>
-              <span>Parol</span>
+              <span>{t.auth_password}</span>
               <div style={{ position: "relative" }}>
                 <input
                   type={showPassword ? "text" : "password"}
                   minLength="6"
                   value={form.password}
                   onChange={(event) => update("password", event.target.value)}
-                  placeholder="Kamida 6 ta belgi"
+                  placeholder={t.auth_password_placeholder}
                   required
                   style={{ paddingRight: "40px" }}
                 />
@@ -94,16 +103,16 @@ export function AuthPage({ login, normalizePhone, resetPassword }) {
 
           <button className="primary-button auth-submit" type="submit" disabled={saving}>
             {saving && <Loader2 size={18} className="spinner" />}
-            {saving ? "Tekshirilmoqda..." : mode === "forgot" ? "Parolni tiklash" : "Kirish"}
+            {saving ? t.auth_checking : mode === "forgot" ? t.auth_reset : t.auth_login}
           </button>
 
           {mode === "login" ? (
             <button type="button" className="text-button" style={{ marginTop: "12px", background: "none", border: "none", color: "#64748b", cursor: "pointer", width: "100%" }} onClick={() => setMode("forgot")}>
-              Parolni unutdingizmi?
+              {t.auth_forgot}
             </button>
           ) : (
             <button type="button" className="text-button" style={{ marginTop: "12px", background: "none", border: "none", color: "#64748b", cursor: "pointer", width: "100%" }} onClick={() => setMode("login")}>
-              Orqaga qaytish
+              {t.auth_back}
             </button>
           )}
         </form>

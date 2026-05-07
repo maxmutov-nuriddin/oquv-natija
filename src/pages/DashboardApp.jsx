@@ -1,6 +1,7 @@
 import dayjs from "dayjs";
 import { useEffect, useMemo, useState } from "react";
 import { useDashboardData } from "../hooks/useDashboardData";
+import { useT } from "../i18n/index.jsx";
 import { groupForDateTime } from "../lib/scoring";
 import { Sidebar } from "../components/layout/Sidebar";
 import { Topbar } from "../components/layout/Topbar";
@@ -13,6 +14,7 @@ import { PrivilegesPage } from "./PrivilegesPage";
 import { SettingsPage } from "./SettingsPage";
 
 export function DashboardApp({ teacher, logout, updateProfile, changePassword }) {
+  const { t } = useT();
   const { students, groups, records, settings, loading, error, isDemo, addGroup, updateGroup, deleteGroup, addStudent, updateStudent, saveLessonRecords, deleteStudent, saveSettings } =
     useDashboardData();
   const [activePage, setActivePage] = useState("dashboard");
@@ -32,7 +34,7 @@ export function DashboardApp({ teacher, logout, updateProfile, changePassword })
   const [editingStudent, setEditingStudent] = useState(null);
 
   async function handleDeleteStudent(student) {
-    if (!window.confirm(`${student.name} o'chirilsinmi? Bu o'quvchining dars tarixi ham o'chadi.`)) return;
+    if (!window.confirm(t.app_delete_confirm(student.name))) return;
     await deleteStudent(student.id);
   }
 
@@ -113,7 +115,7 @@ export function DashboardApp({ teacher, logout, updateProfile, changePassword })
       </div>
 
       {editingStudent && (
-        <Modal title="O'quvchini tahrirlash" onClose={() => setEditingStudent(null)}>
+        <Modal title={t.app_edit_student} onClose={() => setEditingStudent(null)}>
           <StudentForm groups={groups} initialData={editingStudent} onSubmit={(values) => updateStudent(editingStudent.id, values)} onSaved={() => setEditingStudent(null)} />
         </Modal>
       )}

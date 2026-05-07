@@ -71,9 +71,9 @@ export function getPrivilegeInfo(id) {
 
 export function getPerformanceStatus(score) {
   const s = Number(score || 0);
-  if (s >= 80) return { label: "Yaxshi", color: "#16a34a", bg: "#dcfce7", border: "#bbf7d0" };
-  if (s >= 50) return { label: "Ortda",  color: "#d97706", bg: "#fef9c3", border: "#fde68a" };
-  return             { label: "Yomon",  color: "#dc2626", bg: "#fee2e2", border: "#fca5a5" };
+  if (s >= 80) return { key: "good",   color: "#16a34a", bg: "#dcfce7", border: "#bbf7d0" };
+  if (s >= 50) return { key: "behind", color: "#d97706", bg: "#fef9c3", border: "#fde68a" };
+  return             { key: "bad",    color: "#dc2626", bg: "#fee2e2", border: "#fca5a5" };
 }
 
 export function getWeightedRandomItem(poolIds) {

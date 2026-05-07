@@ -4,9 +4,11 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { LEVELS } from "../../constants";
+import { useT } from "../../i18n/index.jsx";
 import { getLevel, getPerformanceStatus, initials } from "../../lib/utils";
 
 export function StudentProfileModal({ student, records, settings, groups, onClose }) {
+  const { t } = useT();
   useEffect(() => {
     const orig = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -86,7 +88,7 @@ export function StudentProfileModal({ student, records, settings, groups, onClos
       >
         {/* Header bar */}
         <div className="modal-header">
-          <h3>O'quvchi profili</h3>
+          <h3>{t.profile_title}</h3>
           <button className="modal-close" type="button" onClick={onClose}><X size={18} /></button>
         </div>
 
@@ -100,19 +102,19 @@ export function StudentProfileModal({ student, records, settings, groups, onClos
               <p className="profile-group">{student.group}</p>
               <div className="profile-badges">
                 <span className="profile-level-badge" style={{ background: level.bg, color: level.color, border: `1.5px solid ${level.color}40` }}>
-                  {level.emoji} {level.name}
+                  {level.emoji} {t[`level_${level.key}`] || level.name}
                 </span>
                 {student.gifts?.some(g => g.type === "vip") && (
-                  <span className="vip-text-badge">VIP</span>
+                  <span className="vip-text-badge">{t.profile_vip}</span>
                 )}
               </div>
               {/* Level progress */}
               <div className="profile-level-progress">
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "#64748b", marginBottom: "4px" }}>
-                  <span style={{ fontWeight: 700, color: level.color }}>{monthlyCoins} coin (bu oy)</span>
+                  <span style={{ fontWeight: 700, color: level.color }}>{monthlyCoins} {t.profile_coins_month}</span>
                   {nextLevel
-                    ? <span>{nextLevel.min - monthlyCoins} coin → {nextLevel.emoji} {nextLevel.name}</span>
-                    : <span style={{ color: level.color, fontWeight: 700 }}>MAX DARAJA 🏆</span>
+                    ? <span>{nextLevel.min - monthlyCoins} {t.profile_coin_to} {nextLevel.emoji} {t[`level_${nextLevel.key}`] || nextLevel.name}</span>
+                    : <span style={{ color: level.color, fontWeight: 700 }}>{t.profile_max_level}</span>
                   }
                 </div>
                 <div className="profile-level-bar">
@@ -125,11 +127,11 @@ export function StudentProfileModal({ student, records, settings, groups, onClos
           {/* ── Quick stats ────────────────────────────────────── */}
           <div className="profile-stats-row">
             {[
-              { label: "Jami dars",    value: totalLessons,        unit: "ta"   },
-              { label: "Jami coin",    value: totalCoins,          unit: "coin" },
-              { label: "Uy vazifa",    value: avgHw  + "%",        status: getPerformanceStatus(avgHw)  },
-              { label: "Yuqori natija",value: avgAtt + "%",        status: getPerformanceStatus(avgAtt) },
-              { label: "Aktivlik",     value: avgAct + "%",        status: getPerformanceStatus(avgAct) },
+              { label: t.profile_total_lessons, value: totalLessons, unit: t.profile_lessons_unit },
+              { label: t.profile_total_coins,   value: totalCoins,   unit: t.profile_coins_unit  },
+              { label: t.profile_homework,  value: avgHw  + "%", status: getPerformanceStatus(avgHw)  },
+              { label: t.profile_attendance, value: avgAtt + "%", status: getPerformanceStatus(avgAtt) },
+              { label: t.profile_activity,  value: avgAct + "%", status: getPerformanceStatus(avgAct) },
             ].map(s => (
               <div key={s.label} className="profile-stat-card">
                 <span className="profile-stat-label">{s.label}</span>
@@ -139,7 +141,7 @@ export function StudentProfileModal({ student, records, settings, groups, onClos
                 {s.unit && <span className="profile-stat-unit">{s.unit}</span>}
                 {s.status && (
                   <span className="profile-stat-badge" style={{ background: s.status.bg, color: s.status.color, borderColor: s.status.border }}>
-                    {s.status.label}
+                    {t[`status_${s.status.key}`]}
                   </span>
                 )}
               </div>
@@ -149,7 +151,7 @@ export function StudentProfileModal({ student, records, settings, groups, onClos
           {/* ── Score chart ───────────────────────────────────── */}
           {chartData.length > 1 && (
             <div className="profile-section">
-              <h4 className="profile-section-title">Ball tarixi (oxirgi {chartData.length} dars)</h4>
+              <h4 className="profile-section-title">{t.profile_chart_title(chartData.length)}</h4>
               <ResponsiveContainer width="100%" height={200}>
                 <LineChart data={chartData} margin={{ top: 4, right: 8, bottom: 4, left: -20 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
@@ -157,9 +159,9 @@ export function StudentProfileModal({ student, records, settings, groups, onClos
                   <YAxis domain={[0, 100]} stroke="#94a3b8" tickLine={false} axisLine={false} style={{ fontSize: 11 }} />
                   <Tooltip contentStyle={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 13 }} />
                   <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
-                  <Line type="monotone" dataKey="hw"  name="Uy vazifa"     stroke="#58cc02" strokeWidth={2} dot={false} />
-                  <Line type="monotone" dataKey="att" name="Yuqori natija" stroke="#1cb0f6" strokeWidth={2} dot={false} />
-                  <Line type="monotone" dataKey="act" name="Aktivlik"      stroke="#ff4b4b" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="hw"  name={t.profile_homework}   stroke="#58cc02" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="att" name={t.profile_attendance} stroke="#1cb0f6" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="act" name={t.profile_activity}   stroke="#ff4b4b" strokeWidth={2} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -168,7 +170,7 @@ export function StudentProfileModal({ student, records, settings, groups, onClos
           {/* ── Heatmap ───────────────────────────────────────── */}
           {totalLessons > 0 && (
             <div className="profile-section">
-              <h4 className="profile-section-title">Davomat (oxirgi 12 hafta)</h4>
+              <h4 className="profile-section-title">{t.profile_heatmap_title}</h4>
               <div className="profile-heatmap">
                 {heatDays.map(d => (
                   <div
@@ -178,20 +180,20 @@ export function StudentProfileModal({ student, records, settings, groups, onClos
                     title={
                       !d.isLesson ? d.label :
                       d.rec ? `${d.label} · HW:${d.rec.homework}% NAT:${d.rec.attendance}% ACT:${d.rec.activity}%` :
-                      `${d.label} · Kelmagan`
+                      `${d.label} · ${t.profile_absent}`
                     }
                   />
                 ))}
               </div>
               <div className="profile-heatmap-legend">
                 <div className="profile-heat-cell" style={{ background: "#e2e8f0" }} />
-                <span>Kelmagan</span>
+                <span>{t.profile_absent}</span>
                 <div className="profile-heat-cell" style={{ background: "#f87171" }} />
-                <span>Yomon</span>
+                <span>{t.profile_bad}</span>
                 <div className="profile-heat-cell" style={{ background: "#fbbf24" }} />
-                <span>Ortda</span>
+                <span>{t.profile_behind}</span>
                 <div className="profile-heat-cell" style={{ background: "#4ade80" }} />
-                <span>Yaxshi</span>
+                <span>{t.profile_good}</span>
               </div>
             </div>
           )}
@@ -199,7 +201,7 @@ export function StudentProfileModal({ student, records, settings, groups, onClos
           {/* ── Recent lessons ────────────────────────────────── */}
           {recent.length > 0 && (
             <div className="profile-section">
-              <h4 className="profile-section-title">Oxirgi darslar</h4>
+              <h4 className="profile-section-title">{t.profile_recent}</h4>
               <div className="profile-recent">
                 {recent.map(r => {
                   const score = Math.round(
@@ -212,12 +214,12 @@ export function StudentProfileModal({ student, records, settings, groups, onClos
                     <div key={r.id} className="profile-recent-row">
                       <span className="profile-recent-date">{dayjs(r.date).format("DD MMM YYYY")}</span>
                       <div className="profile-recent-scores">
-                        <span title="Uy vazifa">HW {r.homework || 0}%</span>
-                        <span title="Yuqori natija">NAT {r.attendance || 0}%</span>
-                        <span title="Aktivlik">ACT {r.activity || 0}%</span>
+                        <span title={t.profile_homework}>HW {r.homework || 0}%</span>
+                        <span title={t.profile_attendance}>NAT {r.attendance || 0}%</span>
+                        <span title={t.profile_activity}>ACT {r.activity || 0}%</span>
                       </div>
                       <span className="profile-recent-badge" style={{ background: st.bg, color: st.color, borderColor: st.border }}>
-                        {score}% · {st.label}
+                        {score}% · {t[`status_${st.key}`]}
                       </span>
                       <span className="profile-recent-coins">+{r.coinsEarned || 0} 🪙</span>
                     </div>
@@ -229,7 +231,7 @@ export function StudentProfileModal({ student, records, settings, groups, onClos
 
           {totalLessons === 0 && (
             <div style={{ textAlign: "center", padding: "40px", color: "#94a3b8", fontSize: "15px", fontWeight: 600 }}>
-              Hali dars tarixi yo'q
+              {t.profile_no_history}
             </div>
           )}
 

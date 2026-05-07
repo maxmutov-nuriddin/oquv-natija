@@ -4,7 +4,8 @@ import { Award, CalendarDays, Plus, Settings, Star, Trash2, Trophy, UserPlus, Us
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { availableGifts, vipData, weekDays, allPrivileges } from "../constants";
 import { getPeriodLeader, getPreviousMonthRange, getPreviousWeekRange, rankStudents } from "../lib/scoring";
-import { cx, getLevel, initials, medalLabel, rankText } from "../lib/utils";
+import { useT } from "../i18n/index.jsx";
+import { cx, getLevel, initials, medalLabel } from "../lib/utils";
 import { GiftCoinModal } from "../components/forms/GiftCoinModal";
 import { GroupForm } from "../components/forms/GroupForm";
 import { BuyGiftModal } from "../components/forms/BuyGiftModal";
@@ -19,12 +20,13 @@ import { Modal } from "../components/ui/Modal";
 import { PanelHeader } from "../components/ui/PanelHeader";
 
 function getGroupActivityStatus(score) {
-  if (score >= 80) return { label: "Aktiv",    color: "#16a34a", bg: "#dcfce7", border: "#bbf7d0" };
-  if (score >= 50) return { label: "O'rtacha", color: "#d97706", bg: "#fef9c3", border: "#fde68a" };
-  return             { label: "Sust",      color: "#dc2626", bg: "#fee2e2", border: "#fca5a5" };
+  if (score >= 80) return { key: "active",  color: "#16a34a", bg: "#dcfce7", border: "#bbf7d0" };
+  if (score >= 50) return { key: "average", color: "#d97706", bg: "#fef9c3", border: "#fde68a" };
+  return             { key: "weak",    color: "#dc2626", bg: "#fee2e2", border: "#fca5a5" };
 }
 
 export function GroupsPage({ groups, students, records, settings, date, query, addGroup, updateGroup, deleteGroup, addStudent, updateStudent, saveLessonRecords, deleteStudent, selectedGroup, setDate }) {
+  const { t } = useT();
   const [activeGroup, setActiveGroup] = useState(groups[0]?.name || "");
   const activeGroupStudents = useMemo(() => students.filter(s => s.group === activeGroup), [students, activeGroup]);
 
@@ -68,11 +70,11 @@ export function GroupsPage({ groups, students, records, settings, date, query, a
 
   const activeGroupObject = useMemo(() => groups.find((group) => group.name === activeGroup), [groups, activeGroup]);
   const activeLessonTime =
-    activeGroupObject?.lessonStart && activeGroupObject?.lessonEnd ? `${activeGroupObject.lessonStart} - ${activeGroupObject.lessonEnd}` : "Vaqt belgilanmagan";
+    activeGroupObject?.lessonStart && activeGroupObject?.lessonEnd ? `${activeGroupObject.lessonStart} - ${activeGroupObject.lessonEnd}` : t.groups_no_time;
   const activeLessonDays =
     activeGroupObject?.weekdays?.length
-      ? weekDays.filter((day) => activeGroupObject.weekdays.includes(day.value)).map((day) => day.label).join(", ")
-      : "Kun tanlanmagan";
+      ? weekDays.filter((day) => activeGroupObject.weekdays.includes(day.value)).map((day) => t.weekday_short[day.value] || day.label).join(", ")
+      : t.groups_no_days;
 
   const ranked = useMemo(() => {
     return rankStudents(
@@ -94,7 +96,7 @@ export function GroupsPage({ groups, students, records, settings, date, query, a
         stats.coins += Number(r.coinsEarned || 0);
         stats.records.push({
           ...r,
-          studentName: activeGroupStudents.find(s => s.id === r.studentId)?.name || "Noma'lum"
+          studentName: activeGroupStudents.find(s => s.id === r.studentId)?.name || t.groups_unknown
         });
       }
     });
@@ -110,26 +112,26 @@ export function GroupsPage({ groups, students, records, settings, date, query, a
           <div className="panel-title">
             <span><Users size={18} /></span>
             <div>
-              <h3>Guruhlar</h3>
-              <p>{groups.length ? `${groups.length} ta guruh` : "Birinchi guruhni yarating"}</p>
+              <h3>{t.groups_title}</h3>
+              <p>{groups.length ? t.groups_count(groups.length) : t.groups_create_first}</p>
             </div>
           </div>
         </div>
         <div className="group-actions">
           <button className="secondary-button" type="button" onClick={() => setModal("group")}>
             <Plus size={16} />
-            Guruh
+            {t.groups_add_group}
           </button>
           <button className="secondary-button" type="button" onClick={() => setModal("student")} disabled={!groups.length}>
             <UserPlus size={16} />
-            O'quvchi
+            {t.groups_add_student}
           </button>
           <button className="primary-button" type="button" onClick={() => setModal("buy-gift")} disabled={!groups.length} style={{ gridColumn: "1 / -1" }}>
             <Award size={16} />
-            Sotib oldi
+            {t.groups_buy_gift}
           </button>
         </div>
-        {!groups.length && <EmptyState title="Guruh yo'q" text="Yangi guruh qo'shish tugmasi orqali birinchi guruhingizni yarating." />}
+        {!groups.length && <EmptyState title={t.groups_empty_title} text={t.groups_empty_text} />}
         {!!groups.length && (
           <div className="group-list">
             {groups.map((group) => {
@@ -140,11 +142,11 @@ export function GroupsPage({ groups, students, records, settings, date, query, a
                 <button key={group.id} className={cx("group-card", activeGroup === group.name && "group-card-active")} onClick={() => setActiveGroup(group.name)}>
                   <div>
                     <strong>{group.name}</strong>
-                    <span>{count} o'quvchi</span>
-                    <span>{group.lessonStart && group.lessonEnd ? `${group.lessonStart} - ${group.lessonEnd}` : "Vaqt belgilanmagan"}</span>
+                    <span>{t.groups_students(count)}</span>
+                    <span>{group.lessonStart && group.lessonEnd ? `${group.lessonStart} - ${group.lessonEnd}` : t.groups_no_time}</span>
                     {actSt && (
                       <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 7px", borderRadius: "999px", background: actSt.bg, color: actSt.color, border: `1px solid ${actSt.border}`, display: "inline-block", marginTop: "4px" }}>
-                        {actSt.label} · {avgScore}%
+                        {t[`group_${actSt.key}`]} · {avgScore}%
                       </span>
                     )}
                   </div>
@@ -161,15 +163,15 @@ export function GroupsPage({ groups, students, records, settings, date, query, a
           <>
             <section className="panel group-overview">
               <div>
-                <span className="eyebrow">Tanlangan guruh</span>
+                <span className="eyebrow">{t.groups_selected_label}</span>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px" }}>
                   <h3 style={{ margin: 0 }}>{activeGroupObject.name}</h3>
                   <div style={{ display: "flex", gap: "8px" }}>
                     <button className="secondary-button" style={{ padding: "6px 12px", fontSize: "13px" }} onClick={() => setModal("edit-group")}>
-                      Tahrirlash
+                      {t.groups_edit}
                     </button>
-                    <button className="danger-button" style={{ padding: "6px 12px", fontSize: "13px" }} onClick={() => { if (window.confirm("Rostdan ham guruhni o'chirasizmi? O'quvchilar tarixi ham o'chib ketishi mumkin.")) deleteGroup(activeGroupObject.id); }}>
-                      O'chirish
+                    <button className="danger-button" style={{ padding: "6px 12px", fontSize: "13px" }} onClick={() => { if (window.confirm(t.groups_delete_confirm())) deleteGroup(activeGroupObject.id); }}>
+                      {t.groups_delete}
                     </button>
                   </div>
                 </div>
@@ -177,15 +179,15 @@ export function GroupsPage({ groups, students, records, settings, date, query, a
               <div className="group-metrics">
                 <div>
                   <strong>{activeGroupStudents.length}</strong>
-                  <span>o'quvchi</span>
+                  <span>{t.groups_metric_students}</span>
                 </div>
                 <div>
                   <strong>{activeLessonDays}</strong>
-                  <span>dars kunlari</span>
+                  <span>{t.groups_metric_days}</span>
                 </div>
                 <div>
                   <strong>{activeLessonTime}</strong>
-                  <span>dars vaqti</span>
+                  <span>{t.groups_metric_time}</span>
                 </div>
               </div>
             </section>
@@ -200,8 +202,8 @@ export function GroupsPage({ groups, students, records, settings, date, query, a
             />
 
             <section className="panel">
-              <PanelHeader icon={CalendarDays} title="Darslar tarixi" subtitle="Oldingi darslar natijalarini ko'rish va tahrirlash (sanani tanlang)" />
-              {!historyDates.length && <EmptyState title="Tarix yo'q" text="Bu guruhda hali dars o'tilmagan." />}
+              <PanelHeader icon={CalendarDays} title={t.groups_history_title} subtitle={t.groups_history_sub} />
+              {!historyDates.length && <EmptyState title={t.groups_no_history_title} text={t.groups_no_history_text} />}
               {!!historyDates.length && (
                 <div className="history-list" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                   {historyDates.map(h => (
@@ -216,18 +218,18 @@ export function GroupsPage({ groups, students, records, settings, date, query, a
                           <strong style={{ color: date === h.date ? "#1e40af" : "#0f172a" }}>{dayjs(h.date).format("DD MMMM YYYY")}</strong>
                         </div>
                         <div style={{ display: "flex", gap: "16px", color: date === h.date ? "#1e40af" : "#64748b", fontSize: "13px" }}>
-                          <span>{h.count} o'quvchi</span>
+                          <span>{h.count} {t.groups_metric_students}</span>
                           <span>{h.coins} coin</span>
                         </div>
                       </button>
                       {expandedDate === h.date && (
                         <div style={{ padding: "12px", background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "8px", marginTop: "4px" }}>
                           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr", gap: "8px", fontSize: "12px", color: "#64748b", paddingBottom: "8px", borderBottom: "1px solid #f1f5f9", marginBottom: "8px" }}>
-                            <span>O'quvchi</span>
-                            <span>Uy vazifa</span>
-                            <span>Yuqori natija</span>
-                            <span>Aktivlik</span>
-                            <span>Coin</span>
+                            <span>{t.groups_col_student}</span>
+                            <span>{t.groups_col_hw}</span>
+                            <span>{t.groups_col_att}</span>
+                            <span>{t.groups_col_act}</span>
+                            <span>{t.groups_col_coin}</span>
                           </div>
                           {h.records.sort((a, b) => b.coinsEarned - a.coinsEarned).map(r => (
                             <div key={r.id} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr", gap: "8px", fontSize: "13px", alignItems: "center", padding: "6px 0" }}>
@@ -250,11 +252,11 @@ export function GroupsPage({ groups, students, records, settings, date, query, a
               <PanelHeader
                 icon={Trophy}
                 title={`${activeGroup} ranking`}
-                subtitle="Coin bo'yicha tartiblangan haftalik va oylik natijalar"
+                subtitle={t.groups_ranking_sub}
                 action={<ExportButton rows={ranked} groupName={activeGroup} records={records} settings={settings} />}
               />
-              {!activeGroup && <EmptyState title="Ranking bo'sh" text="Avval guruh va o'quvchi qo'shing." />}
-              {activeGroup && !ranked.length && <EmptyState title="Bu guruhda o'quvchi yo'q" text="Chap paneldan o'quvchi qo'shsangiz ranking paydo bo'ladi." />}
+              {!activeGroup && <EmptyState title={t.groups_ranking_empty} text={t.groups_ranking_add_hint} />}
+              {activeGroup && !ranked.length && <EmptyState title={t.groups_ranking_no_students} text={t.groups_ranking_students_hint} />}
               {!!ranked.length && (
                 <>
                   <div className="chart-box chart-box-small">
@@ -285,17 +287,17 @@ export function GroupsPage({ groups, students, records, settings, date, query, a
                           <div>
                             <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
                               <strong style={{ margin: 0 }}>{student.name}</strong>
-                              {(() => { const lv = getLevel(student.monthlyCoins || 0); return <span style={{ fontSize: "10px", fontWeight: 600, padding: "1px 6px", borderRadius: "999px", background: lv.bg, color: lv.color, border: `1px solid ${lv.color}40` }}>{lv.emoji} {lv.name}</span>; })()}
-                              {student.id === weeklyWinner?.id && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px", background: "linear-gradient(135deg, #60a5fa, #2563eb)", color: "white" }}>Hafta G'olibi</span>}
-                              {student.id === monthlyWinner?.id && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px", background: "linear-gradient(135deg, #f472b6, #db2777)", color: "white" }}>Oy G'olibi</span>}
-                              {student.gifts?.some(g => g.type === "vip") && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px" }}>VIP</span>}
+                              {(() => { const lv = getLevel(student.monthlyCoins || 0); return <span style={{ fontSize: "10px", fontWeight: 600, padding: "1px 6px", borderRadius: "999px", background: lv.bg, color: lv.color, border: `1px solid ${lv.color}40` }}>{lv.emoji} {t[`level_${lv.key}`] || lv.name}</span>; })()}
+                              {student.id === weeklyWinner?.id && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px", background: "linear-gradient(135deg, #60a5fa, #2563eb)", color: "white" }}>{t.card_week_winner}</span>}
+                              {student.id === monthlyWinner?.id && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px", background: "linear-gradient(135deg, #f472b6, #db2777)", color: "white" }}>{t.card_month_winner}</span>}
+                              {student.gifts?.some(g => g.type === "vip") && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px" }}>{t.profile_vip}</span>}
                             </div>
-                            <p>Weekly {student.weeklyCoins} coin · Monthly {student.monthlyCoins} coin</p>
+                            <p>{t.groups_weekly_coin(student.weeklyCoins)} · {t.groups_monthly_coin(student.monthlyCoins)}</p>
                           </div>
                         </div>
                         <div className="leader-score">
                           <strong>{student.coins}</strong>
-                          <span>total coin</span>
+                          <span>{t.groups_total_coin}</span>
                         </div>
                         <div className="leader-actions" style={{ display: "flex", gap: "4px" }}>
                           <button className="secondary-icon-button" type="button" onClick={() => { setEditingStudent(student); setModal("edit-student"); }}>
@@ -313,9 +315,9 @@ export function GroupsPage({ groups, students, records, settings, date, query, a
             </section>
 
             <section className="panel">
-              <PanelHeader icon={Award} title="Guruh sovg'alari" subtitle="Kimda qanday sovg'a yoki privelegiya borligi" />
+              <PanelHeader icon={Award} title={t.groups_gifts_title} subtitle={t.groups_gifts_sub} />
               {activeGroupStudents.filter(s => s.gifts?.length > 0 || s.id === weeklyWinner?.id || s.id === monthlyWinner?.id).length === 0 ? (
-                <EmptyState title="Sovg'alar yo'q" text="Hali bu guruhda hech kim sovg'a sotib olmagan." />
+                <EmptyState title={t.groups_no_gifts_title} text={t.groups_no_gifts_text} />
               ) : (
                 <div className="group-gifts-summary">
                   {activeGroupStudents.filter(s => s.gifts?.length > 0 || s.id === weeklyWinner?.id || s.id === monthlyWinner?.id).map(s => {
@@ -337,16 +339,16 @@ export function GroupsPage({ groups, students, records, settings, date, query, a
                         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                           <div className="avatar avatar-small">{initials(s.name)}</div>
                           <strong>{s.name}</strong>
-                          {s.id === weeklyWinner?.id && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px", background: "linear-gradient(135deg, #60a5fa, #2563eb)", color: "white" }}>Hafta G'olibi</span>}
-                          {s.id === monthlyWinner?.id && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px", background: "linear-gradient(135deg, #f472b6, #db2777)", color: "white" }}>Oy G'olibi</span>}
-                          {s.gifts?.some(g => g.type === "vip") && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px" }}>VIP</span>}
+                          {s.id === weeklyWinner?.id && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px", background: "linear-gradient(135deg, #60a5fa, #2563eb)", color: "white" }}>{t.card_week_winner}</span>}
+                          {s.id === monthlyWinner?.id && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px", background: "linear-gradient(135deg, #f472b6, #db2777)", color: "white" }}>{t.card_month_winner}</span>}
+                          {s.gifts?.some(g => g.type === "vip") && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px" }}>{t.profile_vip}</span>}
                         </div>
                         <div className="student-gifts" style={{ marginTop: 0 }}>
                           {(s.gifts || []).map((g, idx) => {
                             const giftMeta = availableGifts.find(ag => ag.id === g.id) || { icon: Award, color: g.type === "vip" ? "var(--rose)" : "var(--blue)" };
                             const GiftIcon = giftMeta.icon;
                             return (
-                              <button key={idx} type="button" className="gift-tag" style={{ "--gift-color": giftMeta.color, opacity: sIsPenalized ? 0.45 : 1, cursor: sIsPenalized ? "not-allowed" : "pointer" }} title={sIsPenalized ? "Privelegiyalar bloklangan" : g.id === "mystery_box" ? "Ochish uchun bosing" : "Ishlatish uchun bosing"} disabled={sIsPenalized} onClick={(e) => {
+                              <button key={idx} type="button" className="gift-tag" style={{ "--gift-color": giftMeta.color, opacity: sIsPenalized ? 0.45 : 1, cursor: sIsPenalized ? "not-allowed" : "pointer" }} title={sIsPenalized ? t.card_blocked : g.id === "mystery_box" ? t.card_open : t.card_use} disabled={sIsPenalized} onClick={(e) => {
                                 e.stopPropagation();
                                 if (sIsPenalized) return;
                                 if (g.id === "mystery_box" || g.id === "mistiriy_box") {
@@ -378,7 +380,7 @@ export function GroupsPage({ groups, students, records, settings, date, query, a
                             const remaining = maxUses - usedCount;
                             if (remaining <= 0) return null;
                             return (
-                              <button key={`vip-${idx}`} type="button" className="gift-tag" style={{ "--gift-color": "var(--rose)", cursor: sIsPenalized ? "not-allowed" : "pointer", opacity: sIsPenalized ? 0.45 : 1 }} title={sIsPenalized ? "Privelegiyalar bloklangan" : "Ishlatish uchun bosing"} disabled={sIsPenalized} onClick={(e) => {
+                              <button key={`vip-${idx}`} type="button" className="gift-tag" style={{ "--gift-color": "var(--rose)", cursor: sIsPenalized ? "not-allowed" : "pointer", opacity: sIsPenalized ? 0.45 : 1 }} title={sIsPenalized ? t.card_blocked : t.card_use} disabled={sIsPenalized} onClick={(e) => {
                                 e.stopPropagation();
                                 if (sIsPenalized) return;
                                 if (vp.id === "mystery_box") {
@@ -411,13 +413,13 @@ export function GroupsPage({ groups, students, records, settings, date, query, a
       </div>
 
       {modal === "group" && (
-        <Modal title="Guruh qo'shish" onClose={() => setModal("")}>
+        <Modal title={t.gform_add} onClose={() => setModal("")}>
           <GroupForm onSubmit={addGroup} onSaved={() => setModal("")} />
         </Modal>
       )}
 
       {modal === "edit-group" && activeGroupObject && (
-        <Modal title="Guruhni tahrirlash" onClose={() => setModal("")}>
+        <Modal title={t.gform_edit} onClose={() => setModal("")}>
           <GroupForm
             initialData={activeGroupObject}
             onSubmit={(values) => {
@@ -430,19 +432,19 @@ export function GroupsPage({ groups, students, records, settings, date, query, a
       )}
 
       {modal === "student" && (
-        <Modal title="O'quvchi qo'shish" onClose={() => setModal("")}>
+        <Modal title={t.sform_add} onClose={() => setModal("")}>
           <StudentForm groups={groups} selectedGroup={activeGroup} onSubmit={addStudent} onSaved={() => setModal("")} />
         </Modal>
       )}
 
       {modal === "edit-student" && editingStudent && (
-        <Modal title="O'quvchini tahrirlash" onClose={() => { setModal(""); setEditingStudent(null); }}>
+        <Modal title={t.sform_edit} onClose={() => { setModal(""); setEditingStudent(null); }}>
           <StudentForm groups={groups} initialData={editingStudent} onSubmit={(values) => updateStudent(editingStudent.id, values)} onSaved={() => { setModal(""); setEditingStudent(null); }} />
         </Modal>
       )}
 
       {modal === "buy-gift" && (
-        <Modal title="Sovg'a / Privelegiya qo'shish" onClose={() => setModal("")}>
+        <Modal title={t.app_modal_buy_gift} onClose={() => setModal("")}>
           <BuyGiftModal
             groups={groups}
             students={students}
@@ -502,7 +504,7 @@ export function GroupsPage({ groups, students, records, settings, date, query, a
       )}
 
       {modal === "gift-coin" && activeGiftCoin && (
-        <Modal title="Do'stiga coin 2x qilish" onClose={() => setModal("")}>
+        <Modal title={t.app_modal_gift_coin} onClose={() => setModal("")}>
           <GiftCoinModal
             activeGroupStudents={activeGroupStudents}
             activeGiftCoin={activeGiftCoin}

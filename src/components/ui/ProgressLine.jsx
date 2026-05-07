@@ -1,6 +1,8 @@
+import { useT } from "../../i18n/index.jsx";
 import { getPerformanceStatus, percent } from "../../lib/utils";
 
 export function ProgressLine({ label, value, tone, showStatus = false }) {
+  const { t } = useT();
   const status = showStatus ? getPerformanceStatus(value) : null;
   return (
     <div className="progress-line">
@@ -19,7 +21,7 @@ export function ProgressLine({ label, value, tone, showStatus = false }) {
               textTransform: "uppercase",
               letterSpacing: "0.03em",
             }}>
-              {status.label}
+              {t[`status_${status.key}`]}
             </span>
           )}
           <strong>{percent(value)}%</strong>

@@ -1,9 +1,13 @@
 import { useState } from "react";
 import { Loader2, Plus } from "lucide-react";
-import { weekDays, lessonStartOptions } from "../../constants";
+import { lessonStartOptions } from "../../constants";
+import { useT } from "../../i18n/index.jsx";
 import { cx, addLessonDuration, isValidLessonTime } from "../../lib/utils";
 
+const WEEKDAY_VALUES = [1, 2, 3, 4, 5, 6, 0];
+
 export function GroupForm({ initialData, onSubmit, onSaved }) {
+  const { t } = useT();
   const [name, setName] = useState(initialData?.name || "");
   const [weekdays, setWeekdays] = useState(initialData?.weekdays || []);
   const [lessonStart, setLessonStart] = useState(initialData?.lessonStart || "");
@@ -13,33 +17,20 @@ export function GroupForm({ initialData, onSubmit, onSaved }) {
 
   async function submit(event) {
     event.preventDefault();
-    if (!weekdays.length) {
-      setTimeError("Kamida bitta dars kunini tanlang.");
-      return;
-    }
-    if (!isValidLessonTime(lessonStart)) {
-      setTimeError("Boshlanish vaqti 09:00 dan 20:00 gacha, daqiqa faqat 00 yoki 30 bo'lishi kerak.");
-      return;
-    }
-    if (!lessonEnd || lessonEnd > "20:00") {
-      setTimeError("Dars 1 soat 30 daqiqa bo'lgani uchun eng kech boshlanish 18:30 bo'lishi kerak.");
-      return;
-    }
+    if (!weekdays.length) { setTimeError(t.gform_err_days); return; }
+    if (!isValidLessonTime(lessonStart)) { setTimeError(t.gform_err_time); return; }
+    if (!lessonEnd || lessonEnd > "20:00") { setTimeError(t.gform_err_end); return; }
     setTimeError("");
     setSaving(true);
     try {
       await onSubmit({ name, weekdays, lessonStart, lessonEnd });
-      if (!initialData) {
-        setName("");
-        setWeekdays([]);
-        setLessonStart("");
-      }
+      if (!initialData) { setName(""); setWeekdays([]); setLessonStart(""); }
       onSaved?.();
     } catch (error) {
       setTimeError(
         error?.code === "permission-denied"
-          ? "Firebase ruxsat bermadi. Firestore rules yoki Anonymous Auth sozlamasini tekshiring."
-          : `Guruh qo'shilmadi: ${error?.message || "noma'lum xato"}`
+          ? "Firebase ruxsat bermadi."
+          : `${t.gform_add}: ${error?.message || ""}`
       );
     } finally {
       setSaving(false);
@@ -54,45 +45,43 @@ export function GroupForm({ initialData, onSubmit, onSaved }) {
     <form className="entry-form" onSubmit={submit}>
       <div className="entry-form-head">
         <Plus size={18} />
-        <strong>{initialData ? "Guruhni tahrirlash" : "Guruh qo'shish"}</strong>
+        <strong>{initialData ? t.gform_edit : t.gform_add}</strong>
       </div>
       <label>
-        <span>Guruh nomi</span>
-        <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Masalan: IELTS A" required />
+        <span>{t.gform_name}</span>
+        <input value={name} onChange={(event) => setName(event.target.value)} placeholder={t.gform_name_ph} required />
       </label>
-      <div className="weekday-picker" aria-label="Dars kunlari">
-        {weekDays.map((day) => (
+      <div className="weekday-picker" aria-label={t.gform_name}>
+        {WEEKDAY_VALUES.map((val, i) => (
           <button
-            key={day.value}
+            key={val}
             type="button"
-            className={cx(weekdays.includes(day.value) && "weekday-active")}
-            onClick={() => toggleDay(day.value)}
+            className={cx(weekdays.includes(val) && "weekday-active")}
+            onClick={() => toggleDay(val)}
           >
-            {day.label}
+            {t.weekday_picker[i]}
           </button>
         ))}
       </div>
       <div className="time-grid">
         <label>
-          <span>Boshlanish</span>
+          <span>{t.gform_start}</span>
           <select value={lessonStart} onChange={(event) => setLessonStart(event.target.value)} required>
-            <option value="">Tanlang</option>
+            <option value="">{t.gform_select}</option>
             {lessonStartOptions.map((time) => (
-              <option key={time} value={time}>
-                {time}
-              </option>
+              <option key={time} value={time}>{time}</option>
             ))}
           </select>
         </label>
         <label>
-          <span>Tugash</span>
-          <input value={lessonEnd || "Avto"} readOnly />
+          <span>{t.gform_end}</span>
+          <input value={lessonEnd || t.gform_auto} readOnly />
         </label>
       </div>
       {timeError && <p className="form-error">{timeError}</p>}
       <button className="primary-button" type="submit" disabled={saving}>
         {saving ? <Loader2 size={16} className="spinner" /> : <Plus size={16} />}
-        {saving ? "Saqlanmoqda..." : initialData ? "Saqlash" : "Qo'shish"}
+        {saving ? t.gform_saving : initialData ? t.gform_save : t.gform_submit_add}
       </button>
     </form>
   );

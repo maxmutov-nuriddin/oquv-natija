@@ -1,8 +1,11 @@
 import { Award } from "lucide-react";
 import { navItems } from "../../constants";
+import { useT } from "../../i18n/index.jsx";
 import { cx, initials } from "../../lib/utils";
 
 export function Sidebar({ activePage, setActivePage, isDemo, teacher, logout }) {
+  const { lang, t, setLang } = useT();
+
   return (
     <aside className="sidebar">
       <div className="brand">
@@ -10,8 +13,8 @@ export function Sidebar({ activePage, setActivePage, isDemo, teacher, logout }) 
           <Award size={22} />
         </div>
         <div>
-          <h1>O'quv natija</h1>
-          <p>Admin dashboard</p>
+          <h1>{t.brand_title}</h1>
+          <p>{t.brand_subtitle}</p>
         </div>
       </div>
 
@@ -25,7 +28,7 @@ export function Sidebar({ activePage, setActivePage, isDemo, teacher, logout }) 
               onClick={() => setActivePage(item.id)}
             >
               <Icon size={18} />
-              <span>{item.label}</span>
+              <span>{t[`nav_${item.id}`] || item.label}</span>
             </button>
           );
         })}
@@ -34,16 +37,34 @@ export function Sidebar({ activePage, setActivePage, isDemo, teacher, logout }) 
       <div className="sidebar-note">
         <span className={cx("live-dot", isDemo ? "live-dot-demo" : "live-dot-online")} />
         <div>
-          <strong>{isDemo ? "Demo ma'lumot" : "Firebase live"}</strong>
-          <p>O'zgarishlar real-time yangilanadi.</p>
+          <strong>{isDemo ? t.sidebar_demo : t.sidebar_live}</strong>
+          <p>{t.sidebar_realtime}</p>
         </div>
       </div>
+
+      <div className="sidebar-note" style={{ padding: "8px 16px" }}>
+        <div style={{ display: "flex", gap: "6px", width: "100%" }}>
+          <button
+            onClick={() => setLang("uz")}
+            style={{ flex: 1, padding: "5px", borderRadius: "8px", border: `2px solid ${lang === "uz" ? "#1cb0f6" : "#e2e8f0"}`, background: lang === "uz" ? "#e0f2fe" : "transparent", fontWeight: lang === "uz" ? 700 : 500, fontSize: "12px", cursor: "pointer", color: lang === "uz" ? "#0369a1" : "#64748b" }}
+          >
+            UZ
+          </button>
+          <button
+            onClick={() => setLang("ru")}
+            style={{ flex: 1, padding: "5px", borderRadius: "8px", border: `2px solid ${lang === "ru" ? "#1cb0f6" : "#e2e8f0"}`, background: lang === "ru" ? "#e0f2fe" : "transparent", fontWeight: lang === "ru" ? 700 : 500, fontSize: "12px", cursor: "pointer", color: lang === "ru" ? "#0369a1" : "#64748b" }}
+          >
+            RU
+          </button>
+        </div>
+      </div>
+
       <div className="teacher-box">
         <div className="avatar avatar-small">{initials(teacher?.name || "O")}</div>
         <div>
-          <strong>{teacher?.name || "O'qituvchi"}</strong>
+          <strong>{teacher?.name || t.sidebar_teacher}</strong>
         </div>
-        <button type="button" onClick={logout} className="logout-btn-small">Chiqish</button>
+        <button type="button" onClick={logout} className="logout-btn-small">{t.sidebar_logout}</button>
       </div>
     </aside>
   );

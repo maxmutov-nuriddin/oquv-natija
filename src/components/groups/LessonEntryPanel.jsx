@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
 import { BookOpenCheck, CheckCircle2, Loader2 } from "lucide-react";
-import { scoreFields, weekDays } from "../../constants";
+import { scoreFields } from "../../constants";
+import { useT } from "../../i18n/index.jsx";
 import { cx, initials, numberInputValue, parsePercentInput } from "../../lib/utils";
 import { EmptyState } from "../ui/EmptyState";
 import { PanelHeader } from "../ui/PanelHeader";
 
 export function LessonEntryPanel({ group, students, records, date, settings, saveLessonRecords }) {
+  const { t } = useT();
   const [entries, setEntries] = useState({});
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
   const selectedWeekday = new Date(date + "T00:00:00").getDay();
-  const dayLabel = weekDays.find((day) => day.value === selectedWeekday)?.label || "";
+  const dayLabel = t.weekday_short[selectedWeekday] || "";
   const isLessonDay = Boolean(group?.weekdays?.includes(selectedWeekday));
 
   useEffect(() => {
@@ -27,27 +29,19 @@ export function LessonEntryPanel({ group, students, records, date, settings, sav
       const currentKeys = Object.keys(current);
       const nextKeys = Object.keys(nextEntries);
       const sameLength = currentKeys.length === nextKeys.length;
-      const sameValues =
-        sameLength &&
-        nextKeys.every((studentId) => {
-          const currentEntry = current[studentId];
-          const nextEntry = nextEntries[studentId];
-          return (
-            currentEntry &&
-            currentEntry.homeworkScore === nextEntry.homeworkScore &&
-            currentEntry.attendanceScore === nextEntry.attendanceScore &&
-            currentEntry.activityScore === nextEntry.activityScore
-          );
-        });
+      const sameValues = sameLength && nextKeys.every((studentId) => {
+        const c = current[studentId];
+        const n = nextEntries[studentId];
+        return c && c.homeworkScore === n.homeworkScore && c.attendanceScore === n.attendanceScore && c.activityScore === n.activityScore;
+      });
       return sameValues ? current : nextEntries;
     });
   }, [students, records, date]);
 
   function update(studentId, key, value) {
-    const cleanValue = parsePercentInput(value);
     setEntries((current) => ({
       ...current,
-      [studentId]: { ...current[studentId], [key]: cleanValue }
+      [studentId]: { ...current[studentId], [key]: parsePercentInput(value) }
     }));
   }
 
@@ -56,14 +50,10 @@ export function LessonEntryPanel({ group, students, records, date, settings, sav
     setMessage("");
     setSaving(true);
     try {
-      await saveLessonRecords({
-        date,
-        settings,
-        students: students.map((student) => ({ ...student, ...entries[student.id] }))
-      });
-      setMessage("Dars natijalari saqlandi.");
+      await saveLessonRecords({ date, settings, students: students.map((student) => ({ ...student, ...entries[student.id] })) });
+      setMessage(t.lesson_saved);
     } catch (error) {
-      setMessage(`Saqlanmadi: ${error?.message || "noma'lum xato"}`);
+      setMessage(`${t.lesson_error} ${error?.message || ""}`);
     } finally {
       setSaving(false);
     }
@@ -73,21 +63,19 @@ export function LessonEntryPanel({ group, students, records, date, settings, sav
     <section className="panel lesson-panel">
       <PanelHeader
         icon={BookOpenCheck}
-        title="Dars baholash"
+        title={t.lesson_title}
         subtitle={`${dayLabel} · ${group?.lessonStart || "--:--"} - ${group?.lessonEnd || "--:--"}`}
       />
-      {!isLessonDay && (
-        <p className="lesson-warning">Tanlangan sana bu guruhning dars kuni emas. Kerak bo'lsa yuqoridan boshqa sanani tanlang.</p>
-      )}
-      {!students.length && <EmptyState title="O'quvchi yo'q" text="Avval shu guruhga o'quvchi qo'shing." />}
+      {!isLessonDay && <p className="lesson-warning">{t.lesson_not_day}</p>}
+      {!students.length && <EmptyState title={t.lesson_no_students_title} text={t.lesson_no_students_text} />}
       {!!students.length && (
         <form onSubmit={submit}>
           <div className="lesson-table">
             <div className="lesson-table-head">
-              <span>O'quvchi</span>
-              <span>Uy vazifa %</span>
-              <span>Yuqori natija %</span>
-              <span>Aktivlik %</span>
+              <span>{t.lesson_col_student}</span>
+              <span>{t.lesson_col_hw}</span>
+              <span>{t.lesson_col_att}</span>
+              <span>{t.lesson_col_act}</span>
             </div>
             {students.map((student) => (
               <div className="lesson-row" key={student.id}>
@@ -111,10 +99,10 @@ export function LessonEntryPanel({ group, students, records, date, settings, sav
             ))}
           </div>
           <div style={{ position: "sticky", bottom: "16px", zIndex: 10, marginTop: "16px", padding: "12px", background: "#ffffff", borderRadius: "12px", boxShadow: "0 4px 20px rgba(0,0,0,0.08)", border: "1px solid #e2e8f0" }}>
-            {message && <p className={cx("lesson-message", message.startsWith("Saqlanmadi") && "lesson-message-error")} style={{ marginTop: 0, marginBottom: "12px" }}>{message}</p>}
+            {message && <p className={cx("lesson-message", message.startsWith(t.lesson_error) && "lesson-message-error")} style={{ marginTop: 0, marginBottom: "12px" }}>{message}</p>}
             <button className="primary-button save-button" type="submit" disabled={saving || !isLessonDay} style={{ width: "100%", justifyContent: "center" }}>
               {saving ? <Loader2 size={17} className="spinner" /> : <CheckCircle2 size={17} />}
-              {saving ? "Saqlanmoqda..." : "Dars natijasini saqlash"}
+              {saving ? t.lesson_saving : t.lesson_save}
             </button>
           </div>
         </form>
