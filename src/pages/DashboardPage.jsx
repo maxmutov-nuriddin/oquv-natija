@@ -5,6 +5,7 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 import { calculateCoins, getPeriodLeader, getPreviousMonthRange, getPreviousWeekRange, rankStudents } from "../lib/scoring";
 import { BonusDrumModal } from "../components/games/BonusDrumModal";
 import { StudentCard } from "../components/student/StudentCard";
+import { TimerPanel } from "../components/ui/TimerPanel";
 import { CurrentLessonBanner } from "../components/ui/CurrentLessonBanner";
 import { EmptyState } from "../components/ui/EmptyState";
 import { FunModal } from "../components/ui/FunModal";
@@ -98,6 +99,8 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
         <StatCard icon={Medal} label="O'tgan hafta lideri" value={previousWeekLeader?.name.split(" ")[0] || "-"} hint={`${previousWeekLeader?.periodCoins || 0} coin`} tone="mint" />
         <StatCard icon={Trophy} label="O'tgan oy lideri" value={previousMonthLeader?.name.split(" ")[0] || "-"} hint={`${previousMonthLeader?.periodCoins || 0} coin`} tone="rose" />
       </section>
+
+      <TimerPanel />
 
       <section className="dashboard-grid">
         <div className="panel chart-panel">

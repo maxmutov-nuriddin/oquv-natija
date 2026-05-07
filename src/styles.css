@@ -413,6 +413,34 @@ button {
   font-weight: 800; font-size: 13px; color: var(--text); text-transform: uppercase;
 }
 
+/* Timer */
+.timer-panel { padding: 28px 32px; margin-bottom: 24px; }
+.timer-inner { display: grid; grid-template-columns: 180px 1fr; gap: 32px; align-items: center; }
+.timer-ring-wrap { position: relative; width: 180px; height: 180px; flex-shrink: 0; }
+.timer-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+.timer-digits { font-size: 40px; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -1px; }
+.timer-done-emoji { font-size: 48px; }
+.timer-done-label { font-size: 11px; font-weight: 900; color: #ef4444; text-transform: uppercase; letter-spacing: 0.05em; }
+.timer-ring-low { animation: timer-pulse 0.6s ease-in-out infinite alternate; }
+.timer-ring-done { animation: timer-shake 0.5s ease; }
+@keyframes timer-pulse { from { transform: scale(1); } to { transform: scale(1.04); } }
+@keyframes timer-shake { 0%,100%{transform:rotate(0)} 20%{transform:rotate(-3deg)} 40%{transform:rotate(3deg)} 60%{transform:rotate(-2deg)} 80%{transform:rotate(2deg)} }
+
+.timer-controls-col { display: flex; flex-direction: column; gap: 14px; }
+.timer-section-label { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--muted); margin: 0; letter-spacing: 0.05em; }
+.timer-presets { display: flex; gap: 8px; flex-wrap: wrap; }
+.timer-preset-btn { padding: 8px 14px; border-radius: 999px; border: 2px solid var(--line); border-bottom: 4px solid var(--line-dark); font-weight: 800; font-size: 14px; background: #f8fafc; color: var(--text); cursor: pointer; transition: all 0.1s; }
+.timer-preset-btn:hover { background: #f1f5f9; }
+.timer-preset-btn:active { transform: translateY(3px); border-bottom-width: 1px; }
+.timer-preset-active { background: var(--blue) !important; color: #fff !important; border-color: var(--blue-dark) !important; box-shadow: 0 4px 0 var(--blue-dark); }
+.timer-custom-row { display: flex; gap: 8px; align-items: center; }
+.timer-custom-input { width: 90px; padding: 8px 12px; border: 2px solid var(--line); border-bottom: 4px solid var(--line-dark); border-radius: var(--radius-xs); font-weight: 700; font-size: 14px; color: var(--text); outline: none; background: #f8fafc; }
+.timer-custom-input:focus { border-color: var(--blue); border-bottom-color: var(--blue-dark); }
+.timer-custom-apply { padding: 8px 16px; font-size: 14px; }
+.timer-actions { display: flex; gap: 10px; }
+.timer-start-btn { flex: 1; justify-content: center; padding: 12px; font-size: 15px; }
+.timer-reset-btn { padding: 12px 14px; }
+
 .period-summary-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
 .period-chip { border: 1.5px solid; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; }
 .period-chip-title { font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--muted); }
