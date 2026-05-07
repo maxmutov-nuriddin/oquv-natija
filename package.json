@@ -16,7 +16,8 @@
     "react": "latest",
     "react-dom": "latest",
     "react-router-dom": "^7.15.0",
-    "recharts": "latest"
+    "recharts": "latest",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "latest",
