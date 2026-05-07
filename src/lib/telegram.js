@@ -69,6 +69,8 @@ export async function sendLessonReport({ group, students, date, settings }) {
     }
   });
 
+  if (attended.length === 0) return;
+
   attended.sort((a, b) => b.score - a.score);
 
   const dateStr = dayjs(date).format("DD.MM.YYYY");
