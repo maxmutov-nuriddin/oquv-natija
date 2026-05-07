@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Pause, Play, RotateCcw } from "lucide-react";
+import { Bell, BellOff, Pause, Play, RotateCcw } from "lucide-react";
 
 const PRESETS = [
   { label: "1'",  s: 60  },
@@ -14,54 +14,56 @@ const CIRC   = 2 * Math.PI * RADIUS;
 const LS_KEY = "oquv_timer";
 
 function loadState() {
-  try {
-    const raw = localStorage.getItem(LS_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
+  try { return JSON.parse(localStorage.getItem(LS_KEY)); } catch { return null; }
 }
-
-function saveState(state) {
-  localStorage.setItem(LS_KEY, JSON.stringify(state));
+function saveState(s) { localStorage.setItem(LS_KEY, JSON.stringify(s)); }
+function calcRemaining(s) {
+  if (!s.startedAt) return s.baseRemaining;
+  return Math.max(0, s.baseRemaining - Math.floor((Date.now() - s.startedAt) / 1000));
 }
-
-// Returns current remaining seconds based on timestamp arithmetic
-function calcRemaining(state) {
-  if (!state.startedAt) return state.baseRemaining;
-  const elapsed = Math.floor((Date.now() - state.startedAt) / 1000);
-  return Math.max(0, state.baseRemaining - elapsed);
-}
-
 function initialState() {
   const saved = loadState();
   if (saved) {
     const rem = calcRemaining(saved);
-    // If was running but time ran out while away
-    if (rem <= 0 && saved.startedAt) {
-      return { ...saved, startedAt: null, baseRemaining: 0, done: true };
-    }
+    if (rem <= 0 && saved.startedAt) return { ...saved, startedAt: null, baseRemaining: 0, done: true };
     return { ...saved, baseRemaining: rem, startedAt: saved.startedAt ? Date.now() - (saved.baseRemaining - rem) * 1000 : null };
   }
   return { total: 180, baseRemaining: 180, startedAt: null, done: false };
 }
 
-export function TimerPanel() {
-  const [state, setState] = useState(initialState);
-  const [display, setDisplay] = useState(() => calcRemaining(initialState()));
-  const [custom, setCustom] = useState("");
-  const rafRef = useRef(null);
+// Web Audio API — 3 ta qo'ng'iroq ovozi (hech qanday fayl kerak emas)
+function playAlarm() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [0, 0.5, 1.0].forEach(delay => {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(880, ctx.currentTime + delay);
+      osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + delay + 0.4);
+      gain.gain.setValueAtTime(0.4, ctx.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.4);
+      osc.start(ctx.currentTime + delay);
+      osc.stop(ctx.currentTime + delay + 0.4);
+    });
+    if (navigator.vibrate) navigator.vibrate([300, 150, 300, 150, 300]);
+  } catch { /* ovoz qo'llab-quvvatlanmasa o'tkazib yuboradi */ }
+}
 
-  const remaining = calcRemaining(state);
+export function TimerPanel() {
+  const [state,   setState]   = useState(initialState);
+  const [display, setDisplay] = useState(() => calcRemaining(initialState()));
+  const [custom,  setCustom]  = useState("");
+  const [muted,   setMuted]   = useState(false);
+  const rafRef    = useRef(null);
+  const alarmFired = useRef(false);
+
   const isRunning = state.startedAt !== null;
 
-  // RAF loop for smooth countdown display
   useEffect(() => {
-    if (!isRunning) {
-      setDisplay(state.baseRemaining);
-      return;
-    }
+    if (!isRunning) { setDisplay(state.baseRemaining); return; }
 
     function tick() {
       const rem = calcRemaining(state);
@@ -72,19 +74,21 @@ export function TimerPanel() {
           saveState(next);
           return next;
         });
+        if (!alarmFired.current && !muted) {
+          alarmFired.current = true;
+          playAlarm();
+        }
         return;
       }
       rafRef.current = requestAnimationFrame(tick);
     }
 
+    alarmFired.current = false;
     rafRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafRef.current);
-  }, [isRunning, state]);
+  }, [isRunning, state, muted]);
 
-  function update(next) {
-    saveState(next);
-    setState(next);
-  }
+  function update(next) { saveState(next); setState(next); }
 
   function selectPreset(s) {
     cancelAnimationFrame(rafRef.current);
@@ -100,13 +104,8 @@ export function TimerPanel() {
 
   function handleStartPause() {
     if (state.done || display === 0) return;
-    if (isRunning) {
-      // Pause: freeze baseRemaining at current value, clear startedAt
-      update({ ...state, baseRemaining: calcRemaining(state), startedAt: null });
-    } else {
-      // Start: record when we started
-      update({ ...state, baseRemaining: display, startedAt: Date.now() });
-    }
+    if (isRunning) update({ ...state, baseRemaining: calcRemaining(state), startedAt: null });
+    else           update({ ...state, baseRemaining: display, startedAt: Date.now() });
   }
 
   function handleReset() {
@@ -130,12 +129,8 @@ export function TimerPanel() {
             <circle cx="90" cy="90" r={RADIUS} fill="none" stroke="#e2e8f0" strokeWidth="10" />
             <circle
               cx="90" cy="90" r={RADIUS}
-              fill="none"
-              stroke={ringColor}
-              strokeWidth="10"
-              strokeLinecap="round"
-              strokeDasharray={CIRC}
-              strokeDashoffset={offset}
+              fill="none" stroke={ringColor} strokeWidth="10" strokeLinecap="round"
+              strokeDasharray={CIRC} strokeDashoffset={offset}
               transform="rotate(-90 90 90)"
               style={{ transition: "stroke 0.3s" }}
             />
@@ -150,7 +145,17 @@ export function TimerPanel() {
         </div>
 
         <div className="timer-controls-col">
-          <p className="timer-section-label">Vaqt tanlang</p>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <p className="timer-section-label">Vaqt tanlang</p>
+            <button
+              className="secondary-button"
+              onClick={() => setMuted(m => !m)}
+              title={muted ? "Ovozni yoqish" : "Ovozni o'chirish"}
+              style={{ padding: "5px 8px", fontSize: "12px", gap: "4px" }}
+            >
+              {muted ? <BellOff size={14} /> : <Bell size={14} />}
+            </button>
+          </div>
 
           <div className="timer-presets">
             {PRESETS.map(p => (
@@ -166,18 +171,13 @@ export function TimerPanel() {
 
           <div className="timer-custom-row">
             <input
-              type="number"
-              min="1"
-              max="99"
-              placeholder="daqiqa"
+              type="number" min="1" max="99" placeholder="daqiqa"
               className="timer-custom-input"
               value={custom}
               onChange={e => setCustom(e.target.value)}
               onKeyDown={e => e.key === "Enter" && applyCustom()}
             />
-            <button className="secondary-button timer-custom-apply" onClick={applyCustom}>
-              OK
-            </button>
+            <button className="secondary-button timer-custom-apply" onClick={applyCustom}>OK</button>
           </div>
 
           <div className="timer-actions">
