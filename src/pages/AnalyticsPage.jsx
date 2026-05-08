@@ -200,6 +200,7 @@ export function AnalyticsPage({ groups, students, records, settings, date }) {
       const avgScore  = groupAvgScore(gStudents, records, settings, 30, date) ?? 0;
       const avgCoins  = ranked.length ? Math.round(ranked.reduce((s,st)=>s+st.coins,0)/ranked.length) : 0;
       let dangerCount = 0, declineCount = 0, riseCount = 0;
+      let sumHw = 0, sumAtt = 0, sumAct = 0, activeCount = 0;
       gStudents.forEach(s => {
         const recs = records.filter(r =>
           r.studentId === s.id && r.date >= cutoff &&
@@ -215,8 +216,27 @@ export function AnalyticsPage({ groups, students, records, settings, date }) {
         if (avg30 < 50)                                    dangerCount++;
         else if (isDeclineTrend(s.id, records, settings)) declineCount++;
         if (isRiseTrend(s.id, records, settings))         riseCount++;
+        sumHw  += recs.reduce((sum,r)=>sum+Number(r.homework  ||0),0)/n;
+        sumAtt += recs.reduce((sum,r)=>sum+Number(r.attendance||0),0)/n;
+        sumAct += recs.reduce((sum,r)=>sum+Number(r.activity  ||0),0)/n;
+        activeCount++;
       });
-      return { group: g, students: ranked, avgScore, avgCoins, dangerCount, declineCount, riseCount };
+
+      let groupBottleneck = null;
+      if (activeCount > 0) {
+        const grpHw  = Math.round(sumHw  / activeCount);
+        const grpAtt = Math.round(sumAtt / activeCount);
+        const grpAct = Math.round(sumAct / activeCount);
+        const hwLoss  = (100 - grpHw)  * hwW;
+        const attLoss = (100 - grpAtt) * attW;
+        const actLoss = (100 - grpAct) * actW;
+        let key = "hw", val = grpHw;
+        if (attLoss >= hwLoss && attLoss >= actLoss) { key = "att"; val = grpAtt; }
+        else if (actLoss >= hwLoss && actLoss >= attLoss) { key = "act"; val = grpAct; }
+        if (val < 75) groupBottleneck = { key, val, hw: grpHw, att: grpAtt, act: grpAct };
+      }
+
+      return { group: g, students: ranked, avgScore, avgCoins, dangerCount, declineCount, riseCount, groupBottleneck };
     });
   }, [groups, students, records, settings, date]);
 
@@ -261,6 +281,29 @@ export function AnalyticsPage({ groups, students, records, settings, date }) {
                 {gs.avgScore}%
               </span>
             </div>
+
+            {/* Group bottleneck */}
+            {gs.groupBottleneck && (() => {
+              const METRIC = { hw: "📚 Uy vazifa", att: "✅ Sinf vazifa", act: "⚡ Aktivlik" };
+              const bn = gs.groupBottleneck;
+              const isWeak = bn.val < 50;
+              return (
+                <div style={{
+                  display: "flex", alignItems: "center", gap: "8px",
+                  background: isWeak ? "#fff5f5" : "#fff9e0",
+                  border: `1px solid ${isWeak ? "var(--rose)" : "var(--gold)"}`,
+                  borderRadius: "10px", padding: "6px 12px", marginBottom: "12px",
+                  fontSize: "13px", fontWeight: 800,
+                  color: isWeak ? "var(--rose-dark)" : "#92400e"
+                }}>
+                  <span>{isWeak ? "⚠️" : "📌"}</span>
+                  <span>Eng zaif yo'nalish: {METRIC[bn.key]} — {bn.val}%</span>
+                  <span style={{ marginLeft: "auto", fontSize: "11px", fontWeight: 600, color: "var(--muted)" }}>
+                    📚{bn.hw}% · ✅{bn.att}% · ⚡{bn.act}%
+                  </span>
+                </div>
+              );
+            })()}
 
             {/* Status badges */}
             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
