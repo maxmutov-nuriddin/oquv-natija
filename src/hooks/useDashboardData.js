@@ -209,24 +209,54 @@ export function useDashboardData() {
         }
       },
       async deleteGroup(groupId) {
+        if (hasFirebaseConfig && db) {
+          await ensureAdminSession();
+
+          const groupRef = doc(db, "groups", groupId);
+          const groupSnap = await getDoc(groupRef);
+          const groupName = groupSnap.data()?.name;
+          if (!groupName) return;
+
+          // Faqat shu guruh studentlarini topamiz
+          const studentsSnap = await getDocs(
+            query(collection(db, "students"), where("group", "==", groupName))
+          );
+          const studentIds = studentsSnap.docs.map(d => d.id);
+
+          // Shu studentlarning recordlarini topamiz (10talik chunklar bilan)
+          const recordRefs = [];
+          for (let i = 0; i < studentIds.length; i += 10) {
+            const chunk = studentIds.slice(i, i + 10);
+            const recordsSnap = await getDocs(
+              query(collection(db, "records"), where("studentId", "in", chunk))
+            );
+            recordsSnap.docs.forEach(d => recordRefs.push(d.ref));
+          }
+
+          // Hammasini 500talik batch'larda o'chiramiz
+          const allRefs = [groupRef, ...studentsSnap.docs.map(d => d.ref), ...recordRefs];
+          for (let i = 0; i < allRefs.length; i += 500) {
+            const batch = writeBatch(db);
+            allRefs.slice(i, i + 500).forEach(ref => batch.delete(ref));
+            await batch.commit();
+          }
+          // onSnapshot avtomatik local state ni yangilaydi
+          return;
+        }
+
+        // Demo rejim: faqat local state
         setData((current) => {
           const groupToDelete = current.groups.find((g) => g.id === groupId);
+          const deletedStudentIds = new Set(
+            current.students.filter(s => s.group === groupToDelete?.name).map(s => s.id)
+          );
           return {
             ...current,
             groups: current.groups.filter((g) => g.id !== groupId),
-            students: current.students.filter((s) => s.group !== groupToDelete?.name),
-            records: current.records.filter((r) => {
-              const student = current.students.find(s => s.id === r.studentId);
-              return student?.group !== groupToDelete?.name;
-            })
+            students: current.students.filter((s) => !deletedStudentIds.has(s.id)),
+            records: current.records.filter((r) => !deletedStudentIds.has(r.studentId))
           };
         });
-
-        if (hasFirebaseConfig && db) {
-          await ensureAdminSession();
-          await deleteDoc(doc(db, "groups", groupId));
-          // Note: In a real app we'd also delete associated students and records from DB.
-        }
       },
       async saveLessonRecords({ date, students, settings }) {
         const rows = [];

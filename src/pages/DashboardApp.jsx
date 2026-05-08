@@ -34,6 +34,17 @@ export function DashboardApp({ teacher, logout, updateProfile, changePassword })
   const [manualGroup, setManualGroup] = useState("");
   const selectedGroup = manualGroup || automaticGroup;
   const [editingStudent, setEditingStudent] = useState(null);
+  const [pendingScores, setPendingScores] = useState({});
+
+  // Clear pending scores when switching group or date
+  useEffect(() => { setPendingScores({}); }, [selectedGroup, date]);
+
+  function handleScoreChange(studentId, key, value) {
+    setPendingScores(prev => ({
+      ...prev,
+      [studentId]: { ...(prev[studentId] || {}), [key]: value }
+    }));
+  }
 
   async function handleDeleteStudent(student) {
     if (!window.confirm(t.app_delete_confirm(student.name))) return;
@@ -42,17 +53,20 @@ export function DashboardApp({ teacher, logout, updateProfile, changePassword })
 
   async function handleSendResults() {
     if (!currentGroup) return;
-    const groupStudents = students.filter(s => s.group === selectedGroup);
+    const groupStudents = students.filter(s => s.group === currentGroup.name);
     const studentsWithScores = groupStudents.map(student => {
+      const p = pendingScores[student.id];
       const record = records.find(r => r.studentId === student.id && r.date === date);
       return {
         ...student,
-        homeworkScore: record?.homework || 0,
-        attendanceScore: record?.attendance || 0,
-        activityScore: record?.activity || 0,
+        homeworkScore: p?.homeworkScore ?? record?.homework ?? 0,
+        attendanceScore: p?.attendanceScore ?? record?.attendance ?? 0,
+        activityScore: p?.activityScore ?? record?.activity ?? 0,
       };
     });
+    await saveLessonRecords({ date, settings, students: studentsWithScores });
     await sendLessonReport({ group: currentGroup, students: studentsWithScores, date, settings });
+    setPendingScores({});
   }
 
   return (
@@ -102,6 +116,8 @@ export function DashboardApp({ teacher, logout, updateProfile, changePassword })
                   onDeleteStudent={handleDeleteStudent}
                   saveLessonRecords={saveLessonRecords}
                   updateStudent={updateStudent}
+                  pendingScores={pendingScores}
+                  onScoreChange={handleScoreChange}
                 />
               )}
               {activePage === "groups" && (

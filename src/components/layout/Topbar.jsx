@@ -47,17 +47,12 @@ export function Topbar({ activePage, date, setDate, query, setQuery, selectedGro
       <div className="control-row">
         {showSendBtn && (
           <button
+            className="primary-button"
             onClick={handleSend}
             disabled={sending}
-            style={{
-              display: "flex", alignItems: "center", gap: "6px",
-              padding: "8px 14px", borderRadius: "8px", border: "none", cursor: "pointer",
-              background: sending ? "#94a3b8" : "linear-gradient(135deg, #2563eb, #1d4ed8)",
-              color: "#fff", fontWeight: 600, fontSize: "13px", whiteSpace: "nowrap",
-              boxShadow: "0 2px 8px rgba(37,99,235,0.35)", transition: "opacity 0.2s"
-            }}
+            style={{ height: "54px", padding: "0 20px", fontSize: "14px", whiteSpace: "nowrap" }}
           >
-            {sending ? <Loader2 size={14} className="spinner" /> : <Send size={14} />}
+            {sending ? <Loader2 size={15} className="spinner" /> : <Send size={15} />}
             {sending ? t.topbar_sending : (sendStatus || t.topbar_send_results)}
           </button>
         )}

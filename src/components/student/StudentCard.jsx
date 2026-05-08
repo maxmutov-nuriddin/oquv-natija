@@ -7,7 +7,7 @@ import { getScoreSummary, isDeclineTrend } from "../../lib/scoring";
 import { cx, getLevel, getPerformanceStatus, initials, numberInputValue, parsePercentInput } from "../../lib/utils";
 import { ProgressLine } from "../ui/ProgressLine";
 
-export function StudentCard({ student, onDelete, onEdit, onProfile, index, date, records, settings, saveLessonRecords, isLessonDay = true, onWarningReset, onUpdateStudent, weeklyWinner, monthlyWinner, hideGifts = false }) {
+export function StudentCard({ student, onDelete, onEdit, onProfile, index, date, records, settings, saveLessonRecords, isLessonDay = true, isRecordSaved = false, pendingScore, onScoreChange, onWarningReset, onUpdateStudent, weeklyWinner, monthlyWinner, hideGifts = false }) {
   const { t } = useT();
   const todayRecord = records?.find((r) => r.studentId === student.id && r.date === date);
   const hw = todayRecord ? todayRecord.homework : 0;
@@ -154,7 +154,12 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
       <div className="quick-edit">
         {scoreFields.map((field) => {
           const Icon = field.icon;
-          const val = field.key === "homeworkScore" ? hw : field.key === "attendanceScore" ? att : act;
+          const savedVal = field.key === "homeworkScore" ? hw : field.key === "attendanceScore" ? att : act;
+          const val = pendingScore?.[field.key] ?? savedVal;
+          const handleChange = (newVal) => {
+            if (onScoreChange) onScoreChange(field.key, newVal);
+            else handleQuickUpdate(field.key, newVal);
+          };
           return (
             <label key={field.key}>
               <span>
@@ -165,9 +170,13 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
                 type="number"
                 min="0"
                 max="100"
-                disabled={!isLessonDay}
+                disabled={!isLessonDay || isRecordSaved}
                 value={numberInputValue(val)}
-                onChange={(event) => handleQuickUpdate(field.key, parsePercentInput(event.target.value))}
+                onChange={(event) => handleChange(parsePercentInput(event.target.value))}
+                onFocus={(e) => e.target.select()}
+                onBlur={(e) => { if (e.target.value === "" || isNaN(Number(e.target.value))) handleChange(0); }}
+                onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); }}
+                onWheel={(e) => e.target.blur()}
                 aria-label={field.label}
               />
             </label>

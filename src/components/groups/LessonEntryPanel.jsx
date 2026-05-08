@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { BookOpenCheck, CheckCircle2, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { BookOpenCheck, CheckCircle2, Loader2, Pencil } from "lucide-react";
 import { scoreFields } from "../../constants";
 import { useT } from "../../i18n/index.jsx";
 import { cx, initials, numberInputValue, parsePercentInput } from "../../lib/utils";
@@ -11,59 +11,19 @@ export function LessonEntryPanel({ group, students, records, date, currentTime, 
   const [entries, setEntries] = useState({});
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
+  const [isUnlocked, setIsUnlocked] = useState(false);
   const selectedWeekday = new Date(date + "T00:00:00").getDay();
   const dayLabel = t.weekday_short[selectedWeekday] || "";
   const isLessonDay = Boolean(group?.weekdays?.includes(selectedWeekday));
   const isLessonOver = Boolean(group?.lessonEnd && isLessonDay && currentTime >= group.lessonEnd);
+  const isRecordSaved = students.length > 0 && students.some(s => records.some(r => r.studentId === s.id && r.date === date));
+  const locked = isRecordSaved && !isUnlocked;
 
-  // Refs so callbacks always read latest values without causing re-runs
-  const entriesRef = useRef(entries);
-  useEffect(() => { entriesRef.current = entries; }, [entries]);
-  const studentsRef = useRef(students);
-  useEffect(() => { studentsRef.current = students; }, [students]);
-  const settingsRef = useRef(settings);
-  useEffect(() => { settingsRef.current = settings; }, [settings]);
-
-  const prevTimeRef  = useRef(currentTime);
-  const autoSavedRef = useRef(""); // "groupId-date" of last auto-save
-
-  // Stable auto-save callback — reassigned every render so always uses fresh closure values
-  const doAutoSaveRef = useRef(null);
-  doAutoSaveRef.current = () => {
-    if (!group?.lessonEnd || !isLessonDay) return;
-    const saveKey = `${group.id || group.name}-${date}`;
-    if (autoSavedRef.current === saveKey) return;
-    autoSavedRef.current = saveKey;
-    const s = settingsRef.current;
-    const studentsWithScores = studentsRef.current.map(st => ({ ...st, ...entriesRef.current[st.id] }));
-    saveLessonRecords({ date, settings: s, students: studentsWithScores })
-      .then(() => {
-        setMessage(t.lesson_auto_saved);
-      })
-      .catch(err => {
-        autoSavedRef.current = ""; // allow retry on next tick
-        setMessage(`${t.lesson_error} ${err?.message || ""}`);
-      });
-  };
-
-  // Auto-save when currentTime crosses group.lessonEnd
+  // Clear stale message and unlock state when switching groups
   useEffect(() => {
-    const prev = prevTimeRef.current;
-    prevTimeRef.current = currentTime;
-    if (!currentTime || !group?.lessonEnd || !isLessonDay) return;
-    if (prev < group.lessonEnd && currentTime >= group.lessonEnd) {
-      doAutoSaveRef.current();
-    }
-  }, [currentTime]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Auto-save if lesson was already over when page loaded or group/date changed.
-  // 200ms delay lets the entries-init effect populate entriesRef first.
-  useEffect(() => {
-    if (!currentTime || !group?.lessonEnd || !isLessonDay) return;
-    if (currentTime < group.lessonEnd) return;
-    const timer = setTimeout(() => doAutoSaveRef.current(), 200);
-    return () => clearTimeout(timer);
-  }, [group?.id, date]); // eslint-disable-line react-hooks/exhaustive-deps
+    setMessage("");
+    setIsUnlocked(false);
+  }, [group?.id, date]);
 
   useEffect(() => {
     const nextEntries = {};
@@ -117,11 +77,25 @@ export function LessonEntryPanel({ group, students, records, date, currentTime, 
         title={t.lesson_title}
         subtitle={`${dayLabel} · ${group?.lessonStart || "--:--"} - ${group?.lessonEnd || "--:--"}`}
       />
-      {!isLessonDay && <p className="lesson-warning">{t.lesson_not_day}</p>}
-      {isLessonOver && (
+      {!isLessonDay && !isRecordSaved && <p className="lesson-warning">{t.lesson_not_day}</p>}
+      {isLessonOver && !isRecordSaved && (
         <p className="lesson-warning" style={{ background: "#fef3c7", color: "#92400e", borderColor: "#fcd34d", fontWeight: 600 }}>
           {t.lesson_over}
         </p>
+      )}
+      {isRecordSaved && !isUnlocked && (
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", background: "#dcfce7", color: "#15803d", border: "1px solid #86efac", borderRadius: "8px", fontWeight: 600, fontSize: "13px" }}>
+          <span style={{ flex: 1 }}>🔒 Natijalar saqlandi va qulflandi</span>
+          <button
+            type="button"
+            className="secondary-button"
+            style={{ padding: "5px 12px", fontSize: "12px", flexShrink: 0, background: "white", color: "#15803d", borderColor: "#86efac" }}
+            onClick={() => setIsUnlocked(true)}
+          >
+            <Pencil size={13} />
+            Tahrirlash
+          </button>
+        </div>
       )}
       {!students.length && <EmptyState title={t.lesson_no_students_title} text={t.lesson_no_students_text} />}
       {!!students.length && (
@@ -145,7 +119,7 @@ export function LessonEntryPanel({ group, students, records, date, currentTime, 
                     type="number"
                     min="0"
                     max="100"
-                    disabled={!isLessonDay || isLessonOver}
+                    disabled={!isLessonDay || isLessonOver || locked}
                     value={numberInputValue(entries[student.id]?.[field.key])}
                     onChange={(event) => update(student.id, field.key, event.target.value)}
                     aria-label={`${student.name} ${field.label}`}
@@ -156,7 +130,7 @@ export function LessonEntryPanel({ group, students, records, date, currentTime, 
           </div>
           <div style={{ position: "sticky", bottom: "16px", zIndex: 10, marginTop: "16px", padding: "12px", background: "#ffffff", borderRadius: "12px", boxShadow: "0 4px 20px rgba(0,0,0,0.08)", border: "1px solid #e2e8f0" }}>
             {message && <p className={cx("lesson-message", message.startsWith(t.lesson_error) && "lesson-message-error")} style={{ marginTop: 0, marginBottom: "12px" }}>{message}</p>}
-            <button className="primary-button save-button" type="submit" disabled={saving || !isLessonDay || isLessonOver} style={{ width: "100%", justifyContent: "center" }}>
+            <button className="primary-button save-button" type="submit" disabled={saving || !isLessonDay || isLessonOver || locked} style={{ width: "100%", justifyContent: "center" }}>
               {saving ? <Loader2 size={17} className="spinner" /> : <CheckCircle2 size={17} />}
               {saving ? t.lesson_saving : t.lesson_save}
             </button>

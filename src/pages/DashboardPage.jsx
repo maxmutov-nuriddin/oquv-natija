@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
-import { useMemo, useState } from "react";
-import { BarChart3, Coins, Medal, Trophy, Users } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { BarChart3, Coins, Medal, Pencil, Trophy, Users } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { calculateCoins, getPeriodLeader, getPreviousMonthRange, getPreviousWeekRange, rankStudents } from "../lib/scoring";
 import { useT } from "../i18n/index.jsx";
@@ -16,7 +16,7 @@ import { FunModal } from "../components/ui/FunModal";
 import { PanelHeader } from "../components/ui/PanelHeader";
 import { StatCard } from "../components/ui/StatCard";
 
-export function DashboardPage({ groups, students, records, settings, selectedGroup, currentGroup, currentTime, date, query, onEditStudent, onDeleteStudent, saveLessonRecords, updateStudent }) {
+export function DashboardPage({ groups, students, records, settings, selectedGroup, currentGroup, currentTime, date, query, onEditStudent, onDeleteStudent, saveLessonRecords, updateStudent, pendingScores = {}, onScoreChange }) {
   const monthlyWinner = useMemo(() => getPeriodLeader(students.filter(s => s.group === selectedGroup), records, settings, getPreviousMonthRange(date)), [students, selectedGroup, records, settings, date]);
   const weeklyWinner = useMemo(() => {
     const candidates = students.filter(s => s.group === selectedGroup && s.id !== monthlyWinner?.id);
@@ -52,11 +52,15 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
 
   const todayGroupRecords = useMemo(() => records.filter(r => r.date === date && groupStudents.some(s => s.id === r.studentId)), [records, date, groupStudents]);
   const alreadySpun = todayGroupRecords.some(r => r.dailyBonus);
+  const isRecordSaved = todayGroupRecords.length > 0;
   const { t } = useT();
   const [showBonusDrum, setShowBonusDrum] = useState(false);
   const [profileStudent, setProfileStudent] = useState(null);
   const [showComic, setShowComic] = useState(false);
   const [comicVersion, setComicVersion] = useState(0);
+  const [scoresUnlocked, setScoresUnlocked] = useState(false);
+
+  useEffect(() => { setScoresUnlocked(false); }, [selectedGroup, date]);
 
   const showComicButton = useMemo(() => {
     if (!currentGroup?.lessonEnd || !currentTime) return false;
@@ -171,7 +175,20 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
       </section>
 
       <section className="panel">
-        <PanelHeader icon={Users} title={t.dash_students_section} subtitle={t.dash_students_hint} />
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+          <PanelHeader icon={Users} title={t.dash_students_section} subtitle={t.dash_students_hint} />
+          {isRecordSaved && !scoresUnlocked && (
+            <button
+              type="button"
+              className="secondary-button"
+              style={{ padding: "6px 14px", fontSize: "13px", flexShrink: 0 }}
+              onClick={() => setScoresUnlocked(true)}
+            >
+              <Pencil size={14} />
+              Tahrirlash
+            </button>
+          )}
+        </div>
         {!selectedGroup && <EmptyState title={t.dash_no_group_title} text={t.dash_no_group_text} />}
         {selectedGroup && !ranked.length && <EmptyState title={t.dash_no_students_title} text={t.dash_no_students_text} />}
         {!!ranked.length && (
@@ -189,6 +206,9 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
                 saveLessonRecords={saveLessonRecords}
                 onProfile={setProfileStudent}
                 isLessonDay={isLessonDay}
+                isRecordSaved={isRecordSaved && !scoresUnlocked}
+                pendingScore={pendingScores[student.id]}
+                onScoreChange={onScoreChange ? (key, value) => onScoreChange(student.id, key, value) : undefined}
                 onWarningReset={(studentId, newIgnoredDates) => updateStudent(studentId, { ignoredZeroDates: newIgnoredDates })}
                 onUpdateStudent={updateStudent}
                 weeklyWinner={weeklyWinner}
