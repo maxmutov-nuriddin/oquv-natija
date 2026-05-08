@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import { useEffect, useMemo, useState } from "react";
 import { BarChart3, Coins, Medal, Pencil, Trophy, Users } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { calculateCoins, getPeriodLeader, getPreviousMonthRange, getPreviousWeekRange, rankStudents } from "../lib/scoring";
+import { calculateCoins, getPeriodLeader, getPreviousMonthRange, getPreviousWeekRange, isDeclineTrend, rankStudents } from "../lib/scoring";
 import { useT } from "../i18n/index.jsx";
 import { BonusDrumModal } from "../components/games/BonusDrumModal";
 import { StudentCard } from "../components/student/StudentCard";
@@ -48,6 +48,11 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
   const previousWeekLeader = useMemo(
     () => getPeriodLeader(groupStudents.filter(s => s.id !== previousMonthLeader?.id), records, settings, getPreviousWeekRange(date)),
     [groupStudents, records, settings, date, previousMonthLeader]
+  );
+
+  const decliningStudents = useMemo(
+    () => ranked.filter(s => isDeclineTrend(s.id, records, settings)),
+    [ranked, records, settings]
   );
 
   const todayGroupRecords = useMemo(() => records.filter(r => r.date === date && groupStudents.some(s => s.id === r.studentId)), [records, date, groupStudents]);
@@ -173,6 +178,42 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
           </div>
         </aside>
       </section>
+
+      {decliningStudents.length > 0 && (
+        <section style={{
+          background: "#fff7ed",
+          border: "2px solid #fed7aa",
+          borderBottom: "4px solid #fb923c",
+          borderRadius: "16px",
+          padding: "20px 24px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "12px"
+        }}>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px" }}>
+            <div>
+              <strong style={{ fontSize: "16px", fontWeight: 800, color: "#c2410c", display: "block" }}>
+                {t.decline_alert_title}
+              </strong>
+              <span style={{ fontSize: "13px", color: "#ea580c", fontWeight: 600 }}>
+                {t.decline_alert_sub(decliningStudents.length)} · {t.decline_alert_hint}
+              </span>
+            </div>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+            {decliningStudents.map(s => (
+              <span key={s.id} style={{
+                display: "inline-flex", alignItems: "center", gap: "6px",
+                background: "#ffedd5", color: "#c2410c",
+                border: "2px solid #fed7aa", borderRadius: "9999px",
+                padding: "4px 14px", fontSize: "13px", fontWeight: 800
+              }}>
+                📉 {s.name}
+              </span>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="panel">
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>

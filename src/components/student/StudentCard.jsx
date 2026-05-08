@@ -132,6 +132,8 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
         <ProgressLine label={t.card_activity} value={act} tone="tone-activity" showStatus={attended} />
       </div>
 
+      <WeakMetricHint studentId={student.id} records={records} date={date} settings={settings} />
+
       <PeriodSummary studentId={student.id} records={records} date={date} settings={settings} />
 
       <div>
@@ -261,6 +263,36 @@ function periodFinal(data, settings) {
   const att = Number(settings?.attendanceWeight ?? 0.3);
   const act = Number(settings?.activityWeight   ?? 0.3);
   return Math.round(data.avgHw * hw + data.avgAtt * att + data.avgAct * act);
+}
+
+function WeakMetricHint({ studentId, records, date, settings }) {
+  const { t } = useT();
+  const monthly = getScoreSummary(studentId, records, 30, date);
+  if (!monthly) return null;
+
+  const overallScore = periodFinal(monthly, settings);
+  if (overallScore >= 80) return null;
+
+  const metrics = [
+    { label: t.card_homework,   score: monthly.avgHw,  weight: Number(settings?.homeworkWeight  || 0.4) },
+    { label: t.card_attendance, score: monthly.avgAtt, weight: Number(settings?.attendanceWeight || 0.3) },
+    { label: t.card_activity,   score: monthly.avgAct, weight: Number(settings?.activityWeight   || 0.3) },
+  ];
+
+  const bottleneck = [...metrics].sort(
+    (a, b) => (100 - b.score) * b.weight - (100 - a.score) * a.weight
+  )[0];
+
+  if (bottleneck.score >= 75) return null;
+
+  return (
+    <div style={{
+      background: "#fffbeb", border: "1px solid #fde68a", borderRadius: "8px",
+      padding: "7px 12px", fontSize: "12px", fontWeight: 700, color: "#92400e"
+    }}>
+      {t.hint_bottleneck(bottleneck.label, bottleneck.score)}
+    </div>
+  );
 }
 
 function PeriodSummary({ studentId, records, date, settings }) {
