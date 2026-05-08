@@ -1,4 +1,4 @@
-import { Activity, Award, BookOpenCheck, CheckCircle2, LayoutDashboard, Settings, Star, Trophy, Users } from "lucide-react";
+import { Activity, Award, BookOpenCheck, CheckCircle2, LayoutDashboard, Settings, ShieldX, Star, Trophy, Users } from "lucide-react";
 
 export const navItems = [
   { id: "dashboard", label: "Bosh sahifa", icon: LayoutDashboard },
@@ -27,6 +27,7 @@ export const availableGifts = [
   { id: "sticker", name: "Stiker", icon: Star, color: "var(--gold)" },
   { id: "notebook", name: "Daftar", icon: BookOpenCheck, color: "var(--blue)" },
   { id: "pen", name: "Ruchka", icon: Activity, color: "var(--mint)" },
+  { id: "block_friend", name: "Do'stni bloklash", icon: ShieldX, color: "var(--rose)" },
   { id: "vip_weekly", name: "VIP Haftalik", icon: Trophy, color: "var(--rose)", type: "vip" },
   { id: "vip_monthly", name: "VIP Oylik", icon: Award, color: "var(--gold)", type: "vip" }
 ];
@@ -41,6 +42,7 @@ export const privilegesData = {
     { id: "no_question", name: "Savol bermaslik huquqi", price: 1000, type: "mute" },
     { id: "escape_punishment", name: "Jazodan qutilish", price: 900, type: "protection" },
     { id: "gift_coin", name: "Do'stiga coin 2x qilish", price: 900, type: "boost" },
+    { id: "block_friend", name: "Do'stni bloklash", price: 650, type: "block" },
     { id: "mystery_box", name: "MISTIRIY BOX", price: 3000, type: "random" }
   ],
   junior: [
@@ -51,6 +53,7 @@ export const privilegesData = {
     { id: "skip_task", name: "1 ta vazifa skip", price: 500, type: "skip" },
     { id: "no_question", name: "Savol bermaslik huquqi", price: 1000, type: "mute" },
     { id: "gift_coin", name: "Do'stiga coin 2x qilish", price: 900, type: "boost" },
+    { id: "block_friend", name: "Do'stni bloklash", price: 650, type: "block" },
     { id: "mystery_box", name: "MISTIRIY BOX", price: 3000, type: "random" }
   ]
 };

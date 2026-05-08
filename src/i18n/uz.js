@@ -1,6 +1,6 @@
 export const uz = {
   // Brand
-  brand_title: "O'quv natija",
+  brand_title: "Coddy Result",
   brand_subtitle: "Admin dashboard",
 
   // Nav

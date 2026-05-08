@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useDashboardData } from "../hooks/useDashboardData";
 import { useT } from "../i18n/index.jsx";
 import { groupForDateTime } from "../lib/scoring";
@@ -8,10 +8,11 @@ import { Topbar } from "../components/layout/Topbar";
 import { StudentForm } from "../components/forms/StudentForm";
 import { Modal } from "../components/ui/Modal";
 import { LoadingState } from "../components/ui/LoadingState";
-import { DashboardPage } from "./DashboardPage";
-import { GroupsPage } from "./GroupsPage";
-import { PrivilegesPage } from "./PrivilegesPage";
-import { SettingsPage } from "./SettingsPage";
+
+const DashboardPage  = lazy(() => import("./DashboardPage").then(m => ({ default: m.DashboardPage })));
+const GroupsPage     = lazy(() => import("./GroupsPage").then(m => ({ default: m.GroupsPage })));
+const PrivilegesPage = lazy(() => import("./PrivilegesPage").then(m => ({ default: m.PrivilegesPage })));
+const SettingsPage   = lazy(() => import("./SettingsPage").then(m => ({ default: m.SettingsPage })));
 
 export function DashboardApp({ teacher, logout, updateProfile, changePassword }) {
   const { t } = useT();
@@ -65,53 +66,57 @@ export function DashboardApp({ teacher, logout, updateProfile, changePassword })
               )}
             </div>
           )}
-          {!loading && activePage === "dashboard" && (
-            <DashboardPage
-              groups={groups}
-              students={students}
-              records={records}
-              settings={settings}
-              selectedGroup={selectedGroup}
-              currentGroup={currentGroup}
-              currentTime={currentTime}
-              date={date}
-              query={query}
-              onEditStudent={setEditingStudent}
-              onDeleteStudent={handleDeleteStudent}
-              saveLessonRecords={saveLessonRecords}
-              updateStudent={updateStudent}
-            />
+          {!loading && (
+            <Suspense fallback={<LoadingState />}>
+              {activePage === "dashboard" && (
+                <DashboardPage
+                  groups={groups}
+                  students={students}
+                  records={records}
+                  settings={settings}
+                  selectedGroup={selectedGroup}
+                  currentGroup={currentGroup}
+                  currentTime={currentTime}
+                  date={date}
+                  query={query}
+                  onEditStudent={setEditingStudent}
+                  onDeleteStudent={handleDeleteStudent}
+                  saveLessonRecords={saveLessonRecords}
+                  updateStudent={updateStudent}
+                />
+              )}
+              {activePage === "groups" && (
+                <GroupsPage
+                  groups={groups}
+                  students={students}
+                  records={records}
+                  settings={settings}
+                  date={date}
+                  currentTime={currentTime}
+                  query={query}
+                  addGroup={addGroup}
+                  updateGroup={updateGroup}
+                  deleteGroup={deleteGroup}
+                  addStudent={addStudent}
+                  updateStudent={updateStudent}
+                  saveLessonRecords={saveLessonRecords}
+                  deleteStudent={handleDeleteStudent}
+                  selectedGroup={selectedGroup}
+                  setDate={setDate}
+                />
+              )}
+              {activePage === "settings" && (
+                <SettingsPage
+                  settings={settings}
+                  saveSettings={saveSettings}
+                  teacher={teacher}
+                  updateProfile={updateProfile}
+                  changePassword={changePassword}
+                />
+              )}
+              {activePage === "privileges" && <PrivilegesPage />}
+            </Suspense>
           )}
-          {!loading && activePage === "groups" && (
-            <GroupsPage
-              groups={groups}
-              students={students}
-              records={records}
-              settings={settings}
-              date={date}
-              currentTime={currentTime}
-              query={query}
-              addGroup={addGroup}
-              updateGroup={updateGroup}
-              deleteGroup={deleteGroup}
-              addStudent={addStudent}
-              updateStudent={updateStudent}
-              saveLessonRecords={saveLessonRecords}
-              deleteStudent={handleDeleteStudent}
-              selectedGroup={selectedGroup}
-              setDate={setDate}
-            />
-          )}
-          {!loading && activePage === "settings" && (
-            <SettingsPage
-              settings={settings}
-              saveSettings={saveSettings}
-              teacher={teacher}
-              updateProfile={updateProfile}
-              changePassword={changePassword}
-            />
-          )}
-          {!loading && activePage === "privileges" && <PrivilegesPage />}
         </main>
       </div>
 

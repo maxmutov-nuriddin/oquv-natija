@@ -1,5 +1,5 @@
 {
-  "name": "oquvchi-dashboard",
+  "name": "coddy-result",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -24,6 +24,7 @@
     "autoprefixer": "latest",
     "postcss": "latest",
     "tailwindcss": "latest",
-    "vite": "latest"
+    "vite": "latest",
+    "vite-plugin-pwa": "^1.3.0"
   }
 }

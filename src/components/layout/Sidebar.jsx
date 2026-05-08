@@ -1,10 +1,40 @@
-import { Award } from "lucide-react";
+import { Award, Download } from "lucide-react";
+import { useEffect, useState } from "react";
 import { navItems } from "../../constants";
 import { useT } from "../../i18n/index.jsx";
 import { cx, initials } from "../../lib/utils";
 
 export function Sidebar({ activePage, setActivePage, isDemo, teacher, logout }) {
   const { lang, t, setLang } = useT();
+  const [installPrompt, setInstallPrompt] = useState(null);
+  const [installed, setInstalled] = useState(false);
+
+  useEffect(() => {
+    function onBeforeInstall(e) {
+      e.preventDefault();
+      setInstallPrompt(e);
+    }
+    function onAppInstalled() {
+      setInstalled(true);
+      setInstallPrompt(null);
+    }
+    window.addEventListener("beforeinstallprompt", onBeforeInstall);
+    window.addEventListener("appinstalled", onAppInstalled);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", onBeforeInstall);
+      window.removeEventListener("appinstalled", onAppInstalled);
+    };
+  }, []);
+
+  async function handleInstall() {
+    if (!installPrompt) return;
+    await installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === "accepted") {
+      setInstallPrompt(null);
+      setInstalled(true);
+    }
+  }
 
   return (
     <aside className="sidebar">
@@ -58,6 +88,26 @@ export function Sidebar({ activePage, setActivePage, isDemo, teacher, logout }) 
           </button>
         </div>
       </div>
+
+      {installPrompt && !installed && (
+        <button
+          type="button"
+          onClick={handleInstall}
+          style={{
+            display: "flex", alignItems: "center", gap: "10px",
+            width: "100%", marginTop: "12px",
+            background: "rgba(255,255,255,0.15)",
+            border: "2px solid rgba(255,255,255,0.4)",
+            borderBottom: "4px solid rgba(0,0,0,0.15)",
+            borderRadius: "16px", padding: "12px 16px",
+            color: "white", fontWeight: 800, fontSize: "14px",
+            cursor: "pointer", transition: "all 0.1s"
+          }}
+        >
+          <Download size={18} />
+          <span>Ilovani yuklab olish</span>
+        </button>
+      )}
 
       <div className="teacher-box">
         <div className="avatar avatar-small">{initials(teacher?.name || "O")}</div>
