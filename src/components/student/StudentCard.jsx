@@ -44,11 +44,12 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
   const isVip = gifts.some(g => g.type === "vip" && g.count > 0) || (isWeeklyWinner && isStartOfWeek) || (isMonthlyWinner && isStartOfMonth);
   const declining = isDeclineTrend(student.id, records, settings);
 
-  const finalScore = Math.round(
+  const finalScore = Math.min(100, Math.round(
     hw * (settings.homeworkWeight || 0.4) +
     att * (settings.attendanceWeight || 0.3) +
-    act * (settings.activityWeight || 0.3)
-  );
+    act * (settings.activityWeight || 0.3) +
+    (extraTask ? Number(settings.extraTaskWeight || 0) * 100 : 0)
+  ));
 
   const monthlyCoins = student.monthlyCoins || 0;
   const level = getLevel(monthlyCoins);

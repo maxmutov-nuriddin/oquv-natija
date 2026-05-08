@@ -241,6 +241,7 @@ export const ru = {
   settings_att_coin: "Монеты за результат",
   settings_act_coin: "Монеты за активность",
   settings_extra_task_coin: "Монеты за доп. задание",
+  settings_extra_task_weight: "Вес доп. задания",
   settings_hw_weight: "Вес Д/З",
   settings_att_weight: "Вес результата",
   settings_act_weight: "Вес активности",

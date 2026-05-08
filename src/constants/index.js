@@ -9,7 +9,7 @@ export const navItems = [
 
 export const scoreFields = [
   { key: "homeworkScore", label: "Uy vazifa", short: "HW", icon: BookOpenCheck },
-  { key: "attendanceScore", label: "Yuqori natija", short: "NAT", icon: CheckCircle2 },
+  { key: "attendanceScore", label: "Sinf vazifa", short: "SV", icon: CheckCircle2 },
   { key: "activityScore", label: "Aktivlik", short: "ACT", icon: Activity }
 ];
 

@@ -87,7 +87,7 @@ export async function sendLessonReport({ group, students, date, settings }) {
   attended.forEach(s => {
     text += `\n${scoreEmoji(s.score)} <b>${s.name}</b>\n`;
     text += `   📝 Uy vazifa: <b>${s.hw}%</b>\n`;
-    text += `   📊 Yuqori natija: <b>${s.att}%</b>\n`;
+    text += `   📊 Sinf vazifa: <b>${s.att}%</b>\n`;
     text += `   ⚡ Aktivlik: <b>${s.act}%</b>\n`;
     text += `   🏆 Umumiy ball: <b>${s.score}%</b> — ${scoreLabel(s.score)}\n`;
     text += `   🪙 Bugungi coin: <b>+${s.coins}</b>\n`;

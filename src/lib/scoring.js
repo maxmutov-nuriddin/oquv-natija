@@ -8,15 +8,17 @@ export function calculateCoins(record, settings) {
   return Math.round(homeworkCoins + attendanceCoins + activityCoins + extraTaskCoins);
 }
 
-export function finalScore(student, settings) {
+export function finalScore(student, settings, extraTaskScore = 0) {
   const hw = Number(settings.homeworkWeight ?? 0.4);
   const result = Number(settings.attendanceWeight ?? 0.3);
   const act = Number(settings.activityWeight ?? 0.3);
-  return Math.round(
+  const ext = Number(settings.extraTaskWeight ?? 0);
+  return Math.min(100, Math.round(
     Number(student.homeworkScore || 0) * hw +
       Number(student.attendanceScore || 0) * result +
-      Number(student.activityScore || 0) * act
-  );
+      Number(student.activityScore || 0) * act +
+      extraTaskScore * ext
+  ));
 }
 
 export function getWindowRecords(records, days, date = dayjs()) {
@@ -113,12 +115,15 @@ export function summarizeStudent(student, records, settings, date = dayjs()) {
   const coins = Math.max(0, rawCoins - (student.homeworkFines || 0));
   const weeklyCoins = weeklyRecords.reduce((sum, record) => sum + (Number(record.coinsEarned) || calculateCoins(record, settings)), 0);
   const monthlyCoins = monthlyRecords.reduce((sum, record) => sum + (Number(record.coinsEarned) || calculateCoins(record, settings)), 0);
+  const lessonDays = monthlyRecords.filter(r => r.homework > 0 || r.attendance > 0 || r.activity > 0 || r.extraTask).length;
+  const extraTaskDays = monthlyRecords.filter(r => r.extraTask).length;
+  const extraTaskScore = lessonDays > 0 ? Math.round((extraTaskDays / lessonDays) * 100) : 0;
   return {
     ...student,
     coins,
     weeklyCoins,
     monthlyCoins,
-    finalScore: finalScore(student, settings)
+    finalScore: finalScore(student, settings, extraTaskScore)
   };
 }
 

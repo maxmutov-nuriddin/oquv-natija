@@ -151,7 +151,8 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
           <SettingInput label={t.settings_hw_coin}         value={draft.homeworkCoin}    onChange={(v) => update("homeworkCoin", v)} />
           <SettingInput label={t.settings_att_coin}        value={draft.attendanceCoin}  onChange={(v) => update("attendanceCoin", v)} />
           <SettingInput label={t.settings_act_coin}        value={draft.activityCoin}    onChange={(v) => update("activityCoin", v)} />
-          <SettingInput label={t.settings_extra_task_coin} value={draft.extraTaskCoin ?? 3} onChange={(v) => update("extraTaskCoin", v)} />
+          <SettingInput label={t.settings_extra_task_coin}   value={draft.extraTaskCoin ?? 3}    onChange={(v) => update("extraTaskCoin", v)} />
+          <SettingInput step="0.05" label={t.settings_extra_task_weight} value={draft.extraTaskWeight ?? 0.1} onChange={(v) => update("extraTaskWeight", v)} />
           <SettingInput step="0.1" label={t.settings_hw_weight}  value={draft.homeworkWeight}   onChange={(v) => update("homeworkWeight", v)} />
           <SettingInput step="0.1" label={t.settings_att_weight} value={draft.attendanceWeight} onChange={(v) => update("attendanceWeight", v)} />
           <SettingInput step="0.1" label={t.settings_act_weight} value={draft.activityWeight}   onChange={(v) => update("activityWeight", v)} />
