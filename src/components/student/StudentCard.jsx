@@ -23,9 +23,9 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
   async function handleQuickUpdate(key, value) {
     const updatedStudent = {
       ...student,
-      homeworkScore: hw,
-      attendanceScore: att,
-      activityScore: act,
+      homeworkScore: pendingScore?.homeworkScore ?? hw,
+      attendanceScore: pendingScore?.attendanceScore ?? att,
+      activityScore: pendingScore?.activityScore ?? act,
       [key]: value
     };
     if (saveLessonRecords) {
@@ -188,7 +188,11 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
                 value={numberInputValue(val)}
                 onChange={(event) => handleChange(parsePercentInput(event.target.value))}
                 onFocus={(e) => e.target.select()}
-                onBlur={(e) => { if (e.target.value === "" || isNaN(Number(e.target.value))) handleChange(0); }}
+                onBlur={(e) => {
+                  const v = (e.target.value === "" || isNaN(Number(e.target.value))) ? 0 : parsePercentInput(e.target.value);
+                  handleChange(v);
+                  handleQuickUpdate(field.key, v);
+                }}
                 onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); }}
                 onWheel={(e) => e.target.blur()}
                 aria-label={field.label}
