@@ -13,7 +13,7 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
   const hw = todayRecord ? todayRecord.homework : 0;
   const att = todayRecord ? todayRecord.attendance : 0;
   const act = todayRecord ? todayRecord.activity : 0;
-  const extraTask = todayRecord?.extraTask ?? false;
+  const extraTask = Number(todayRecord?.extraTask || 0);
   const todayCoins = todayRecord ? (todayRecord.coinsEarned ?? 0) : 0;
   const attended = hw > 0 || att > 0 || act > 0;
 
@@ -48,7 +48,7 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
     hw * (settings.homeworkWeight || 0.4) +
     att * (settings.attendanceWeight || 0.3) +
     act * (settings.activityWeight || 0.3) +
-    (extraTask ? Number(settings.extraTaskWeight || 0) * 100 : 0)
+    extraTask * Number(settings.extraTaskWeight || 0)
   ));
 
   const monthlyCoins = student.monthlyCoins || 0;
@@ -183,26 +183,30 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
         })}
       </div>
       {isLowPerformer && (
-        <button
-          type="button"
-          disabled={!isLessonDay || isRecordSaved}
-          onClick={() => handleQuickUpdate("extraTask", !extraTask)}
-          style={{
-            display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-            width: "100%", padding: "10px", borderRadius: "9999px", fontSize: "13px", fontWeight: 800,
-            border: `2px solid ${extraTask ? "#16a34a" : "#d1d5db"}`,
-            borderBottom: `4px solid ${extraTask ? "#15803d" : "#9ca3af"}`,
-            background: extraTask ? "#dcfce7" : "#f9fafb",
-            color: extraTask ? "#15803d" : "#6b7280",
-            cursor: (!isLessonDay || isRecordSaved) ? "not-allowed" : "pointer",
-            opacity: (!isLessonDay || isRecordSaved) ? 0.6 : 1,
-            marginBottom: "6px", transition: "all 0.1s"
-          }}
-        >
-          <Zap size={14} fill={extraTask ? "currentColor" : "none"} />
-          {extraTask ? t.card_extra_task_done : t.card_extra_task}
-          {extraTask && <span style={{ marginLeft: "auto", fontSize: "11px", fontWeight: 700, background: "#16a34a", color: "white", padding: "1px 7px", borderRadius: "999px" }}>+{settings.extraTaskCoin ?? 3} coin</span>}
-        </button>
+        <label style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          background: extraTask > 0 ? "#dcfce7" : "#f9fafb",
+          border: `2px solid ${extraTask > 0 ? "#86efac" : "#e2e8f0"}`,
+          borderRadius: "9999px", padding: "6px 12px 6px 16px", gap: "8px"
+        }}>
+          <span style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 800, color: extraTask > 0 ? "#15803d" : "#64748b" }}>
+            <Zap size={13} fill={extraTask > 0 ? "currentColor" : "none"} />
+            {t.card_extra_task}
+          </span>
+          <input
+            type="number"
+            min="0"
+            max="100"
+            disabled={!isLessonDay || isRecordSaved}
+            value={numberInputValue(extraTask)}
+            onChange={(e) => handleQuickUpdate("extraTask", parsePercentInput(e.target.value))}
+            onFocus={(e) => e.target.select()}
+            onBlur={(e) => { if (e.target.value === "" || isNaN(Number(e.target.value))) handleQuickUpdate("extraTask", 0); }}
+            onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); }}
+            onWheel={(e) => e.target.blur()}
+            style={{ width: "60px", textAlign: "center", border: "none", background: "transparent", fontWeight: 800, fontSize: "14px", color: extraTask > 0 ? "#15803d" : "#374151", outline: "none" }}
+          />
+        </label>
       )}
 
       <div style={{ display: "flex", gap: "6px" }}>
