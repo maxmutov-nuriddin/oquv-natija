@@ -43,6 +43,12 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
   const isVip = gifts.some(g => g.type === "vip" && g.count > 0) || (isWeeklyWinner && isStartOfWeek) || (isMonthlyWinner && isStartOfMonth);
   const declining = isDeclineTrend(student.id, records, settings);
 
+  const finalScore = Math.round(
+    hw * (settings.homeworkWeight || 0.4) +
+    att * (settings.attendanceWeight || 0.3) +
+    act * (settings.activityWeight || 0.3)
+  );
+
   const monthlyCoins = student.monthlyCoins || 0;
   const level = getLevel(monthlyCoins);
   const levelIndex = LEVELS.indexOf(level);
@@ -84,7 +90,10 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
                 <span key={i} className="vip-text-badge">{g.name}</span>
               ))}
             </div>
-            <p>{student.group} · {isStartOfWeek ? t.card_rank_week(student.weeklyRank) : t.card_rank_waiting}</p>
+            <p style={{ display: "flex", alignItems: "center", gap: "6px", margin: "3px 0 0" }}>
+              <span>{student.group} · {isStartOfWeek ? t.card_rank_week(student.weeklyRank) : t.card_rank_waiting}</span>
+              <span style={{ color: "var(--blue)", fontWeight: 900, textTransform: "none", fontSize: "13px" }}>{finalScore}%</span>
+            </p>
           </div>
         </div>
         <div className="coin-badge">
@@ -116,29 +125,15 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
         </div>
       )}
 
-      <div className="student-score">
-        <span>{t.card_final}</span>
-        <strong>{Math.round(
-          hw * (settings.homeworkWeight || 0.4) +
-          att * (settings.attendanceWeight || 0.3) +
-          act * (settings.activityWeight || 0.3)
-        )}%</strong>
-      </div>
-
       <div className="student-progress">
         <ProgressLine label={t.card_homework} value={hw} tone="tone-homework" showStatus={attended} />
         <ProgressLine label={t.card_attendance} value={att} tone="tone-result" showStatus={attended} />
         <ProgressLine label={t.card_activity} value={act} tone="tone-activity" showStatus={attended} />
       </div>
 
-      <div className="rank-chips">
-        <span>{t.card_week_label} {isStartOfWeek ? t.rankText(student.weeklyRank) : t.card_pending}</span>
-        <span>{t.card_month_label} {isStartOfMonth ? t.rankText(student.monthlyRank) : t.card_pending}</span>
-      </div>
-
       <PeriodSummary studentId={student.id} records={records} date={date} settings={settings} />
 
-      <div style={{ marginTop: "10px" }}>
+      <div>
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "#64748b", marginBottom: "4px" }}>
           <span style={{ fontWeight: 600, color: level.color }}>{level.emoji} {t[`level_${level.key}`] || level.name} · {monthlyCoins} {t.card_coins_month}</span>
           {nextLevel
@@ -183,21 +178,19 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
           );
         })}
       </div>
-      <div className="student-actions" style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "12px" }}>
-        <button className="secondary-button" type="button" onClick={() => onProfile?.(student)} style={{ width: "100%", justifyContent: "center", padding: "9px", fontSize: "13px" }}>
-          <User size={15} />
+      <div style={{ display: "flex", gap: "6px" }}>
+        <button className="secondary-button" type="button" onClick={() => onProfile?.(student)} style={{ flex: 1, justifyContent: "center", padding: "8px", fontSize: "12px", minHeight: "40px" }}>
+          <User size={13} />
           {t.card_profile}
         </button>
-        <div style={{ display: "flex", gap: "6px" }}>
-          <button className="secondary-button" type="button" onClick={() => onEdit?.(student)} style={{ flex: 1, justifyContent: "center", padding: "8px", fontSize: "13px" }}>
-            <Settings size={15} />
-            {t.card_edit}
-          </button>
-          <button className="danger-button" type="button" onClick={() => onDelete(student)} style={{ flex: 1, justifyContent: "center", padding: "8px", fontSize: "13px" }}>
-            <Trash2 size={15} />
-            {t.card_delete}
-          </button>
-        </div>
+        <button className="secondary-button" type="button" onClick={() => onEdit?.(student)} style={{ flex: 1, justifyContent: "center", padding: "8px", fontSize: "12px", minHeight: "40px" }}>
+          <Settings size={13} />
+          {t.card_edit}
+        </button>
+        <button className="danger-button" type="button" onClick={() => onDelete(student)} style={{ flex: 1, justifyContent: "center", padding: "8px", fontSize: "12px", minHeight: "40px" }}>
+          <Trash2 size={13} />
+          {t.card_delete}
+        </button>
       </div>
 
       {zeroCount === 2 && (
@@ -252,7 +245,7 @@ function PeriodSummary({ studentId, records, date, settings }) {
   if (!weekly && !monthly) return null;
   return (
     <div className="period-summary-row">
-      {weekly  && <PeriodChip titleKey="period_weekly" count={weekly.count}  score={periodFinal(weekly,  settings)} />}
+      {weekly  && <PeriodChip titleKey="period_weekly"  count={weekly.count}  score={periodFinal(weekly,  settings)} />}
       {monthly && <PeriodChip titleKey="period_monthly" count={monthly.count} score={periodFinal(monthly, settings)} />}
     </div>
   );

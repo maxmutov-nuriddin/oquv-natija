@@ -288,7 +288,7 @@ button {
 
 /* Student Cards */
 .student-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
-.student-card { padding: 24px; display: flex; flex-direction: column; gap: 20px; transition: transform 0.1s; }
+.student-card { padding: 16px; display: flex; flex-direction: column; gap: 10px; transition: transform 0.1s; }
 .student-card:active { transform: translateY(4px); border-bottom-width: 2px; margin-bottom: 4px; }
 .student-card-top { border-color: var(--gold); border-bottom-color: var(--gold-dark); background: #fffcf0; }
 
@@ -398,9 +398,9 @@ button {
 .student-score span { font-weight: 800; color: var(--muted); text-transform: uppercase; font-size: 14px; }
 .student-score strong { font-weight: 900; color: var(--blue); font-size: 28px; }
 
-.progress-line { display: flex; flex-direction: column; gap: 8px; }
-.progress-line > div:first-child { display: flex; justify-content: space-between; font-weight: 800; font-size: 14px; color: var(--text); text-transform: uppercase; }
-.progress-track { height: 12px; background: var(--line); border-radius: 999px; overflow: hidden; }
+.progress-line { display: flex; flex-direction: column; gap: 4px; }
+.progress-line > div:first-child { display: flex; justify-content: space-between; font-weight: 800; font-size: 12px; color: var(--text); text-transform: uppercase; }
+.progress-track { height: 9px; background: var(--line); border-radius: 999px; overflow: hidden; }
 .progress-track i { display: block; height: 100%; border-radius: 999px; }
 .tone-homework { background: var(--mint); }
 .tone-result { background: var(--blue); }
@@ -441,20 +441,20 @@ button {
 .timer-start-btn { flex: 1; justify-content: center; padding: 12px; font-size: 15px; }
 .timer-reset-btn { padding: 12px 14px; }
 
-.period-summary-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
-.period-chip { border: 1.5px solid; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; }
+.period-summary-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.period-chip { border: 1.5px solid; border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 1px; }
 .period-chip-title { font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--muted); }
 .period-chip-count { font-size: 10px; font-weight: 600; color: var(--muted); }
-.period-chip-badge { font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.03em; margin-top: 4px; }
-.period-chip-score { font-size: 22px; font-weight: 900; line-height: 1; }
+.period-chip-badge { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.03em; margin-top: 2px; }
+.period-chip-score { font-size: 18px; font-weight: 900; line-height: 1; }
 
-.quick-edit { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.quick-edit { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .quick-edit label {
   border: 2px solid var(--line); border-bottom: 4px solid var(--line-dark);
-  border-radius: var(--radius-sm); padding: 12px; display: flex; flex-direction: column; gap: 8px; text-align: center;
+  border-radius: var(--radius-sm); padding: 8px; display: flex; flex-direction: column; gap: 4px; text-align: center;
 }
-.quick-edit span { font-weight: 800; font-size: 12px; color: var(--muted); text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 4px; }
-.quick-edit input { width: 100%; border: none; font-weight: 900; font-size: 20px; text-align: center; color: var(--text); background: transparent; outline: none; }
+.quick-edit span { font-weight: 800; font-size: 11px; color: var(--muted); text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 4px; }
+.quick-edit input { width: 100%; border: none; font-weight: 900; font-size: 18px; text-align: center; color: var(--text); background: transparent; outline: none; }
 .quick-edit label:focus-within { border-color: var(--blue); border-bottom-color: var(--blue-dark); }
 
 /* Buttons */
