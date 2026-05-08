@@ -153,24 +153,29 @@ export function summarizeStudent(student, records, settings, date = dayjs()) {
   const monthlyCoins= monthlyRecords.reduce((sum, r) => sum + (Number(r.coinsEarned) || calculateCoins(r, settings)), 0);
 
   // finalScore: joriy oy darslarining o'rtacha bali (eng to'g'ri usul)
+  // Only regular lesson days (extraTask-only records must NOT drag down hw/att/act average)
   const activeLessons = monthlyRecords.filter(
-    r => r.homework > 0 || r.attendance > 0 || r.activity > 0 || r.extraTask > 0
+    r => r.homework > 0 || r.attendance > 0 || r.activity > 0
   );
+  // avgExtra is computed separately across all records that have an extra task
+  const extraRecs = monthlyRecords.filter(r => r.extraTask > 0);
+  const avgExtra  = extraRecs.length > 0
+    ? extraRecs.reduce((s, r) => s + Number(r.extraTask || 0), 0) / extraRecs.length
+    : 0;
+
   let computedFinalScore;
   if (activeLessons.length > 0) {
     const n = activeLessons.length;
-    const avgHw    = activeLessons.reduce((s, r) => s + Number(r.homework   || 0), 0) / n;
-    const avgAtt   = activeLessons.reduce((s, r) => s + Number(r.attendance || 0), 0) / n;
-    const avgAct   = activeLessons.reduce((s, r) => s + Number(r.activity   || 0), 0) / n;
-    const avgExtra = activeLessons.reduce((s, r) => s + Number(r.extraTask  || 0), 0) / n;
+    const avgHw  = activeLessons.reduce((s, r) => s + Number(r.homework   || 0), 0) / n;
+    const avgAtt = activeLessons.reduce((s, r) => s + Number(r.attendance || 0), 0) / n;
+    const avgAct = activeLessons.reduce((s, r) => s + Number(r.activity   || 0), 0) / n;
     computedFinalScore = finalScore(
       { homeworkScore: avgHw, attendanceScore: avgAtt, activityScore: avgAct },
       settings,
       avgExtra
     );
   } else {
-    // Hali dars bo'lmagan bo'lsa — saqlangan oxirgi qiymat
-    computedFinalScore = finalScore(student, settings, 0);
+    computedFinalScore = finalScore(student, settings, avgExtra);
   }
 
   return {

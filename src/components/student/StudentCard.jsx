@@ -34,7 +34,14 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
   }
 
   const ignoredZeroDates = student.ignoredZeroDates || [];
-  const zeroRecords = records?.filter((r) => r.studentId === student.id && r.homework === 0 && !ignoredZeroDates.includes(r.date)) || [];
+  // Only count as "missed homework" if the student was actually in a lesson (att or act > 0)
+  // extraTask-only records (hw=att=act=0) must NOT count as missed homework
+  const zeroRecords = records?.filter((r) =>
+    r.studentId === student.id &&
+    r.homework === 0 &&
+    (r.attendance > 0 || r.activity > 0) &&
+    !ignoredZeroDates.includes(r.date)
+  ) || [];
   const zeroCount = zeroRecords.length;
   const isPenalized = zeroCount >= 2;
 

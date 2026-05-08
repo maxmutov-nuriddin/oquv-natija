@@ -314,7 +314,7 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
                 if (s.id === monthlyWinner?.id) vipPerks.push(...vipData[tier].monthly.map(p => ({ ...p, source: "monthly" })));
                 if (s.id === weeklyWinner?.id)  vipPerks.push(...vipData[tier].weekly.map(p => ({ ...p, source: "weekly" })));
                 const sIgnoredDates = s.ignoredZeroDates || [];
-                const sZeroCount = records.filter(r => r.studentId === s.id && r.homework === 0 && !sIgnoredDates.includes(r.date)).length;
+                const sZeroCount = records.filter(r => r.studentId === s.id && r.homework === 0 && (r.attendance > 0 || r.activity > 0) && !sIgnoredDates.includes(r.date)).length;
                 const sIsBlocked = sZeroCount >= 2 || s.privilegeBlockedDate === date;
                 const sIsPrivilegeBlocked = s.privilegeBlockedDate === date;
                 return (
