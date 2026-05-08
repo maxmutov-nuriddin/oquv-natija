@@ -120,6 +120,7 @@ button {
 }
 
 .nav-button:hover { background: rgba(255,255,255,0.1); }
+.nav-button-active:hover { color: #ffffff; }
 .nav-button-active {
   background: #ffffff;
   color: var(--blue);
