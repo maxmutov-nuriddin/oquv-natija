@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { Coins, Settings, Star, Trash2, Trophy, User, Zap } from "lucide-react";
+import { Coins, Settings, Star, Trash2, Trophy, User } from "lucide-react";
 import { availableGifts, scoreFields } from "../../constants";
 import { LEVELS } from "../../constants";
 import { useT } from "../../i18n/index.jsx";
@@ -7,13 +7,12 @@ import { getScoreSummary, isDeclineTrend } from "../../lib/scoring";
 import { cx, getLevel, getPerformanceStatus, initials, numberInputValue, parsePercentInput } from "../../lib/utils";
 import { ProgressLine } from "../ui/ProgressLine";
 
-export function StudentCard({ student, onDelete, onEdit, onProfile, index, date, records, settings, saveLessonRecords, isLessonDay = true, isRecordSaved = false, pendingScore, onScoreChange, onWarningReset, onUpdateStudent, weeklyWinner, monthlyWinner, hideGifts = false, isLowPerformer = false }) {
+export function StudentCard({ student, onDelete, onEdit, onProfile, index, date, records, settings, saveLessonRecords, isLessonDay = true, isRecordSaved = false, onWarningReset, onUpdateStudent, weeklyWinner, monthlyWinner, hideGifts = false, isLowPerformer = false }) {
   const { t } = useT();
   const todayRecord = records?.find((r) => r.studentId === student.id && r.date === date);
   const hw = todayRecord ? todayRecord.homework : 0;
   const att = todayRecord ? todayRecord.attendance : 0;
   const act = todayRecord ? todayRecord.activity : 0;
-  const extraTask = Number(todayRecord?.extraTask || 0);
   const todayCoins = todayRecord ? (todayRecord.coinsEarned ?? 0) : 0;
   const dailyBonus = todayRecord?.dailyBonus;
   const hasBonusDrum = dailyBonus !== undefined && dailyBonus !== null;
@@ -23,9 +22,9 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
   async function handleQuickUpdate(key, value) {
     const updatedStudent = {
       ...student,
-      homeworkScore: pendingScore?.homeworkScore ?? hw,
-      attendanceScore: pendingScore?.attendanceScore ?? att,
-      activityScore: pendingScore?.activityScore ?? act,
+      homeworkScore: hw,
+      attendanceScore: att,
+      activityScore: act,
       [key]: value
     };
     if (saveLessonRecords) {
@@ -34,8 +33,6 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
   }
 
   const ignoredZeroDates = student.ignoredZeroDates || [];
-  // Only count as "missed homework" if the student was actually in a lesson (att or act > 0)
-  // extraTask-only records (hw=att=act=0) must NOT count as missed homework
   const zeroRecords = records?.filter((r) =>
     r.studentId === student.id &&
     r.homework === 0 &&
@@ -57,8 +54,7 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
   const finalScore = Math.min(100, Math.round(
     hw * (settings.homeworkWeight || 0.4) +
     att * (settings.attendanceWeight || 0.3) +
-    act * (settings.activityWeight || 0.3) +
-    extraTask * Number(settings.extraTaskWeight || 0)
+    act * (settings.activityWeight || 0.3)
   ));
 
   const monthlyCoins = student.monthlyCoins || 0;
@@ -169,11 +165,6 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
         {scoreFields.map((field) => {
           const Icon = field.icon;
           const savedVal = field.key === "homeworkScore" ? hw : field.key === "attendanceScore" ? att : act;
-          const val = pendingScore?.[field.key] ?? savedVal;
-          const handleChange = (newVal) => {
-            if (onScoreChange) onScoreChange(field.key, newVal);
-            else handleQuickUpdate(field.key, newVal);
-          };
           return (
             <label key={field.key}>
               <span>
@@ -181,16 +172,15 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
                 {field.short}
               </span>
               <input
+                key={`${student.id}-${field.key}-${savedVal}`}
                 type="number"
                 min="0"
                 max="100"
                 disabled={!isLessonDay || isRecordSaved}
-                value={numberInputValue(val)}
-                onChange={(event) => handleChange(parsePercentInput(event.target.value))}
+                defaultValue={numberInputValue(savedVal)}
                 onFocus={(e) => e.target.select()}
                 onBlur={(e) => {
                   const v = (e.target.value === "" || isNaN(Number(e.target.value))) ? 0 : parsePercentInput(e.target.value);
-                  handleChange(v);
                   handleQuickUpdate(field.key, v);
                 }}
                 onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); }}
@@ -201,33 +191,6 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
           );
         })}
       </div>
-      {isLowPerformer && (
-        <label style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          background: extraTask > 0 ? "#dcfce7" : "#f9fafb",
-          border: `2px solid ${extraTask > 0 ? "#86efac" : "#e2e8f0"}`,
-          borderRadius: "9999px", padding: "6px 12px 6px 16px", gap: "8px"
-        }}>
-          <span style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 800, color: extraTask > 0 ? "#15803d" : "#64748b" }}>
-            <Zap size={13} fill={extraTask > 0 ? "currentColor" : "none"} />
-            {t.card_extra_task}
-          </span>
-          <input
-            type="number"
-            min="0"
-            max="100"
-            disabled={!isLessonDay || isRecordSaved}
-            value={numberInputValue(extraTask)}
-            onChange={(e) => handleQuickUpdate("extraTask", parsePercentInput(e.target.value))}
-            onFocus={(e) => e.target.select()}
-            onBlur={(e) => { if (e.target.value === "" || isNaN(Number(e.target.value))) handleQuickUpdate("extraTask", 0); }}
-            onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); }}
-            onWheel={(e) => e.target.blur()}
-            style={{ width: "60px", textAlign: "center", border: "none", background: "transparent", fontWeight: 800, fontSize: "14px", color: extraTask > 0 ? "#15803d" : "#374151", outline: "none" }}
-          />
-        </label>
-      )}
-
       <div style={{ display: "flex", gap: "6px" }}>
         <button className="secondary-button" type="button" onClick={() => onProfile?.(student)} style={{ flex: 1, justifyContent: "center", padding: "8px", fontSize: "12px", minHeight: "40px" }}>
           <User size={13} />
@@ -286,7 +249,7 @@ function periodFinal(data, settings) {
   const hw  = Number(settings?.homeworkWeight  ?? 0.4);
   const att = Number(settings?.attendanceWeight ?? 0.3);
   const act = Number(settings?.activityWeight   ?? 0.3);
-  return Math.round(data.avgHw * hw + data.avgAtt * att + data.avgAct * act);
+  return Math.min(100, Math.round(data.avgHw * hw + data.avgAtt * att + data.avgAct * act));
 }
 
 function WeakMetricHint({ studentId, records, date, settings }) {

@@ -4,20 +4,17 @@ export function calculateCoins(record, settings) {
   const homeworkCoins = (Number(record.homework || 0) / 100) * Number(settings.homeworkCoin || 0);
   const attendanceCoins = (Number(record.attendance || 0) / 100) * Number(settings.attendanceCoin || 0);
   const activityCoins = (Number(record.activity || 0) / 100) * Number(settings.activityCoin || 0);
-  const extraTaskCoins = (Number(record.extraTask || 0) / 100) * Number(settings.extraTaskCoin || 0);
-  return Math.round(homeworkCoins + attendanceCoins + activityCoins + extraTaskCoins);
+  return Math.round(homeworkCoins + attendanceCoins + activityCoins);
 }
 
-export function finalScore(student, settings, extraTaskScore = 0) {
+export function finalScore(student, settings) {
   const hw = Number(settings.homeworkWeight ?? 0.4);
   const result = Number(settings.attendanceWeight ?? 0.3);
   const act = Number(settings.activityWeight ?? 0.3);
-  const ext = Number(settings.extraTaskWeight ?? 0);
   return Math.min(100, Math.round(
     Number(student.homeworkScore || 0) * hw +
       Number(student.attendanceScore || 0) * result +
-      Number(student.activityScore || 0) * act +
-      extraTaskScore * ext
+      Number(student.activityScore || 0) * act
   ));
 }
 
@@ -152,16 +149,9 @@ export function summarizeStudent(student, records, settings, date = dayjs()) {
   const weeklyCoins = weeklyRecords.reduce((sum, r)  => sum + (Number(r.coinsEarned) || calculateCoins(r, settings)), 0);
   const monthlyCoins= monthlyRecords.reduce((sum, r) => sum + (Number(r.coinsEarned) || calculateCoins(r, settings)), 0);
 
-  // finalScore: joriy oy darslarining o'rtacha bali (eng to'g'ri usul)
-  // Only regular lesson days (extraTask-only records must NOT drag down hw/att/act average)
   const activeLessons = monthlyRecords.filter(
     r => r.homework > 0 || r.attendance > 0 || r.activity > 0
   );
-  // avgExtra is computed separately across all records that have an extra task
-  const extraRecs = monthlyRecords.filter(r => r.extraTask > 0);
-  const avgExtra  = extraRecs.length > 0
-    ? extraRecs.reduce((s, r) => s + Number(r.extraTask || 0), 0) / extraRecs.length
-    : 0;
 
   let computedFinalScore;
   if (activeLessons.length > 0) {
@@ -171,11 +161,10 @@ export function summarizeStudent(student, records, settings, date = dayjs()) {
     const avgAct = activeLessons.reduce((s, r) => s + Number(r.activity   || 0), 0) / n;
     computedFinalScore = finalScore(
       { homeworkScore: avgHw, attendanceScore: avgAtt, activityScore: avgAct },
-      settings,
-      avgExtra
+      settings
     );
   } else {
-    computedFinalScore = finalScore(student, settings, avgExtra);
+    computedFinalScore = finalScore(student, settings);
   }
 
   return {

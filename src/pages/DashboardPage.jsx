@@ -23,7 +23,7 @@ import { FunModal } from "../components/ui/FunModal";
 import { PanelHeader } from "../components/ui/PanelHeader";
 import { StatCard } from "../components/ui/StatCard";
 
-export function DashboardPage({ groups, students, records, settings, selectedGroup, currentGroup, currentTime, date, query, onEditStudent, onDeleteStudent, saveLessonRecords, updateStudent, pendingScores = {}, onScoreChange }) {
+export function DashboardPage({ groups, students, records, settings, selectedGroup, currentGroup, currentTime, date, query, onEditStudent, onDeleteStudent, saveLessonRecords, updateStudent, isLessonLocked = false, onUnlock }) {
   const monthlyWinner = useMemo(() => getPeriodLeader(students.filter(s => s.group === selectedGroup), records, settings, getPreviousMonthRange(date)), [students, selectedGroup, records, settings, date]);
   const weeklyWinner = useMemo(() => {
     const candidates = students.filter(s => s.group === selectedGroup && s.id !== monthlyWinner?.id);
@@ -70,19 +70,16 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
 
   const todayGroupRecords = useMemo(() => records.filter(r => r.date === date && groupStudents.some(s => s.id === r.studentId)), [records, date, groupStudents]);
   const alreadySpun = todayGroupRecords.some(r => r.dailyBonus !== undefined && r.dailyBonus !== null);
-  const isRecordSaved = todayGroupRecords.length > 0;
   const { t } = useT();
   const [showBonusDrum, setShowBonusDrum] = useState(false);
   const [profileStudent, setProfileStudent] = useState(null);
   const [showComic, setShowComic] = useState(false);
   const [comicVersion, setComicVersion] = useState(0);
-  const [scoresUnlocked, setScoresUnlocked] = useState(false);
   const [giftModal, setGiftModal] = useState("");
   const [activeMystery, setActiveMystery] = useState(null);
   const [activeGiftCoin, setActiveGiftCoin] = useState(null);
   const [activeBlockFriend, setActiveBlockFriend] = useState(null);
 
-  useEffect(() => { setScoresUnlocked(false); }, [selectedGroup, date]);
 
   const showComicButton = useMemo(() => {
     if (!currentGroup?.lessonEnd || !currentTime) return false;
@@ -235,12 +232,12 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
       <section className="panel">
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
           <PanelHeader icon={Users} title={t.dash_students_section} subtitle={t.dash_students_hint} />
-          {isRecordSaved && !scoresUnlocked && (
+          {isLessonLocked && (
             <button
               type="button"
               className="secondary-button"
               style={{ padding: "6px 14px", fontSize: "13px", flexShrink: 0 }}
-              onClick={() => setScoresUnlocked(true)}
+              onClick={onUnlock}
             >
               <Pencil size={14} />
               Tahrirlash
@@ -264,9 +261,7 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
                 saveLessonRecords={saveLessonRecords}
                 onProfile={setProfileStudent}
                 isLessonDay={isLessonDay}
-                isRecordSaved={isRecordSaved && !scoresUnlocked}
-                pendingScore={pendingScores[student.id]}
-                onScoreChange={onScoreChange ? (key, value) => onScoreChange(student.id, key, value) : undefined}
+                isRecordSaved={isLessonLocked}
                 onWarningReset={(studentId, newIgnoredDates) => updateStudent(studentId, { ignoredZeroDates: newIgnoredDates })}
                 onUpdateStudent={updateStudent}
                 weeklyWinner={weeklyWinner}
