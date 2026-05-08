@@ -23,6 +23,7 @@ export function DashboardApp({ teacher, logout, updateProfile, changePassword })
   const [date, setDate] = useState(dayjs().format("YYYY-MM-DD"));
   const [currentTime, setCurrentTime] = useState(dayjs().format("HH:mm"));
   const [query, setQuery] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const timer = window.setInterval(() => setCurrentTime(dayjs().format("HH:mm")), 30000);
@@ -72,7 +73,18 @@ export function DashboardApp({ teacher, logout, updateProfile, changePassword })
   return (
     <div className="app-bg">
       <div className="app-shell">
-        <Sidebar activePage={activePage} setActivePage={setActivePage} isDemo={isDemo} teacher={teacher} logout={logout} />
+        <Sidebar
+          activePage={activePage}
+          setActivePage={(page) => { setActivePage(page); setSidebarOpen(false); }}
+          isDemo={isDemo}
+          teacher={teacher}
+          logout={logout}
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
+        {sidebarOpen && (
+          <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />
+        )}
         <main className="main-content">
           <Topbar
             activePage={activePage}
@@ -86,6 +98,7 @@ export function DashboardApp({ teacher, logout, updateProfile, changePassword })
             currentGroup={currentGroup}
             currentTime={currentTime}
             onSendResults={handleSendResults}
+            onMenuClick={() => setSidebarOpen(true)}
           />
 
           {loading && <LoadingState />}

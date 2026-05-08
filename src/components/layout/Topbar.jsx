@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { CalendarDays, Loader2, Search, Send, Users } from "lucide-react";
+import { CalendarDays, Loader2, Menu, Search, Send, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import { navItems } from "../../constants";
 import { useT } from "../../i18n/index.jsx";
@@ -9,7 +9,7 @@ function toMin(time) {
   return h * 60 + m;
 }
 
-export function Topbar({ activePage, date, setDate, query, setQuery, selectedGroup, groups, setSelectedGroup, currentGroup, currentTime, onSendResults }) {
+export function Topbar({ activePage, date, setDate, query, setQuery, selectedGroup, groups, setSelectedGroup, currentGroup, currentTime, onSendResults, onMenuClick }) {
   const { t } = useT();
   const pageTitle = t[`nav_${activePage}`] || navItems.find((item) => item.id === activePage)?.label || "Dashboard";
   const [sendStatus, setSendStatus] = useState("");
@@ -38,10 +38,15 @@ export function Topbar({ activePage, date, setDate, query, setQuery, selectedGro
 
   return (
     <header className="topbar">
-      <div className="topbar-title">
-        <span className="eyebrow">{t.topbar_eyebrow}</span>
-        <h2>{pageTitle}</h2>
-        <p>{t.topbar_subtitle(dayjs(date).format("DD MMMM YYYY"), selectedGroup || t.topbar_no_group)}</p>
+      <div className="topbar-left">
+        <button className="mobile-menu-btn" onClick={onMenuClick} aria-label="Open menu">
+          <Menu size={20} />
+        </button>
+        <div className="topbar-title">
+          <span className="eyebrow">{t.topbar_eyebrow}</span>
+          <h2>{pageTitle}</h2>
+          <p>{t.topbar_subtitle(dayjs(date).format("DD MMMM YYYY"), selectedGroup || t.topbar_no_group)}</p>
+        </div>
       </div>
 
       <div className="control-row">

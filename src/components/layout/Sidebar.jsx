@@ -1,10 +1,10 @@
-import { Award, Download } from "lucide-react";
+import { Award, Download, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { navItems } from "../../constants";
 import { useT } from "../../i18n/index.jsx";
 import { cx, initials } from "../../lib/utils";
 
-export function Sidebar({ activePage, setActivePage, isDemo, teacher, logout }) {
+export function Sidebar({ activePage, setActivePage, isDemo, teacher, logout, isOpen, onClose }) {
   const { lang, t, setLang } = useT();
   const [installPrompt, setInstallPrompt] = useState(null);
   const [installed, setInstalled] = useState(false);
@@ -37,7 +37,10 @@ export function Sidebar({ activePage, setActivePage, isDemo, teacher, logout }) 
   }
 
   return (
-    <aside className="sidebar">
+    <aside className={cx("sidebar", isOpen && "sidebar-open")}>
+      <button className="sidebar-close-btn" onClick={onClose} aria-label="Close menu">
+        <X size={18} />
+      </button>
       <div className="brand">
         <div className="brand-mark">
           <Award size={22} />

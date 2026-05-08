@@ -100,6 +100,7 @@ export function LessonEntryPanel({ group, students, records, date, currentTime, 
       {!students.length && <EmptyState title={t.lesson_no_students_title} text={t.lesson_no_students_text} />}
       {!!students.length && (
         <form onSubmit={submit}>
+          <div className="lesson-table-scroll">
           <div className="lesson-table">
             <div className="lesson-table-head">
               <span>{t.lesson_col_student}</span>
@@ -127,6 +128,7 @@ export function LessonEntryPanel({ group, students, records, date, currentTime, 
                 ))}
               </div>
             ))}
+          </div>
           </div>
           <div style={{ position: "sticky", bottom: "16px", zIndex: 10, marginTop: "16px", padding: "12px", background: "#ffffff", borderRadius: "12px", boxShadow: "0 4px 20px rgba(0,0,0,0.08)", border: "1px solid #e2e8f0" }}>
             {message && <p className={cx("lesson-message", message.startsWith(t.lesson_error) && "lesson-message-error")} style={{ marginTop: 0, marginBottom: "12px" }}>{message}</p>}

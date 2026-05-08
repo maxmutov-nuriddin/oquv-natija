@@ -511,6 +511,7 @@ button {
 .lesson-table { border: 2px solid var(--line); border-bottom: 6px solid var(--line-dark); border-radius: var(--radius-sm); overflow: hidden; background: white; }
 .lesson-table-head { display: grid; grid-template-columns: minmax(220px, 1fr) repeat(3, minmax(110px, 0.4fr)); gap: 16px; background: var(--line-soft); padding: 16px 24px; font-weight: 900; font-size: 14px; color: var(--muted); text-transform: uppercase; }
 .lesson-row { display: grid; grid-template-columns: minmax(220px, 1fr) repeat(3, minmax(110px, 0.4fr)); gap: 16px; padding: 16px 24px; border-top: 2px solid var(--line); align-items: center; }
+.lesson-student { display: flex; align-items: center; gap: 12px; }
 .lesson-student strong { font-size: 18px; font-weight: 900; }
 .lesson-row input { width: 100%; border: 2px solid var(--line); border-bottom: 4px solid var(--line-dark); border-radius: var(--radius-xs); min-height: 52px; text-align: center; font-weight: 900; font-size: 20px; outline: none; }
 .lesson-row input:focus { border-color: var(--blue); border-bottom-color: var(--blue-dark); }
@@ -823,4 +824,358 @@ button {
   font-size: 13px;
   line-height: 1.55;
   color: #1e293b;
+}
+
+/* page-stack wrapper */
+.page-stack { display: flex; flex-direction: column; gap: 0; }
+
+/* ============================================================
+   RESPONSIVE — mobile first, 320px minimum
+   ============================================================ */
+
+/* Hamburger button — hidden on desktop */
+.mobile-menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border: 2px solid var(--line);
+  border-bottom: 4px solid var(--line-dark);
+  border-radius: var(--radius-xs);
+  background: white;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.1s;
+}
+.mobile-menu-btn:active { transform: translateY(4px); border-bottom-width: 0; }
+
+/* Sidebar overlay backdrop — hidden on desktop */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 199;
+  cursor: pointer;
+}
+
+/* Sidebar close button — hidden on desktop */
+.sidebar-close-btn {
+  display: none;
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.2);
+  border: 2px solid rgba(255,255,255,0.4);
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 900;
+  transition: all 0.1s;
+}
+
+/* Topbar left wrapper */
+.topbar-left { display: flex; align-items: flex-start; gap: 12px; }
+
+/* ── 768 px — tablets & phones ─────────────────────────────── */
+@media (max-width: 768px) {
+  /* App shell: single column */
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  /* Sidebar: off-canvas drawer */
+  .sidebar {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 280px;
+    z-index: 200;
+    transform: translateX(-100%);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto;
+  }
+  .sidebar-open {
+    transform: translateX(0) !important;
+  }
+  .sidebar-close-btn { display: flex; }
+  .sidebar-overlay { display: block; }
+
+  /* Main content */
+  .main-content { padding: 16px; }
+
+  /* Hamburger visible */
+  .mobile-menu-btn { display: flex; }
+
+  /* Topbar */
+  .topbar {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+  }
+  .topbar-left { align-items: center; }
+  .topbar-title h2 { font-size: 22px; }
+  .topbar-title p { font-size: 13px; margin-top: 4px; }
+  .eyebrow { font-size: 11px; margin-bottom: 6px; }
+
+  .control-row { flex-wrap: wrap; gap: 10px; }
+  .control { height: 46px; padding: 0 12px; }
+  .control-search { flex: 1 1 120px; }
+  .control-date { flex: 1 1 130px; }
+  .control-select { flex: 1 1 140px; }
+
+  /* Stats grid */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  /* Dashboard grid: stack */
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  /* Panel */
+  .panel { padding: 20px; margin-bottom: 16px; }
+  .panel-title h3 { font-size: 20px; }
+  .panel-title > span { width: 42px; height: 42px; }
+
+  /* Student grid: 1 column */
+  .student-grid { grid-template-columns: 1fr; gap: 16px; }
+
+  /* Timer */
+  .timer-panel { padding: 20px 24px; margin-bottom: 16px; }
+  .timer-inner {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    justify-items: center;
+  }
+  .timer-ring-wrap { width: 160px; height: 160px; }
+  .timer-controls-col { width: 100%; }
+
+  /* Groups layout: stack */
+  .groups-layout {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .group-list-panel { position: static; }
+  .group-list { max-height: 260px; }
+  .group-overview {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .group-overview h3 { font-size: 30px; }
+  .group-metrics { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .group-metrics strong { font-size: 22px; }
+
+  /* Settings */
+  .settings-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+
+  /* Modals */
+  .modal-backdrop { padding: 12px; align-items: flex-end; }
+  .modal-panel {
+    border-radius: var(--radius) var(--radius) var(--radius-sm) var(--radius-sm);
+    max-height: 92vh;
+    overflow-y: auto;
+  }
+  .profile-modal-panel { max-width: 100%; align-self: flex-end; }
+  .profile-body { padding: 20px 16px; }
+  .modal-header { padding: 16px 20px; }
+  .modal-header h3 { font-size: 20px; }
+
+  /* Profile stats */
+  .profile-stats-row { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+
+  /* Profile identity */
+  .profile-identity { gap: 14px; }
+  .profile-name { font-size: 20px; }
+
+  /* Lesson table: horizontal scroll container */
+  .lesson-table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .lesson-table { min-width: 480px; }
+
+  /* Auth */
+  .auth-card { padding: 32px 20px; }
+  .auth-brand h1 { font-size: 28px; }
+  .auth-brand { gap: 14px; margin-bottom: 28px; }
+
+  /* Current lesson banner */
+  .current-lesson { padding: 18px 20px; gap: 16px; margin-bottom: 16px; }
+  .current-lesson h3 { font-size: 22px; }
+  .current-lesson p { font-size: 14px; }
+  .current-lesson-icon { width: 60px; height: 60px; }
+
+  /* Winner panel */
+  .winner-panel { padding: 28px; }
+  .winner-icon { width: 60px; height: 60px; margin-bottom: 16px; }
+
+  /* Entry form */
+  .entry-form { padding: 20px 16px; gap: 18px; }
+
+  /* Privileges */
+  .privileges-grid { grid-template-columns: 1fr; gap: 16px; }
+
+  /* Stat card */
+  .stat-card { padding: 18px; gap: 12px; }
+  .stat-icon { width: 48px; height: 48px; }
+  .stat-card strong { font-size: 26px; }
+
+  /* Leader */
+  .leader-row { padding: 16px 20px; }
+  .leader-rank { width: 52px; height: 52px; font-size: 17px; }
+  .leader-score strong { font-size: 26px; }
+
+  /* Heatmap: half columns */
+  .profile-heatmap { grid-template-columns: repeat(14, 1fr); }
+
+  /* Chart */
+  .chart-box { height: 260px; }
+}
+
+/* ── 480 px — phones ────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .main-content { padding: 12px; }
+
+  .topbar { padding: 14px 16px; }
+  .topbar-title h2 { font-size: 19px; }
+
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .stat-card { padding: 14px 12px; gap: 10px; }
+  .stat-icon { width: 42px; height: 42px; }
+  .stat-card p { font-size: 12px; }
+  .stat-card strong { font-size: 22px; }
+
+  .panel { padding: 14px; }
+
+  .group-metrics { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .group-metrics div { padding: 14px 10px; }
+  .group-metrics strong { font-size: 20px; }
+  .group-metrics span { font-size: 11px; }
+  .group-overview h3 { font-size: 26px; margin: 4px 0 12px; }
+
+  .settings-grid { grid-template-columns: 1fr; }
+
+  .profile-stats-row { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .profile-stat-value { font-size: 16px; }
+  .profile-name { font-size: 18px; }
+  .profile-avatar { width: 56px; height: 56px; font-size: 20px; }
+
+  .leader-main { gap: 14px; }
+  .leader-rank { width: 44px; height: 44px; font-size: 15px; }
+  .leader-row p { font-size: 12px; }
+  .leader-score strong { font-size: 22px; }
+
+  .auth-card { padding: 24px 14px; }
+  .auth-brand h1 { font-size: 24px; }
+
+  .modal-backdrop { padding: 6px; }
+
+  .winner-panel { padding: 20px; }
+  .winner-icon { width: 52px; height: 52px; }
+  .winner-list h3 { font-size: 18px; }
+  .winner-list strong { font-size: 22px; }
+  .winner-list div { padding: 16px; }
+
+  .current-lesson { padding: 14px 16px; gap: 12px; }
+  .current-lesson h3 { font-size: 19px; }
+  .current-lesson-icon { width: 52px; height: 52px; }
+
+  .timer-ring-wrap { width: 148px; height: 148px; }
+  .timer-digits { font-size: 36px; }
+
+  .chart-box { height: 220px; }
+
+  .control-row { gap: 8px; }
+  .control { height: 44px; }
+  .control-search { flex: 1 1 100%; }
+
+  .entry-form input, .entry-form select { font-size: 16px; padding: 12px; }
+
+  .weekday-picker button { padding: 10px 4px; font-size: 12px; }
+
+  .coin-badge { padding: 6px 12px; font-size: 14px; }
+
+  .student-score strong { font-size: 22px; }
+
+  .period-summary-row { grid-template-columns: 1fr 1fr; }
+}
+
+/* ── 360 px — small phones (320 px min) ─────────────────────── */
+@media (max-width: 360px) {
+  body { min-width: 320px; }
+
+  .main-content { padding: 10px; }
+
+  .topbar { padding: 12px; gap: 10px; }
+  .topbar-title h2 { font-size: 17px; }
+  .topbar-title p { font-size: 12px; }
+
+  .control-row { flex-direction: column; gap: 8px; }
+  .control { width: 100%; height: 44px; }
+
+  .stats-grid { grid-template-columns: 1fr; gap: 8px; }
+  .stat-card { padding: 12px; }
+  .stat-card strong { font-size: 20px; }
+
+  .panel { padding: 12px; margin-bottom: 12px; }
+  .panel-title h3 { font-size: 17px; }
+  .panel-title > span { width: 36px; height: 36px; border-radius: 10px; }
+
+  .current-lesson { padding: 12px; flex-direction: column; }
+  .current-lesson h3 { font-size: 17px; }
+
+  .timer-ring-wrap { width: 130px; height: 130px; }
+  .timer-digits { font-size: 30px; }
+  .timer-presets { gap: 6px; }
+  .timer-preset-btn { padding: 6px 10px; font-size: 13px; }
+
+  .group-overview h3 { font-size: 22px; }
+  .group-metrics { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+  .group-metrics div { padding: 10px 8px; }
+  .group-metrics strong { font-size: 18px; }
+
+  .group-actions { grid-template-columns: 1fr; gap: 10px; }
+
+  .winner-panel { padding: 16px; }
+  .winner-list h3 { font-size: 16px; }
+  .winner-list strong { font-size: 18px; }
+
+  .settings-grid { grid-template-columns: 1fr; }
+
+  .profile-stats-row { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+  .profile-identity { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .profile-heatmap { grid-template-columns: repeat(10, 1fr); }
+
+  .modal-backdrop { padding: 4px; }
+  .entry-form { padding: 14px; gap: 14px; }
+  .entry-form input, .entry-form select { font-size: 15px; padding: 10px; }
+
+  .weekday-picker { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .weekday-picker button { padding: 8px 2px; font-size: 11px; }
+
+  .auth-card { padding: 20px 12px; }
+  .auth-brand { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .auth-brand h1 { font-size: 22px; }
+
+  .coin-badge { padding: 5px 10px; font-size: 13px; gap: 6px; }
+  .student-score strong { font-size: 20px; }
+
+  .primary-button, .secondary-button { min-height: 46px; font-size: 14px; padding: 0 16px; }
+
+  .brand h1 { font-size: 20px; }
+  .nav-button { padding: 12px 14px; font-size: 14px; }
+
+  .leader-main { gap: 10px; }
+  .leader-score strong { font-size: 20px; }
 }
