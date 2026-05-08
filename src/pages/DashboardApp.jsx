@@ -3,6 +3,7 @@ import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useDashboardData } from "../hooks/useDashboardData";
 import { useT } from "../i18n/index.jsx";
 import { groupForDateTime } from "../lib/scoring";
+import { sendLessonReport } from "../lib/telegram";
 import { Sidebar } from "../components/layout/Sidebar";
 import { Topbar } from "../components/layout/Topbar";
 import { StudentForm } from "../components/forms/StudentForm";
@@ -39,6 +40,21 @@ export function DashboardApp({ teacher, logout, updateProfile, changePassword })
     await deleteStudent(student.id);
   }
 
+  async function handleSendResults() {
+    if (!currentGroup) return;
+    const groupStudents = students.filter(s => s.group === selectedGroup);
+    const studentsWithScores = groupStudents.map(student => {
+      const record = records.find(r => r.studentId === student.id && r.date === date);
+      return {
+        ...student,
+        homeworkScore: record?.homework || 0,
+        attendanceScore: record?.attendance || 0,
+        activityScore: record?.activity || 0,
+      };
+    });
+    await sendLessonReport({ group: currentGroup, students: studentsWithScores, date, settings });
+  }
+
   return (
     <div className="app-bg">
       <div className="app-shell">
@@ -53,6 +69,9 @@ export function DashboardApp({ teacher, logout, updateProfile, changePassword })
             selectedGroup={selectedGroup}
             groups={groups}
             setSelectedGroup={setManualGroup}
+            currentGroup={currentGroup}
+            currentTime={currentTime}
+            onSendResults={handleSendResults}
           />
 
           {loading && <LoadingState />}

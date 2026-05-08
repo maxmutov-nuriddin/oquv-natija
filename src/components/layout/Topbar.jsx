@@ -1,11 +1,40 @@
 import dayjs from "dayjs";
-import { CalendarDays, Search, Users } from "lucide-react";
+import { CalendarDays, Loader2, Search, Send, Users } from "lucide-react";
+import { useMemo, useState } from "react";
 import { navItems } from "../../constants";
 import { useT } from "../../i18n/index.jsx";
 
-export function Topbar({ activePage, date, setDate, query, setQuery, selectedGroup, groups, setSelectedGroup }) {
+function toMin(time) {
+  const [h, m] = time.split(":").map(Number);
+  return h * 60 + m;
+}
+
+export function Topbar({ activePage, date, setDate, query, setQuery, selectedGroup, groups, setSelectedGroup, currentGroup, currentTime, onSendResults }) {
   const { t } = useT();
   const pageTitle = t[`nav_${activePage}`] || navItems.find((item) => item.id === activePage)?.label || "Dashboard";
+  const [sendStatus, setSendStatus] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const showSendBtn = useMemo(() => {
+    if (!currentGroup?.lessonEnd || !currentTime) return false;
+    const diff = toMin(currentGroup.lessonEnd) - toMin(currentTime);
+    return diff > 0 && diff <= 15;
+  }, [currentGroup, currentTime]);
+
+  async function handleSend() {
+    if (!onSendResults) return;
+    setSending(true);
+    setSendStatus("");
+    try {
+      await onSendResults();
+      setSendStatus(t.topbar_send_done);
+      setTimeout(() => setSendStatus(""), 3000);
+    } catch (err) {
+      setSendStatus(`${t.topbar_send_fail} ${err?.message || ""}`);
+    } finally {
+      setSending(false);
+    }
+  }
 
   return (
     <header className="topbar">
@@ -16,6 +45,23 @@ export function Topbar({ activePage, date, setDate, query, setQuery, selectedGro
       </div>
 
       <div className="control-row">
+        {showSendBtn && (
+          <button
+            onClick={handleSend}
+            disabled={sending}
+            style={{
+              display: "flex", alignItems: "center", gap: "6px",
+              padding: "8px 14px", borderRadius: "8px", border: "none", cursor: "pointer",
+              background: sending ? "#94a3b8" : "linear-gradient(135deg, #2563eb, #1d4ed8)",
+              color: "#fff", fontWeight: 600, fontSize: "13px", whiteSpace: "nowrap",
+              boxShadow: "0 2px 8px rgba(37,99,235,0.35)", transition: "opacity 0.2s"
+            }}
+          >
+            {sending ? <Loader2 size={14} className="spinner" /> : <Send size={14} />}
+            {sending ? t.topbar_sending : (sendStatus || t.topbar_send_results)}
+          </button>
+        )}
+
         <label className="control control-search">
           <Search size={17} />
           <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t.topbar_search} />

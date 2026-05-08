@@ -22,6 +22,10 @@ export const ru = {
   topbar_search: "Поиск ученика",
   topbar_select_group: "Выберите группу",
   topbar_no_group: "Нет групп",
+  topbar_send_results: "Отправить результаты",
+  topbar_sending: "Отправка...",
+  topbar_send_done: "✓ Отправлено",
+  topbar_send_fail: "Ошибка:",
 
   // Auth
   auth_subtitle: "Вход в панель учителя",

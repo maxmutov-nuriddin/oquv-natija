@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { BookOpenCheck, CheckCircle2, Loader2, Send } from "lucide-react";
+import { BookOpenCheck, CheckCircle2, Loader2 } from "lucide-react";
 import { scoreFields } from "../../constants";
 import { useT } from "../../i18n/index.jsx";
-import { sendLessonReport } from "../../lib/telegram";
 import { cx, initials, numberInputValue, parsePercentInput } from "../../lib/utils";
 import { EmptyState } from "../ui/EmptyState";
 import { PanelHeader } from "../ui/PanelHeader";
@@ -12,7 +11,6 @@ export function LessonEntryPanel({ group, students, records, date, currentTime, 
   const [entries, setEntries] = useState({});
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
-  const [tgStatus, setTgStatus] = useState("");
   const selectedWeekday = new Date(date + "T00:00:00").getDay();
   const dayLabel = t.weekday_short[selectedWeekday] || "";
   const isLessonDay = Boolean(group?.weekdays?.includes(selectedWeekday));
@@ -41,11 +39,6 @@ export function LessonEntryPanel({ group, students, records, date, currentTime, 
     saveLessonRecords({ date, settings: s, students: studentsWithScores })
       .then(() => {
         setMessage(t.lesson_auto_saved);
-        if (group?.telegramChatId && s?.telegramBotToken) {
-          sendLessonReport({ group, students: studentsWithScores, date, settings: s })
-            .then(() => setTgStatus(t.tg_sent))
-            .catch(err => setTgStatus(`${t.tg_fail} ${err.message}`));
-        }
       })
       .catch(err => {
         autoSavedRef.current = ""; // allow retry on next tick
@@ -105,17 +98,11 @@ export function LessonEntryPanel({ group, students, records, date, currentTime, 
   async function submit(event) {
     event.preventDefault();
     setMessage("");
-    setTgStatus("");
     setSaving(true);
     const studentsWithScores = students.map(student => ({ ...student, ...entries[student.id] }));
     try {
       await saveLessonRecords({ date, settings, students: studentsWithScores });
       setMessage(t.lesson_saved);
-      if (group?.telegramChatId && settings?.telegramBotToken) {
-        sendLessonReport({ group, students: studentsWithScores, date, settings })
-          .then(() => setTgStatus(t.tg_sent))
-          .catch(err => setTgStatus(`${t.tg_fail} ${err.message}`));
-      }
     } catch (error) {
       setMessage(`${t.lesson_error} ${error?.message || ""}`);
     } finally {
@@ -169,12 +156,6 @@ export function LessonEntryPanel({ group, students, records, date, currentTime, 
           </div>
           <div style={{ position: "sticky", bottom: "16px", zIndex: 10, marginTop: "16px", padding: "12px", background: "#ffffff", borderRadius: "12px", boxShadow: "0 4px 20px rgba(0,0,0,0.08)", border: "1px solid #e2e8f0" }}>
             {message && <p className={cx("lesson-message", message.startsWith(t.lesson_error) && "lesson-message-error")} style={{ marginTop: 0, marginBottom: "12px" }}>{message}</p>}
-            {tgStatus && (
-              <p style={{ margin: "0 0 10px", fontSize: "13px", display: "flex", alignItems: "center", gap: "6px", color: tgStatus.startsWith(t.tg_fail) ? "#dc2626" : "#16a34a", fontWeight: 600 }}>
-                <Send size={14} />
-                {tgStatus}
-              </p>
-            )}
             <button className="primary-button save-button" type="submit" disabled={saving || !isLessonDay || isLessonOver} style={{ width: "100%", justifyContent: "center" }}>
               {saving ? <Loader2 size={17} className="spinner" /> : <CheckCircle2 size={17} />}
               {saving ? t.lesson_saving : t.lesson_save}

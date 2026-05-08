@@ -22,6 +22,10 @@ export const uz = {
   topbar_search: "O'quvchi qidirish",
   topbar_select_group: "Guruh tanlang",
   topbar_no_group: "Guruh yo'q",
+  topbar_send_results: "Natijalarni yuborish",
+  topbar_sending: "Yuborilmoqda...",
+  topbar_send_done: "✓ Yuborildi",
+  topbar_send_fail: "Xato:",
 
   // Auth
   auth_subtitle: "O'qituvchi dashboardiga kirish",
