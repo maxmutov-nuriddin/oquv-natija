@@ -214,6 +214,7 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
                 weeklyWinner={weeklyWinner}
                 monthlyWinner={monthlyWinner}
                 hideGifts={true}
+                isLowPerformer={index >= Math.ceil(ranked.length / 2)}
               />
             ))}
           </div>

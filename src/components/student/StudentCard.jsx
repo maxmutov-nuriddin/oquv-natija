@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { Coins, Settings, Star, Trash2, Trophy, User } from "lucide-react";
+import { Coins, Settings, Star, Trash2, Trophy, User, Zap } from "lucide-react";
 import { availableGifts, scoreFields } from "../../constants";
 import { LEVELS } from "../../constants";
 import { useT } from "../../i18n/index.jsx";
@@ -7,12 +7,13 @@ import { getScoreSummary, isDeclineTrend } from "../../lib/scoring";
 import { cx, getLevel, getPerformanceStatus, initials, numberInputValue, parsePercentInput } from "../../lib/utils";
 import { ProgressLine } from "../ui/ProgressLine";
 
-export function StudentCard({ student, onDelete, onEdit, onProfile, index, date, records, settings, saveLessonRecords, isLessonDay = true, isRecordSaved = false, pendingScore, onScoreChange, onWarningReset, onUpdateStudent, weeklyWinner, monthlyWinner, hideGifts = false }) {
+export function StudentCard({ student, onDelete, onEdit, onProfile, index, date, records, settings, saveLessonRecords, isLessonDay = true, isRecordSaved = false, pendingScore, onScoreChange, onWarningReset, onUpdateStudent, weeklyWinner, monthlyWinner, hideGifts = false, isLowPerformer = false }) {
   const { t } = useT();
   const todayRecord = records?.find((r) => r.studentId === student.id && r.date === date);
   const hw = todayRecord ? todayRecord.homework : 0;
   const att = todayRecord ? todayRecord.attendance : 0;
   const act = todayRecord ? todayRecord.activity : 0;
+  const extraTask = todayRecord?.extraTask ?? false;
   const todayCoins = todayRecord ? (todayRecord.coinsEarned ?? 0) : 0;
   const attended = hw > 0 || att > 0 || act > 0;
 
@@ -178,6 +179,29 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
           );
         })}
       </div>
+      {isLowPerformer && (
+        <button
+          type="button"
+          disabled={!isLessonDay || isRecordSaved}
+          onClick={() => handleQuickUpdate("extraTask", !extraTask)}
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+            width: "100%", padding: "10px", borderRadius: "9999px", fontSize: "13px", fontWeight: 800,
+            border: `2px solid ${extraTask ? "#16a34a" : "#d1d5db"}`,
+            borderBottom: `4px solid ${extraTask ? "#15803d" : "#9ca3af"}`,
+            background: extraTask ? "#dcfce7" : "#f9fafb",
+            color: extraTask ? "#15803d" : "#6b7280",
+            cursor: (!isLessonDay || isRecordSaved) ? "not-allowed" : "pointer",
+            opacity: (!isLessonDay || isRecordSaved) ? 0.6 : 1,
+            marginBottom: "6px", transition: "all 0.1s"
+          }}
+        >
+          <Zap size={14} fill={extraTask ? "currentColor" : "none"} />
+          {extraTask ? t.card_extra_task_done : t.card_extra_task}
+          {extraTask && <span style={{ marginLeft: "auto", fontSize: "11px", fontWeight: 700, background: "#16a34a", color: "white", padding: "1px 7px", borderRadius: "999px" }}>+{settings.extraTaskCoin ?? 3} coin</span>}
+        </button>
+      )}
+
       <div style={{ display: "flex", gap: "6px" }}>
         <button className="secondary-button" type="button" onClick={() => onProfile?.(student)} style={{ flex: 1, justifyContent: "center", padding: "8px", fontSize: "12px", minHeight: "40px" }}>
           <User size={13} />

@@ -4,7 +4,8 @@ export function calculateCoins(record, settings) {
   const homeworkCoins = (Number(record.homework || 0) / 100) * Number(settings.homeworkCoin || 0);
   const attendanceCoins = (Number(record.attendance || 0) / 100) * Number(settings.attendanceCoin || 0);
   const activityCoins = (Number(record.activity || 0) / 100) * Number(settings.activityCoin || 0);
-  return Math.round(homeworkCoins + attendanceCoins + activityCoins);
+  const extraTaskCoins = record.extraTask ? Number(settings.extraTaskCoin || 0) : 0;
+  return Math.round(homeworkCoins + attendanceCoins + activityCoins + extraTaskCoins);
 }
 
 export function finalScore(student, settings) {

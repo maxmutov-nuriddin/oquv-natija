@@ -266,8 +266,9 @@ export function useDashboardData() {
           const hw = Number(student.homeworkScore || 0);
           const att = Number(student.attendanceScore || 0);
           const act = Number(student.activityScore || 0);
+          const extraTask = Boolean(student.extraTask);
 
-          if (hw === 0 && att === 0 && act === 0) {
+          if (hw === 0 && att === 0 && act === 0 && !extraTask) {
             recordsToDelete.push({ studentId: student.id, date });
           } else {
             const record = {
@@ -275,7 +276,8 @@ export function useDashboardData() {
               date,
               homework: hw,
               attendance: att,
-              activity: act
+              activity: act,
+              extraTask
             };
             rows.push({
               student,
