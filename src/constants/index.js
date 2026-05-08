@@ -1,10 +1,11 @@
-import { Activity, Award, BookOpenCheck, CheckCircle2, LayoutDashboard, Settings, ShieldX, Star, Trophy, Users } from "lucide-react";
+import { Activity, Award, BookOpenCheck, BarChart2, CheckCircle2, LayoutDashboard, Settings, ShieldX, Star, Trophy, Users } from "lucide-react";
 
 export const navItems = [
-  { id: "dashboard", label: "Bosh sahifa", icon: LayoutDashboard },
-  { id: "groups", label: "Guruhlar", icon: Users },
+  { id: "dashboard",  label: "Bosh sahifa", icon: LayoutDashboard },
+  { id: "groups",     label: "Guruhlar",    icon: Users },
+  { id: "analytics",  label: "Tahlil",      icon: BarChart2 },
   { id: "privileges", label: "Privelegiya", icon: Star },
-  { id: "settings", label: "Sozlamalar", icon: Settings }
+  { id: "settings",   label: "Sozlamalar",  icon: Settings }
 ];
 
 export const scoreFields = [

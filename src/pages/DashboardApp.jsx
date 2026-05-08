@@ -12,6 +12,7 @@ import { LoadingState } from "../components/ui/LoadingState";
 
 const DashboardPage  = lazy(() => import("./DashboardPage").then(m => ({ default: m.DashboardPage })));
 const GroupsPage     = lazy(() => import("./GroupsPage").then(m => ({ default: m.GroupsPage })));
+const AnalyticsPage  = lazy(() => import("./AnalyticsPage").then(m => ({ default: m.AnalyticsPage })));
 const PrivilegesPage = lazy(() => import("./PrivilegesPage").then(m => ({ default: m.PrivilegesPage })));
 const SettingsPage   = lazy(() => import("./SettingsPage").then(m => ({ default: m.SettingsPage })));
 
@@ -153,6 +154,15 @@ export function DashboardApp({ teacher, logout, updateProfile, changePassword })
                   setDate={setDate}
                 />
               )}
+              {activePage === "analytics" && (
+                <AnalyticsPage
+                  groups={groups}
+                  students={students}
+                  records={records}
+                  settings={settings}
+                  date={date}
+                />
+              )}
               {activePage === "settings" && (
                 <SettingsPage
                   settings={settings}
@@ -160,6 +170,7 @@ export function DashboardApp({ teacher, logout, updateProfile, changePassword })
                   teacher={teacher}
                   updateProfile={updateProfile}
                   changePassword={changePassword}
+                  isDemo={isDemo}
                 />
               )}
               {activePage === "privileges" && <PrivilegesPage />}

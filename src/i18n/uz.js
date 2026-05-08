@@ -4,10 +4,11 @@ export const uz = {
   brand_subtitle: "Admin dashboard",
 
   // Nav
-  nav_dashboard: "Bosh sahifa",
-  nav_groups: "Guruhlar",
+  nav_dashboard:  "Bosh sahifa",
+  nav_groups:     "Guruhlar",
+  nav_analytics:  "Tahlil",
   nav_privileges: "Privelegiya",
-  nav_settings: "Sozlamalar",
+  nav_settings:   "Sozlamalar",
 
   // Sidebar
   sidebar_demo: "Demo ma'lumot",

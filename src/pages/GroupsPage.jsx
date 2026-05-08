@@ -486,6 +486,7 @@ export function GroupsPage({ groups, students, records, settings, date, currentT
           <BuyGiftModal
             groups={groups}
             students={students}
+            initialGroup={activeGroup}
             onBuy={(form) => {
               const student = students.find(s => s.id === form.studentId);
               if (!student) return;

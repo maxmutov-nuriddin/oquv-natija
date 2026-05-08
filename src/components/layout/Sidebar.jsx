@@ -4,7 +4,7 @@ import { navItems } from "../../constants";
 import { useT } from "../../i18n/index.jsx";
 import { cx, initials } from "../../lib/utils";
 
-export function Sidebar({ activePage, setActivePage, isDemo, teacher, logout, isOpen, onClose }) {
+export function Sidebar({ activePage, setActivePage, teacher, logout, isOpen, onClose }) {
   const { lang, t, setLang } = useT();
   const [installPrompt, setInstallPrompt] = useState(null);
   const [installed, setInstalled] = useState(false);
@@ -66,14 +66,6 @@ export function Sidebar({ activePage, setActivePage, isDemo, teacher, logout, is
           );
         })}
       </nav>
-
-      <div className="sidebar-note">
-        <span className={cx("live-dot", isDemo ? "live-dot-demo" : "live-dot-online")} />
-        <div>
-          <strong>{isDemo ? t.sidebar_demo : t.sidebar_live}</strong>
-          <p>{t.sidebar_realtime}</p>
-        </div>
-      </div>
 
       <div className="sidebar-note" style={{ padding: "8px 16px" }}>
         <div style={{ display: "flex", gap: "6px", width: "100%" }}>

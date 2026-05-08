@@ -4,10 +4,11 @@ export const ru = {
   brand_subtitle: "Панель учителя",
 
   // Nav
-  nav_dashboard: "Главная",
-  nav_groups: "Группы",
+  nav_dashboard:  "Главная",
+  nav_groups:     "Группы",
+  nav_analytics:  "Аналитика",
   nav_privileges: "Привилегии",
-  nav_settings: "Настройки",
+  nav_settings:   "Настройки",
 
   // Sidebar
   sidebar_demo: "Демо данные",

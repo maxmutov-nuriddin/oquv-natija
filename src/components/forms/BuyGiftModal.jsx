@@ -2,9 +2,9 @@ import { useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { privilegesData } from "../../constants";
 
-export function BuyGiftModal({ groups, students, onBuy }) {
+export function BuyGiftModal({ groups, students, onBuy, initialGroup }) {
   const [form, setForm] = useState({
-    group: groups[0]?.name || "",
+    group: initialGroup || groups[0]?.name || "",
     studentId: "",
     giftName: "",
     count: 1

@@ -5,7 +5,7 @@ import { cx } from "../lib/utils";
 import { PanelHeader } from "../components/ui/PanelHeader";
 import { SettingInput } from "../components/ui/SettingInput";
 
-export function SettingsPage({ settings, saveSettings, teacher, updateProfile, changePassword }) {
+export function SettingsPage({ settings, saveSettings, teacher, updateProfile, changePassword, isDemo }) {
   const { t } = useT();
   const [draft, setDraft] = useState(settings);
   const [profileName, setProfileName] = useState(teacher?.name || "");
@@ -264,6 +264,14 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
           {t.settings_change_password}
         </button>
       </section>
+
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "12px 16px", background: isDemo ? "#fef9c3" : "#f0fdf4", border: `1px solid ${isDemo ? "#fde047" : "#bbf7d0"}`, borderRadius: "12px" }}>
+        <span className={cx("live-dot", isDemo ? "live-dot-demo" : "live-dot-online")} />
+        <div>
+          <strong style={{ fontSize: "13px", color: isDemo ? "#854d0e" : "#166534" }}>{isDemo ? t.sidebar_demo : t.sidebar_live}</strong>
+          <p style={{ fontSize: "12px", color: isDemo ? "#92400e" : "#15803d", margin: 0 }}>{t.sidebar_realtime}</p>
+        </div>
+      </div>
     </div>
   );
 }

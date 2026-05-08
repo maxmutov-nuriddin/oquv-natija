@@ -1,10 +1,17 @@
 import dayjs from "dayjs";
 import { useEffect, useMemo, useState } from "react";
-import { BarChart3, Coins, Medal, Pencil, Trophy, Users } from "lucide-react";
+import { Award, BarChart3, Coins, Medal, Pencil, Star, Trophy, Users } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { availableGifts, vipData, allPrivileges } from "../constants";
 import { calculateCoins, getPeriodLeader, getPreviousMonthRange, getPreviousWeekRange, isDeclineTrend, rankStudents } from "../lib/scoring";
+import { initials } from "../lib/utils";
 import { useT } from "../i18n/index.jsx";
 import { BonusDrumModal } from "../components/games/BonusDrumModal";
+import { MysteryBoxModal } from "../components/games/MysteryBoxModal";
+import { BlockFriendModal } from "../components/forms/BlockFriendModal";
+import { BuyGiftModal } from "../components/forms/BuyGiftModal";
+import { GiftCoinModal } from "../components/forms/GiftCoinModal";
+import { Modal } from "../components/ui/Modal";
 import { StudentCard } from "../components/student/StudentCard";
 import { StudentProfileModal } from "../components/student/StudentProfileModal";
 import { TimerPanel } from "../components/ui/TimerPanel";
@@ -27,6 +34,12 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
     const groupObj = groups?.find(g => g.name === selectedGroup);
     return groupObj ? groupObj.weekdays?.includes(dayjs(date).day()) : false;
   }, [groups, selectedGroup, date]);
+
+  const isLessonActive = useMemo(() => {
+    const groupObj = groups?.find(g => g.name === selectedGroup);
+    if (!groupObj?.lessonStart || !groupObj?.lessonEnd || !currentTime || !isLessonDay) return false;
+    return currentTime >= groupObj.lessonStart && currentTime < groupObj.lessonEnd;
+  }, [groups, selectedGroup, currentTime, isLessonDay]);
 
   const groupStudents = useMemo(() => students.filter((student) => student.group === selectedGroup), [students, selectedGroup]);
   const ranked = useMemo(() => {
@@ -64,6 +77,10 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
   const [showComic, setShowComic] = useState(false);
   const [comicVersion, setComicVersion] = useState(0);
   const [scoresUnlocked, setScoresUnlocked] = useState(false);
+  const [giftModal, setGiftModal] = useState("");
+  const [activeMystery, setActiveMystery] = useState(null);
+  const [activeGiftCoin, setActiveGiftCoin] = useState(null);
+  const [activeBlockFriend, setActiveBlockFriend] = useState(null);
 
   useEffect(() => { setScoresUnlocked(false); }, [selectedGroup, date]);
 
@@ -262,6 +279,113 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
         )}
       </section>
 
+      {selectedGroup && (
+        <section className="panel">
+          <PanelHeader
+            icon={Award}
+            title={t.groups_gifts_title}
+            subtitle={t.groups_gifts_sub}
+            action={
+              <button
+                className="primary-button" type="button"
+                onClick={() => setGiftModal("buy-gift")}
+                disabled={!isLessonActive}
+                style={{ padding: "6px 14px", fontSize: "13px", opacity: isLessonActive ? 1 : 0.45, cursor: isLessonActive ? "pointer" : "not-allowed" }}
+                title={!isLessonActive ? "Faqat dars vaqtida ishlatish mumkin" : undefined}
+              >
+                <Award size={14} />
+                {t.groups_buy_gift}
+              </button>
+            }
+          />
+          {!isLessonActive && (
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", background: "#f1f5f9", borderRadius: "8px", fontSize: "13px", color: "#64748b", marginBottom: "4px" }}>
+              <span>🔒</span>
+              <span>Sovg'alar faqat dars vaqtida ishlatish mumkin</span>
+            </div>
+          )}
+          {groupStudents.filter(s => s.gifts?.length > 0 || s.id === weeklyWinner?.id || s.id === monthlyWinner?.id).length === 0 ? (
+            <EmptyState title={t.groups_no_gifts_title} text={t.groups_no_gifts_text} />
+          ) : (
+            <div className="group-gifts-summary">
+              {groupStudents.filter(s => s.gifts?.length > 0 || s.id === weeklyWinner?.id || s.id === monthlyWinner?.id).map(s => {
+                const tier = s.group.toLowerCase().includes("senior") ? "senior" : "junior";
+                const vipPerks = [];
+                if (s.id === monthlyWinner?.id) vipPerks.push(...vipData[tier].monthly.map(p => ({ ...p, source: "monthly" })));
+                if (s.id === weeklyWinner?.id)  vipPerks.push(...vipData[tier].weekly.map(p => ({ ...p, source: "weekly" })));
+                const sIgnoredDates = s.ignoredZeroDates || [];
+                const sZeroCount = records.filter(r => r.studentId === s.id && r.homework === 0 && !sIgnoredDates.includes(r.date)).length;
+                const sIsBlocked = sZeroCount >= 2 || s.privilegeBlockedDate === date;
+                const sIsPrivilegeBlocked = s.privilegeBlockedDate === date;
+                return (
+                  <div key={s.id} className="summary-gift-row">
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+                      <div className="avatar avatar-small">{initials(s.name)}</div>
+                      <strong>{s.name}</strong>
+                      {s.id === weeklyWinner?.id  && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px", background: "linear-gradient(135deg, #60a5fa, #2563eb)", color: "white" }}>{t.card_week_winner}</span>}
+                      {s.id === monthlyWinner?.id && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px", background: "linear-gradient(135deg, #f472b6, #db2777)", color: "white" }}>{t.card_month_winner}</span>}
+                      {s.gifts?.some(g => g.type === "vip") && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px" }}>{t.profile_vip}</span>}
+                      {sIsPrivilegeBlocked && <span style={{ fontSize: "10px", fontWeight: 800, padding: "2px 7px", borderRadius: "999px", background: "#fee2e2", color: "#b91c1c", border: "1px solid #fca5a5" }}>🛡️ Bloklangan</span>}
+                    </div>
+                    <div className="student-gifts" style={{ marginTop: 0 }}>
+                      {(s.gifts || []).map((g, idx) => {
+                        const giftMeta = availableGifts.find(ag => ag.id === g.id) || { icon: Award, color: g.type === "vip" ? "var(--rose)" : "var(--blue)" };
+                        const GiftIcon = giftMeta.icon;
+                        const isBlockGift = g.id === "block_friend";
+                        const btnDisabled = !isLessonActive || (isBlockGift ? sZeroCount >= 2 : sIsBlocked);
+                        return (
+                          <button key={idx} type="button" className="gift-tag"
+                            style={{ "--gift-color": giftMeta.color, opacity: btnDisabled ? 0.45 : 1, cursor: btnDisabled ? "not-allowed" : "pointer" }}
+                            disabled={btnDisabled}
+                            title={!isLessonActive ? "Faqat dars vaqtida ishlatish mumkin" : sIsPrivilegeBlocked && !isBlockGift ? "Bloklangan" : sZeroCount >= 2 ? t.card_blocked : g.id === "mystery_box" ? t.card_open : t.card_use}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (btnDisabled) return;
+                              if (g.id === "block_friend") { setActiveBlockFriend({ studentId: s.id, giftItem: g }); setGiftModal("block-friend"); return; }
+                              if (g.id === "mystery_box" || g.id === "mistiriy_box") { setActiveMystery({ studentId: s.id, type: "shop", mysteryType: `shop_${tier}`, giftItem: g }); setGiftModal("mystery-box"); return; }
+                              if (g.id === "gift_coin") { setActiveGiftCoin({ studentId: s.id, type: "shop", giftItem: g }); setGiftModal("gift-coin"); return; }
+                              const nextGifts = (s.gifts || []).map(item => item.id === g.id ? { ...item, count: Math.max(0, Number(item.count || 0) - 1) } : item).filter(item => item.count > 0);
+                              updateStudent(s.id, { gifts: nextGifts });
+                            }}>
+                            <GiftIcon size={12} />
+                            <span>{g.name} x{g.count}</span>
+                          </button>
+                        );
+                      })}
+                      {vipPerks.map((vp, idx) => {
+                        const usedCount = s.usedVipPerks?.[`${vp.source}_${vp.id}`] || 0;
+                        const maxUses = vp.count !== undefined ? vp.count : (vp.uses || 1);
+                        const remaining = maxUses - usedCount;
+                        if (remaining <= 0) return null;
+                        return (
+                          <button key={`vip-${idx}`} type="button" className="gift-tag"
+                            style={{ "--gift-color": "var(--rose)", cursor: (!isLessonActive || sIsBlocked) ? "not-allowed" : "pointer", opacity: (!isLessonActive || sIsBlocked) ? 0.45 : 1 }}
+                            disabled={!isLessonActive || sIsBlocked}
+                            title={!isLessonActive ? "Faqat dars vaqtida ishlatish mumkin" : sIsPrivilegeBlocked ? "Bloklangan" : sZeroCount >= 2 ? t.card_blocked : t.card_use}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (!isLessonActive || sIsBlocked) return;
+                              if (vp.id === "mystery_box") { setActiveMystery({ studentId: s.id, type: vp.source, mysteryType: `${tier}_${vp.source}`, vipPerk: vp }); setGiftModal("mystery-box"); }
+                              else if (vp.id === "gift_coin") { setActiveGiftCoin({ studentId: s.id, type: vp.source, vipPerk: vp }); setGiftModal("gift-coin"); }
+                              else {
+                                const perkKey = `${vp.source}_${vp.id}`;
+                                updateStudent(s.id, { usedVipPerks: { ...(s.usedVipPerks || {}), [perkKey]: (s.usedVipPerks?.[perkKey] || 0) + 1 } });
+                              }
+                            }}>
+                            <Star size={12} />
+                            <span>{vp.name} {remaining > 1 ? `x${remaining}` : ""}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
+
       {showBonusDrum && (
         <FunModal onClose={() => setShowBonusDrum(false)}>
           <BonusDrumModal onReward={handleBonusReward} onClose={() => setShowBonusDrum(false)} />
@@ -275,6 +399,107 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
           onClose={() => setShowComic(false)}
           onSaved={() => setComicVersion(v => v + 1)}
         />
+      )}
+
+      {giftModal === "buy-gift" && (
+        <Modal title={t.app_modal_buy_gift} onClose={() => setGiftModal("")}>
+          <BuyGiftModal
+            groups={groups}
+            students={students}
+            initialGroup={selectedGroup}
+            onBuy={(form) => {
+              const student = students.find(s => s.id === form.studentId);
+              if (!student) return;
+              const currentGifts = student.gifts || [];
+              const selectedPrivilege = allPrivileges.find(p => p.name === form.giftName) || availableGifts.find(g => g.name === form.giftName);
+              const giftId = selectedPrivilege ? selectedPrivilege.id : form.giftName.toLowerCase().replace(/\s+/g, "_");
+              const isVip = form.giftName.toUpperCase().includes("VIP");
+              const existingGift = currentGifts.find(g => g.id === giftId);
+              const nextGifts = existingGift
+                ? currentGifts.map(g => g.name.toLowerCase() === form.giftName.toLowerCase() ? { ...g, count: Number(g.count || 0) + Number(form.count) } : g)
+                : [...currentGifts, { id: giftId, name: form.giftName, count: Number(form.count), type: isVip ? "vip" : "gift" }];
+              updateStudent(student.id, { gifts: nextGifts });
+              setGiftModal("");
+            }}
+          />
+        </Modal>
+      )}
+
+      {giftModal === "mystery-box" && activeMystery && (
+        <FunModal onClose={() => setGiftModal("")}>
+          <MysteryBoxModal
+            activeMystery={activeMystery}
+            onClose={() => setGiftModal("")}
+            onReward={(rewardItem, mystery) => {
+              const student = students.find(s => s.id === mystery.studentId);
+              if (!student) { setGiftModal(""); return; }
+              const currentGifts = student.gifts || [];
+              const existingGift = currentGifts.find(g => g.id === rewardItem.id);
+              let nextGifts = existingGift
+                ? currentGifts.map(g => g.id === rewardItem.id ? { ...g, count: Number(g.count || 0) + 1 } : g)
+                : [...currentGifts, { id: rewardItem.id, name: rewardItem.name, count: 1, type: "gift" }];
+              if (mystery.type === "shop") {
+                nextGifts = nextGifts.map(item => item.id === mystery.giftItem.id ? { ...item, count: Math.max(0, Number(item.count || 0) - 1) } : item).filter(item => item.count > 0);
+                updateStudent(student.id, { gifts: nextGifts });
+              } else {
+                const perkKey = `${mystery.vipPerk.source}_${mystery.vipPerk.id}`;
+                updateStudent(student.id, { gifts: nextGifts, usedVipPerks: { ...(student.usedVipPerks || {}), [perkKey]: (student.usedVipPerks?.[perkKey] || 0) + 1 } });
+              }
+              setGiftModal("");
+            }}
+          />
+        </FunModal>
+      )}
+
+      {giftModal === "gift-coin" && activeGiftCoin && (
+        <Modal title={t.app_modal_gift_coin} onClose={() => setGiftModal("")}>
+          <GiftCoinModal
+            activeGroupStudents={groupStudents}
+            activeGiftCoin={activeGiftCoin}
+            onClose={() => setGiftModal("")}
+            onConfirm={(targetStudentId, giftData) => {
+              const target = students.find(s => s.id === targetStudentId);
+              if (target) {
+                const existingBoost = (target.gifts || []).find(g => g.id === "coin_boost_2x");
+                const newGifts = existingBoost
+                  ? (target.gifts || []).map(g => g.id === "coin_boost_2x" ? { ...g, count: (g.count || 0) + 1 } : g)
+                  : [...(target.gifts || []), { id: "coin_boost_2x", name: "2x coin boost", count: 1, type: "gift" }];
+                updateStudent(target.id, { gifts: newGifts });
+              }
+              const giver = students.find(s => s.id === giftData.studentId);
+              if (giver) {
+                if (giftData.type === "shop") {
+                  updateStudent(giver.id, { gifts: giver.gifts.map(item => item.id === "gift_coin" ? { ...item, count: Math.max(0, (item.count || 0) - 1) } : item).filter(item => item.count > 0) });
+                } else {
+                  const perkKey = `${giftData.type}_${giftData.vipPerk.id}`;
+                  updateStudent(giver.id, { usedVipPerks: { ...(giver.usedVipPerks || {}), [perkKey]: (giver.usedVipPerks?.[perkKey] || 0) + 1 } });
+                }
+              }
+              setGiftModal("");
+              setActiveGiftCoin(null);
+            }}
+          />
+        </Modal>
+      )}
+
+      {giftModal === "block-friend" && activeBlockFriend && (
+        <Modal title="Do'stni bloklash" onClose={() => { setGiftModal(""); setActiveBlockFriend(null); }}>
+          <BlockFriendModal
+            groupStudents={groupStudents}
+            blockingStudentId={activeBlockFriend.studentId}
+            date={date}
+            onBlock={(targetId) => {
+              const blocker = students.find(s => s.id === activeBlockFriend.studentId);
+              if (blocker) {
+                updateStudent(blocker.id, { gifts: (blocker.gifts || []).map(item => item.id === "block_friend" ? { ...item, count: Math.max(0, (item.count || 0) - 1) } : item).filter(item => item.count > 0) });
+              }
+              updateStudent(targetId, { privilegeBlockedDate: date });
+              setGiftModal("");
+              setActiveBlockFriend(null);
+            }}
+            onClose={() => { setGiftModal(""); setActiveBlockFriend(null); }}
+          />
+        </Modal>
       )}
 
       {profileStudent && (
