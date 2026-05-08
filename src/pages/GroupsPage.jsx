@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Award, CalendarDays, Plus, Settings, Star, Trash2, Trophy, UserPlus, Users } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { availableGifts, vipData, weekDays, allPrivileges } from "../constants";
-import { getPeriodLeader, getPreviousMonthRange, getPreviousWeekRange, rankStudents } from "../lib/scoring";
+import { getPeriodLeader, getPreviousMonthRange, getPreviousWeekRange, groupAvgScore, rankStudents } from "../lib/scoring";
 import { sendIntroMessage } from "../lib/telegram";
 import { useT } from "../i18n/index.jsx";
 import { cx, getLevel, initials, medalLabel } from "../lib/utils";
@@ -33,20 +33,10 @@ export function GroupsPage({ groups, students, records, settings, date, currentT
   const activeGroupStudents = useMemo(() => students.filter(s => s.group === activeGroup), [students, activeGroup]);
 
   const groupActivityMap = useMemo(() => {
-    const hw  = Number(settings?.homeworkWeight  || 0.4);
-    const att = Number(settings?.attendanceWeight || 0.3);
-    const act = Number(settings?.activityWeight   || 0.3);
-    const cutoff = dayjs(date).subtract(30, "day").format("YYYY-MM-DD");
     const map = {};
     groups.forEach(group => {
       const gs = students.filter(s => s.group === group.name);
-      if (!gs.length) { map[group.name] = null; return; }
-      const ids = new Set(gs.map(s => s.id));
-      const recs = records.filter(r => ids.has(r.studentId) && r.date >= cutoff);
-      if (!recs.length) { map[group.name] = null; return; }
-      map[group.name] = Math.round(
-        recs.reduce((sum, r) => sum + (r.homework || 0) * hw + (r.attendance || 0) * att + (r.activity || 0) * act, 0) / recs.length
-      );
+      map[group.name] = groupAvgScore(gs, records, settings, 30, date);
     });
     return map;
   }, [groups, students, records, settings, date]);

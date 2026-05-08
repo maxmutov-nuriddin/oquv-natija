@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import { useMemo, useState } from "react";
 import { AlertTriangle, ChevronDown, ChevronUp, TrendingDown, TrendingUp, Users } from "lucide-react";
-import { isDeclineTrend, isRiseTrend, rankStudents } from "../lib/scoring";
+import { groupAvgScore, isDeclineTrend, isRiseTrend, rankStudents } from "../lib/scoring";
 import { PanelHeader } from "../components/ui/PanelHeader";
 import { useT } from "../i18n/index.jsx";
 import { initials } from "../lib/utils";
@@ -190,13 +190,32 @@ export function AnalyticsPage({ groups, students, records, settings, date }) {
   const [openGroup, setOpenGroup] = useState(null);
 
   const groupStats = useMemo(() => {
+    const hwW  = Number(settings.homeworkWeight  || 0.4);
+    const attW = Number(settings.attendanceWeight || 0.3);
+    const actW = Number(settings.activityWeight   || 0.3);
+    const cutoff = dayjs(date).subtract(30, "day").format("YYYY-MM-DD");
     return groups.map(g => {
-      const ranked = rankStudents(students.filter(s => s.group === g.name), records, settings, date);
-      const avgScore    = ranked.length ? Math.round(ranked.reduce((s,st)=>s+st.finalScore,0)/ranked.length) : 0;
-      const avgCoins    = ranked.length ? Math.round(ranked.reduce((s,st)=>s+st.coins,0)/ranked.length)      : 0;
-      const dangerCount = ranked.filter(s => s.finalScore < 50).length;
-      const declineCount= ranked.filter(s => s.finalScore >= 50 && isDeclineTrend(s.id, records, settings)).length;
-      const riseCount   = ranked.filter(s => isRiseTrend(s.id, records, settings)).length;
+      const gStudents = students.filter(s => s.group === g.name);
+      const ranked    = rankStudents(gStudents, records, settings, date);
+      const avgScore  = groupAvgScore(gStudents, records, settings, 30, date) ?? 0;
+      const avgCoins  = ranked.length ? Math.round(ranked.reduce((s,st)=>s+st.coins,0)/ranked.length) : 0;
+      let dangerCount = 0, declineCount = 0, riseCount = 0;
+      gStudents.forEach(s => {
+        const recs = records.filter(r =>
+          r.studentId === s.id && r.date >= cutoff &&
+          (r.homework > 0 || r.attendance > 0 || r.activity > 0)
+        );
+        if (!recs.length) return;
+        const n = recs.length;
+        const avg30 = Math.min(100, Math.round(
+          recs.reduce((sum,r)=>sum+Number(r.homework  ||0),0)/n * hwW +
+          recs.reduce((sum,r)=>sum+Number(r.attendance||0),0)/n * attW +
+          recs.reduce((sum,r)=>sum+Number(r.activity  ||0),0)/n * actW
+        ));
+        if (avg30 < 50)                                    dangerCount++;
+        else if (isDeclineTrend(s.id, records, settings)) declineCount++;
+        if (isRiseTrend(s.id, records, settings))         riseCount++;
+      });
       return { group: g, students: ranked, avgScore, avgCoins, dangerCount, declineCount, riseCount };
     });
   }, [groups, students, records, settings, date]);

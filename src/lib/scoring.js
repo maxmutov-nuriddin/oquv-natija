@@ -107,6 +107,27 @@ export function isDeclineTrend(studentId, records, settings) {
   return s2 < s1 && s3 < s2;
 }
 
+export function groupAvgScore(groupStudents, records, settings, days = 30, date = dayjs()) {
+  const hw  = Number(settings?.homeworkWeight  || 0.4);
+  const att = Number(settings?.attendanceWeight || 0.3);
+  const act = Number(settings?.activityWeight   || 0.3);
+  const cutoff = dayjs(date).subtract(days, "day").format("YYYY-MM-DD");
+  const studentAvgs = groupStudents.map(s => {
+    const recs = records.filter(r =>
+      r.studentId === s.id && r.date >= cutoff &&
+      (r.homework > 0 || r.attendance > 0 || r.activity > 0)
+    );
+    if (!recs.length) return null;
+    const n = recs.length;
+    const avgHw  = recs.reduce((sum, r) => sum + Number(r.homework   || 0), 0) / n;
+    const avgAtt = recs.reduce((sum, r) => sum + Number(r.attendance || 0), 0) / n;
+    const avgAct = recs.reduce((sum, r) => sum + Number(r.activity   || 0), 0) / n;
+    return avgHw * hw + avgAtt * att + avgAct * act;
+  }).filter(v => v !== null);
+  if (!studentAvgs.length) return null;
+  return Math.round(studentAvgs.reduce((s, v) => s + v, 0) / studentAvgs.length);
+}
+
 export function isRiseTrend(studentId, records, settings) {
   const hw  = Number(settings?.homeworkWeight  || 0.4);
   const att = Number(settings?.attendanceWeight || 0.3);
@@ -123,22 +144,41 @@ export function isRiseTrend(studentId, records, settings) {
 
 export function summarizeStudent(student, records, settings, date = dayjs()) {
   const studentRecords = records.filter((record) => record.studentId === student.id);
-  const weeklyRecords = getWindowRecords(studentRecords, 7, date);
+  const weeklyRecords  = getWindowRecords(studentRecords, 7,  date);
   const monthlyRecords = getWindowRecords(studentRecords, 30, date);
-  const rawCoins = studentRecords.reduce((sum, record) => sum + (Number(record.coinsEarned) || calculateCoins(record, settings)), 0);
-  const coins = Math.max(0, rawCoins - (student.homeworkFines || 0));
-  const weeklyCoins = weeklyRecords.reduce((sum, record) => sum + (Number(record.coinsEarned) || calculateCoins(record, settings)), 0);
-  const monthlyCoins = monthlyRecords.reduce((sum, record) => sum + (Number(record.coinsEarned) || calculateCoins(record, settings)), 0);
-  const lessonDays = monthlyRecords.filter(r => r.homework > 0 || r.attendance > 0 || r.activity > 0 || r.extraTask > 0).length;
-  const extraTaskScore = lessonDays > 0
-    ? Math.round(monthlyRecords.reduce((sum, r) => sum + Number(r.extraTask || 0), 0) / lessonDays)
-    : 0;
+
+  const rawCoins    = studentRecords.reduce((sum, r) => sum + (Number(r.coinsEarned) || calculateCoins(r, settings)), 0);
+  const coins       = Math.max(0, rawCoins - (student.homeworkFines || 0));
+  const weeklyCoins = weeklyRecords.reduce((sum, r)  => sum + (Number(r.coinsEarned) || calculateCoins(r, settings)), 0);
+  const monthlyCoins= monthlyRecords.reduce((sum, r) => sum + (Number(r.coinsEarned) || calculateCoins(r, settings)), 0);
+
+  // finalScore: joriy oy darslarining o'rtacha bali (eng to'g'ri usul)
+  const activeLessons = monthlyRecords.filter(
+    r => r.homework > 0 || r.attendance > 0 || r.activity > 0 || r.extraTask > 0
+  );
+  let computedFinalScore;
+  if (activeLessons.length > 0) {
+    const n = activeLessons.length;
+    const avgHw    = activeLessons.reduce((s, r) => s + Number(r.homework   || 0), 0) / n;
+    const avgAtt   = activeLessons.reduce((s, r) => s + Number(r.attendance || 0), 0) / n;
+    const avgAct   = activeLessons.reduce((s, r) => s + Number(r.activity   || 0), 0) / n;
+    const avgExtra = activeLessons.reduce((s, r) => s + Number(r.extraTask  || 0), 0) / n;
+    computedFinalScore = finalScore(
+      { homeworkScore: avgHw, attendanceScore: avgAtt, activityScore: avgAct },
+      settings,
+      avgExtra
+    );
+  } else {
+    // Hali dars bo'lmagan bo'lsa — saqlangan oxirgi qiymat
+    computedFinalScore = finalScore(student, settings, 0);
+  }
+
   return {
     ...student,
     coins,
     weeklyCoins,
     monthlyCoins,
-    finalScore: finalScore(student, settings, extraTaskScore)
+    finalScore: computedFinalScore,
   };
 }
 
