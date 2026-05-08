@@ -122,7 +122,17 @@ export function LessonEntryPanel({ group, students, records, date, currentTime, 
                     max="100"
                     disabled={!isLessonDay || isLessonOver || locked}
                     value={numberInputValue(entries[student.id]?.[field.key])}
-                    onChange={(event) => update(student.id, field.key, event.target.value)}
+                    onChange={(event) => {
+                      if (event.target.value !== "" && Number(event.target.value) > 100) {
+                        event.target.value = "100";
+                      }
+                      update(student.id, field.key, event.target.value);
+                    }}
+                    onBlur={(event) => {
+                      if (event.target.value === "" || isNaN(Number(event.target.value))) {
+                        update(student.id, field.key, 0);
+                      }
+                    }}
                     aria-label={`${student.name} ${field.label}`}
                   />
                 ))}

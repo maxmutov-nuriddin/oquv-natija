@@ -181,10 +181,15 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
                 onFocus={(e) => e.target.select()}
                 onChange={(e) => {
                   if (e.target.value === "") return;
-                  handleQuickUpdate(field.key, parsePercentInput(e.target.value));
+                  const clamped = parsePercentInput(e.target.value);
+                  e.target.value = String(clamped);
+                  handleQuickUpdate(field.key, clamped);
                 }}
                 onBlur={(e) => {
-                  if (e.target.value === "" || isNaN(Number(e.target.value))) handleQuickUpdate(field.key, 0);
+                  if (e.target.value === "" || isNaN(Number(e.target.value))) {
+                    e.target.value = "0";
+                    handleQuickUpdate(field.key, 0);
+                  }
                 }}
                 onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); }}
                 onWheel={(e) => e.target.blur()}
