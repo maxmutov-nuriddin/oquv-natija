@@ -15,6 +15,9 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
   const act = todayRecord ? todayRecord.activity : 0;
   const extraTask = Number(todayRecord?.extraTask || 0);
   const todayCoins = todayRecord ? (todayRecord.coinsEarned ?? 0) : 0;
+  const dailyBonus = todayRecord?.dailyBonus;
+  const hasBonusDrum = dailyBonus !== undefined && dailyBonus !== null;
+  const isPenaltyDrum = dailyBonus === "penalty";
   const attended = hw > 0 || att > 0 || act > 0;
 
   async function handleQuickUpdate(key, value) {
@@ -98,9 +101,14 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
             </p>
           </div>
         </div>
-        <div className="coin-badge">
+        <div className="coin-badge" style={hasBonusDrum ? { background: isPenaltyDrum ? "#fee2e2" : "#dcfce7", color: isPenaltyDrum ? "#b91c1c" : "#15803d" } : {}}>
           <Coins size={15} />
           {todayCoins}
+          {hasBonusDrum && (
+            <span style={{ fontSize: "11px", fontWeight: 800 }}>
+              {isPenaltyDrum ? "🎰−½" : `🎰+${dailyBonus}`}
+            </span>
+          )}
         </div>
       </div>
 

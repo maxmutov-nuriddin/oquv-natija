@@ -267,8 +267,10 @@ export function useDashboardData() {
           const att = Number(student.attendanceScore || 0);
           const act = Number(student.activityScore || 0);
           const extraTask = Number(student.extraTask || 0);
+          const dailyBonus = student.dailyBonus;
+          const hasBonus = dailyBonus !== undefined && dailyBonus !== null;
 
-          if (hw === 0 && att === 0 && act === 0 && !extraTask) {
+          if (hw === 0 && att === 0 && act === 0 && !extraTask && !hasBonus) {
             recordsToDelete.push({ studentId: student.id, date });
           } else {
             const record = {
@@ -279,11 +281,21 @@ export function useDashboardData() {
               activity: act,
               extraTask
             };
+            const baseCoins = calculateCoins(record, settings);
+            let coinsEarned;
+            if (dailyBonus === "penalty") {
+              coinsEarned = Math.round(baseCoins / 2);
+            } else if (hasBonus) {
+              coinsEarned = baseCoins + Number(dailyBonus);
+            } else {
+              coinsEarned = baseCoins;
+            }
             rows.push({
               student,
               record: {
                 ...record,
-                coinsEarned: calculateCoins(record, settings)
+                coinsEarned,
+                ...(hasBonus ? { dailyBonus } : {})
               }
             });
           }

@@ -69,7 +69,7 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
   );
 
   const todayGroupRecords = useMemo(() => records.filter(r => r.date === date && groupStudents.some(s => s.id === r.studentId)), [records, date, groupStudents]);
-  const alreadySpun = todayGroupRecords.some(r => r.dailyBonus);
+  const alreadySpun = todayGroupRecords.some(r => r.dailyBonus !== undefined && r.dailyBonus !== null);
   const isRecordSaved = todayGroupRecords.length > 0;
   const { t } = useT();
   const [showBonusDrum, setShowBonusDrum] = useState(false);
@@ -102,7 +102,7 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
         attendance: existingRecord.attendance || 0,
         activity: existingRecord.activity || 0
       }, settings);
-      const bonus = isPenalty ? 0 : coins;
+      const bonus = isPenalty ? "penalty" : coins;
       return {
         ...student,
         homeworkScore: existingRecord.homework || 0,
