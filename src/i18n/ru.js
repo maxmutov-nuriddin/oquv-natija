@@ -309,6 +309,52 @@ export const ru = {
   weekday_short: ["Вск", "Пнд", "Втр", "Срд", "Чтв", "Птн", "Сбт"],
   weekday_picker: ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"],
 
+  // Analytics page
+  analytics_open: "Результаты",
+  analytics_close: "Закрыть",
+  analytics_students_sub: (n) => `${n} учеников · среднее за 30 дней`,
+  analytics_danger_label: "Зона риска",
+  analytics_danger_sub: "Балл ниже 50%",
+  analytics_danger_empty: "Опасных учеников нет",
+  analytics_decline_label: "Снижение",
+  analytics_decline_sub: "3 урока подряд снижение",
+  analytics_decline_empty: "Снижающихся учеников нет",
+  analytics_rise_label: "Растущие",
+  analytics_rise_sub: "3 урока подряд рост",
+  analytics_rise_empty: "Растущих учеников нет",
+  analytics_danger_badge: (n) => `⚠️ ${n} опасных`,
+  analytics_decline_badge: (n) => `📉 ${n} снижающихся`,
+  analytics_rise_badge: (n) => `📈 ${n} растут`,
+  analytics_all_good: "✅ Всё хорошо",
+  analytics_bottleneck: "Слабое место",
+  analytics_lesson_avg: (n) => `среднее за ${n} уроков (30 дней)`,
+  analytics_main_problem: "Главная проблема",
+
+  // Shared metric labels (with emoji)
+  metric_hw:  "📚 Д/З",
+  metric_att: "✅ Кл. работа",
+  metric_act: "⚡ Активность",
+
+  // Dashboard extras
+  dash_lesson_only:       "Доступно только во время урока",
+  dash_gifts_lesson_only: "Подарки доступны только во время урока",
+  dash_blocked_label:     "🛡️ Заблокировано",
+
+  // Lesson banner
+  banner_has_lesson:    (time) => `Сейчас идёт урок: ${time}.`,
+  banner_no_lesson:     "Сейчас нет группы",
+  banner_no_lesson_sub: (date, time) => `${date} в ${time} у вас нет занятия.`,
+
+  // Block friend modal
+  block_title:      "Заблокировать друга",
+  block_sub:        (date) => `Выбранный ученик ${date} не сможет воспользоваться привилегиями.`,
+  block_select:     "Выберите ученика",
+  block_no_others:  "В группе нет других учеников",
+  block_already:    "Уже заблокирован",
+  block_confirm:    (name, date) => `${name} в этот день (${date}) не сможет воспользоваться привилегиями. Это действие нельзя отменить.`,
+  block_cancel:     "Отмена",
+  block_submit:     "Заблокировать",
+
   // Rank text
   rankText: (n) => `${n}-е место`,
 };

@@ -309,6 +309,52 @@ export const uz = {
   weekday_short: ["Ya", "Du", "Se", "Ch", "Pa", "Ju", "Sh"],
   weekday_picker: ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"],
 
+  // Analytics page
+  analytics_open: "Natija",
+  analytics_close: "Yopish",
+  analytics_students_sub: (n) => `${n} ta o'quvchi · oxirgi 30 kun o'rtachasi`,
+  analytics_danger_label: "Xavf zonasi",
+  analytics_danger_sub: "Ball 50% dan past",
+  analytics_danger_empty: "Xavfli o'quvchi yo'q",
+  analytics_decline_label: "Pasayotgan",
+  analytics_decline_sub: "3 dars ketma-ket pasaygan",
+  analytics_decline_empty: "Pasayotgan o'quvchi yo'q",
+  analytics_rise_label: "Ko'tarilotgan",
+  analytics_rise_sub: "3 dars ketma-ket o'sgan",
+  analytics_rise_empty: "Ko'tarilotgan o'quvchi yo'q",
+  analytics_danger_badge: (n) => `⚠️ ${n} xavfli`,
+  analytics_decline_badge: (n) => `📉 ${n} pasayotgan`,
+  analytics_rise_badge: (n) => `📈 ${n} o'smoqda`,
+  analytics_all_good: "✅ Hammasi yaxshi",
+  analytics_bottleneck: "Eng zaif yo'nalish",
+  analytics_lesson_avg: (n) => `${n} dars o'rtachasi (30 kun)`,
+  analytics_main_problem: "Asosiy muammo",
+
+  // Shared metric labels (with emoji)
+  metric_hw:  "📚 Uy vazifa",
+  metric_att: "✅ Sinf vazifa",
+  metric_act: "⚡ Aktivlik",
+
+  // Dashboard extras
+  dash_lesson_only:       "Faqat dars vaqtida ishlatish mumkin",
+  dash_gifts_lesson_only: "Sovg'alar faqat dars vaqtida ishlatish mumkin",
+  dash_blocked_label:     "🛡️ Bloklangan",
+
+  // Lesson banner
+  banner_has_lesson:    (time) => `Shu kun va shu vaqt oralig'ida dars bor: ${time}.`,
+  banner_no_lesson:     "Bu vaqtda guruh yo'q",
+  banner_no_lesson_sub: (date, time) => `Sizda ${date} kuni soat ${time} da guruhingiz yo'q.`,
+
+  // Block friend modal
+  block_title:      "Do'stni bloklash",
+  block_sub:        (date) => `Tanlangan o'quvchi ${date} kuni barcha imtiyozlaridan foydalana olmaydi.`,
+  block_select:     "O'quvchini tanlang",
+  block_no_others:  "Guruhda boshqa o'quvchilar yo'q",
+  block_already:    "Allaqachon bloklangan",
+  block_confirm:    (name, date) => `${name} ushbu kunda (${date}) barcha imtiyozlaridan foydalana olmaydi. Bu amalni qaytarib bo'lmaydi.`,
+  block_cancel:     "Bekor qilish",
+  block_submit:     "Bloklash",
+
   // Rank text
   rankText: (n) => `${n}-o'rin`,
 };

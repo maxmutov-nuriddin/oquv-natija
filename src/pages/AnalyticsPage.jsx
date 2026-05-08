@@ -49,7 +49,8 @@ function MetricRow({ label, val }) {
 }
 
 function StudentCard({ s, accentColor, accentBg }) {
-  const mainProblemMap = { hw: "📚 Uy vazifa", att: "✅ Sinf vazifa", act: "⚡ Aktivlik" };
+  const { t } = useT();
+  const mainProblemMap = { hw: t.metric_hw, att: t.metric_att, act: t.metric_act };
   const showProblem = s.bottleneck && ({ hw: s.hw, att: s.att, act: s.act }[s.bottleneck] < 50);
 
   return (
@@ -71,7 +72,7 @@ function StudentCard({ s, accentColor, accentBg }) {
           </div>
           {s.lessonCount > 0 && (
             <div style={{ fontSize: "11px", color: "var(--muted)", fontWeight: 600 }}>
-              {s.lessonCount} dars o'rtachasi (30 kun)
+              {t.analytics_lesson_avg(s.lessonCount)}
             </div>
           )}
         </div>
@@ -91,26 +92,31 @@ function StudentCard({ s, accentColor, accentBg }) {
           background: "#fff5f5", border: "1px solid #fecaca",
           borderRadius: "7px", padding: "4px 8px", marginBottom: "8px"
         }}>
-          ↓ Asosiy muammo: {mainProblemMap[s.bottleneck]} · {({ hw: s.hw, att: s.att, act: s.act }[s.bottleneck])}%
+          ↓ {t.analytics_main_problem}: {mainProblemMap[s.bottleneck]} · {({ hw: s.hw, att: s.att, act: s.act }[s.bottleneck])}%
         </div>
       )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
-        <MetricRow label="📚 Uy vazifa"   val={s.hw}  />
-        <MetricRow label="✅ Sinf vazifa" val={s.att} />
-        <MetricRow label="⚡ Aktivlik"    val={s.act} />
+        <MetricRow label={t.metric_hw}  val={s.hw}  />
+        <MetricRow label={t.metric_att} val={s.att} />
+        <MetricRow label={t.metric_act} val={s.act} />
       </div>
     </div>
   );
 }
 
-const SECTIONS = [
-  { key: "dangerous", icon: AlertTriangle, label: "Xavf zonasi",   sub: "Ball 50% dan past",             accentColor: "var(--rose)",  accentBg: "#ffe5e5", empty: "Xavfli o'quvchi yo'q" },
-  { key: "declining", icon: TrendingDown,  label: "Pasayotgan",    sub: "3 dars ketma-ket pasaygan",     accentColor: "#f97316",      accentBg: "#ffedd5", empty: "Pasayotgan o'quvchi yo'q" },
-  { key: "rising",    icon: TrendingUp,    label: "Ko'tarilotgan", sub: "3 dars ketma-ket o'sgan",       accentColor: "var(--mint)",  accentBg: "#e8ffd6", empty: "Ko'tarilotgan o'quvchi yo'q" },
-];
+function useSections() {
+  const { t } = useT();
+  return [
+    { key: "dangerous", icon: AlertTriangle, label: t.analytics_danger_label,  sub: t.analytics_danger_sub,  accentColor: "var(--rose)",  accentBg: "#ffe5e5", empty: t.analytics_danger_empty  },
+    { key: "declining", icon: TrendingDown,  label: t.analytics_decline_label, sub: t.analytics_decline_sub, accentColor: "#f97316",      accentBg: "#ffedd5", empty: t.analytics_decline_empty },
+    { key: "rising",    icon: TrendingUp,    label: t.analytics_rise_label,    sub: t.analytics_rise_sub,    accentColor: "var(--mint)",  accentBg: "#e8ffd6", empty: t.analytics_rise_empty    },
+  ];
+}
 
 function GroupDetail({ gs, records, settings, date }) {
+  const { t } = useT();
+  const SECTIONS = useSections();
   const hwW  = Number(settings.homeworkWeight  || 0.4);
   const attW = Number(settings.attendanceWeight || 0.3);
   const actW = Number(settings.activityWeight   || 0.3);
@@ -254,7 +260,7 @@ export function AnalyticsPage({ groups, students, records, settings, date }) {
             <PanelHeader
               icon={Users}
               title={gs.group.name}
-              subtitle={`${gs.students.length} o'quvchi · oxirgi 30 kun o'rtachasi`}
+              subtitle={t.analytics_students_sub(gs.students.length)}
               action={
                 <button
                   type="button"
@@ -263,7 +269,7 @@ export function AnalyticsPage({ groups, students, records, settings, date }) {
                   onClick={() => setOpenGroup(isOpen ? null : gs.group.id)}
                 >
                   {isOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                  {isOpen ? "Yopish" : "Natija"}
+                  {isOpen ? t.analytics_close : t.analytics_open}
                 </button>
               }
             />
@@ -284,7 +290,7 @@ export function AnalyticsPage({ groups, students, records, settings, date }) {
 
             {/* Group bottleneck */}
             {gs.groupBottleneck && (() => {
-              const METRIC = { hw: "📚 Uy vazifa", att: "✅ Sinf vazifa", act: "⚡ Aktivlik" };
+              const METRIC = { hw: t.metric_hw, att: t.metric_att, act: t.metric_act };
               const bn = gs.groupBottleneck;
               const isWeak = bn.val < 50;
               return (
@@ -297,7 +303,7 @@ export function AnalyticsPage({ groups, students, records, settings, date }) {
                   color: isWeak ? "var(--rose-dark)" : "#92400e"
                 }}>
                   <span>{isWeak ? "⚠️" : "📌"}</span>
-                  <span>Eng zaif yo'nalish: {METRIC[bn.key]} — {bn.val}%</span>
+                  <span>{t.analytics_bottleneck}: {METRIC[bn.key]} — {bn.val}%</span>
                   <span style={{ marginLeft: "auto", fontSize: "11px", fontWeight: 600, color: "var(--muted)" }}>
                     📚{bn.hw}% · ✅{bn.att}% · ⚡{bn.act}%
                   </span>
@@ -309,22 +315,22 @@ export function AnalyticsPage({ groups, students, records, settings, date }) {
             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
               {gs.dangerCount > 0 && (
                 <span style={{ fontSize: "12px", fontWeight: 800, padding: "3px 10px", borderRadius: "999px", background: "#ffe5e5", color: "var(--rose-dark)", border: "1px solid var(--rose)" }}>
-                  ⚠️ {gs.dangerCount} xavfli
+                  {t.analytics_danger_badge(gs.dangerCount)}
                 </span>
               )}
               {gs.declineCount > 0 && (
                 <span style={{ fontSize: "12px", fontWeight: 800, padding: "3px 10px", borderRadius: "999px", background: "#ffedd5", color: "#c2410c", border: "1px solid #f97316" }}>
-                  📉 {gs.declineCount} pasayotgan
+                  {t.analytics_decline_badge(gs.declineCount)}
                 </span>
               )}
               {gs.riseCount > 0 && (
                 <span style={{ fontSize: "12px", fontWeight: 800, padding: "3px 10px", borderRadius: "999px", background: "#e8ffd6", color: "var(--mint-dark)", border: "1px solid var(--mint)" }}>
-                  📈 {gs.riseCount} o'smoqda
+                  {t.analytics_rise_badge(gs.riseCount)}
                 </span>
               )}
               {gs.dangerCount === 0 && gs.declineCount === 0 && (
                 <span style={{ fontSize: "12px", fontWeight: 800, padding: "3px 10px", borderRadius: "999px", background: "#e8ffd6", color: "var(--mint-dark)", border: "1px solid var(--mint)" }}>
-                  ✅ Hammasi yaxshi
+                  {t.analytics_all_good}
                 </span>
               )}
             </div>

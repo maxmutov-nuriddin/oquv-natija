@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { ShieldX } from "lucide-react";
 import { initials } from "../../lib/utils";
+import { useT } from "../../i18n/index.jsx";
 
 export function BlockFriendModal({ groupStudents, blockingStudentId, date, onBlock, onClose }) {
+  const { t } = useT();
   const [targetId, setTargetId] = useState("");
-  const [confirmed, setConfirmed] = useState(false);
 
   const candidates = groupStudents.filter(s => s.id !== blockingStudentId);
   const target = candidates.find(s => s.id === targetId);
@@ -22,21 +23,21 @@ export function BlockFriendModal({ groupStudents, blockingStudentId, date, onBlo
           <ShieldX size={24} color="white" />
         </div>
         <div>
-          <strong style={{ fontSize: "16px", display: "block", color: "#991b1b" }}>Do'stni bloklash</strong>
+          <strong style={{ fontSize: "16px", display: "block", color: "#991b1b" }}>{t.block_title}</strong>
           <span style={{ fontSize: "13px", color: "#b91c1c" }}>
-            Tanlangan o'quvchi <strong>{date}</strong> kuni barcha imtiyozlaridan foydalana olmaydi.
+            {t.block_sub(date)}
           </span>
         </div>
       </div>
 
       <div>
         <span style={{ fontSize: "13px", fontWeight: 800, textTransform: "uppercase", color: "var(--muted)", display: "block", marginBottom: "10px" }}>
-          O'quvchini tanlang
+          {t.block_select}
         </span>
         <div style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "280px", overflowY: "auto" }}>
           {candidates.length === 0 && (
             <p style={{ color: "var(--muted)", fontSize: "14px", textAlign: "center", padding: "24px 0" }}>
-              Guruhda boshqa o'quvchilar yo'q
+              {t.block_no_others}
             </p>
           )}
           {candidates.map(s => {
@@ -69,7 +70,7 @@ export function BlockFriendModal({ groupStudents, blockingStudentId, date, onBlo
                   <strong style={{ fontSize: "15px", display: "block" }}>{s.name}</strong>
                   {isBlocked && (
                     <span style={{ fontSize: "11px", color: "var(--rose)", fontWeight: 700 }}>
-                      Allaqachon bloklangan
+                      {t.block_already}
                     </span>
                   )}
                 </div>
@@ -84,13 +85,13 @@ export function BlockFriendModal({ groupStudents, blockingStudentId, date, onBlo
 
       {target && (
         <div style={{ background: "#fef2f2", border: "2px solid #fca5a5", borderRadius: "12px", padding: "14px", fontSize: "14px", color: "#991b1b" }}>
-          <strong>{target.name}</strong> ushbu kunda ({date}) barcha imtiyozlaridan foydalana olmaydi. Bu amalni qaytarib bo'lmaydi.
+          {t.block_confirm(target.name, date)}
         </div>
       )}
 
       <div style={{ display: "flex", gap: "8px" }}>
         <button type="button" className="secondary-button" onClick={onClose} style={{ flex: 1, justifyContent: "center" }}>
-          Bekor qilish
+          {t.block_cancel}
         </button>
         <button
           type="submit"
@@ -99,7 +100,7 @@ export function BlockFriendModal({ groupStudents, blockingStudentId, date, onBlo
           style={{ flex: 1, justifyContent: "center" }}
         >
           <ShieldX size={16} />
-          Bloklash
+          {t.block_submit}
         </button>
       </div>
     </form>

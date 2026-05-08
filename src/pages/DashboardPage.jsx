@@ -291,7 +291,7 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
                 onClick={() => setGiftModal("buy-gift")}
                 disabled={!isLessonActive}
                 style={{ padding: "6px 14px", fontSize: "13px", opacity: isLessonActive ? 1 : 0.45, cursor: isLessonActive ? "pointer" : "not-allowed" }}
-                title={!isLessonActive ? "Faqat dars vaqtida ishlatish mumkin" : undefined}
+                title={!isLessonActive ? t.dash_lesson_only : undefined}
               >
                 <Award size={14} />
                 {t.groups_buy_gift}
@@ -301,7 +301,7 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
           {!isLessonActive && (
             <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", background: "#f1f5f9", borderRadius: "8px", fontSize: "13px", color: "#64748b", marginBottom: "4px" }}>
               <span>🔒</span>
-              <span>Sovg'alar faqat dars vaqtida ishlatish mumkin</span>
+              <span>{t.dash_gifts_lesson_only}</span>
             </div>
           )}
           {groupStudents.filter(s => s.gifts?.length > 0 || s.id === weeklyWinner?.id || s.id === monthlyWinner?.id).length === 0 ? (
@@ -325,7 +325,7 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
                       {s.id === weeklyWinner?.id  && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px", background: "linear-gradient(135deg, #60a5fa, #2563eb)", color: "white" }}>{t.card_week_winner}</span>}
                       {s.id === monthlyWinner?.id && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px", background: "linear-gradient(135deg, #f472b6, #db2777)", color: "white" }}>{t.card_month_winner}</span>}
                       {s.gifts?.some(g => g.type === "vip") && <span className="vip-text-badge" style={{ fontSize: "10px", padding: "1px 4px" }}>{t.profile_vip}</span>}
-                      {sIsPrivilegeBlocked && <span style={{ fontSize: "10px", fontWeight: 800, padding: "2px 7px", borderRadius: "999px", background: "#fee2e2", color: "#b91c1c", border: "1px solid #fca5a5" }}>🛡️ Bloklangan</span>}
+                      {sIsPrivilegeBlocked && <span style={{ fontSize: "10px", fontWeight: 800, padding: "2px 7px", borderRadius: "999px", background: "#fee2e2", color: "#b91c1c", border: "1px solid #fca5a5" }}>{t.dash_blocked_label}</span>}
                     </div>
                     <div className="student-gifts" style={{ marginTop: 0 }}>
                       {(s.gifts || []).map((g, idx) => {
@@ -337,7 +337,7 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
                           <button key={idx} type="button" className="gift-tag"
                             style={{ "--gift-color": giftMeta.color, opacity: btnDisabled ? 0.45 : 1, cursor: btnDisabled ? "not-allowed" : "pointer" }}
                             disabled={btnDisabled}
-                            title={!isLessonActive ? "Faqat dars vaqtida ishlatish mumkin" : sIsPrivilegeBlocked && !isBlockGift ? "Bloklangan" : sZeroCount >= 2 ? t.card_blocked : g.id === "mystery_box" ? t.card_open : t.card_use}
+                            title={!isLessonActive ? t.dash_lesson_only : sIsPrivilegeBlocked && !isBlockGift ? t.dash_blocked_label : sZeroCount >= 2 ? t.card_blocked : g.id === "mystery_box" ? t.card_open : t.card_use}
                             onClick={(e) => {
                               e.stopPropagation();
                               if (btnDisabled) return;
@@ -361,7 +361,7 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
                           <button key={`vip-${idx}`} type="button" className="gift-tag"
                             style={{ "--gift-color": "var(--rose)", cursor: (!isLessonActive || sIsBlocked) ? "not-allowed" : "pointer", opacity: (!isLessonActive || sIsBlocked) ? 0.45 : 1 }}
                             disabled={!isLessonActive || sIsBlocked}
-                            title={!isLessonActive ? "Faqat dars vaqtida ishlatish mumkin" : sIsPrivilegeBlocked ? "Bloklangan" : sZeroCount >= 2 ? t.card_blocked : t.card_use}
+                            title={!isLessonActive ? t.dash_lesson_only : sIsPrivilegeBlocked ? t.dash_blocked_label : sZeroCount >= 2 ? t.card_blocked : t.card_use}
                             onClick={(e) => {
                               e.stopPropagation();
                               if (!isLessonActive || sIsBlocked) return;
