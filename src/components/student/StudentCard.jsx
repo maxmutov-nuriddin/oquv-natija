@@ -172,16 +172,19 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
                 {field.short}
               </span>
               <input
-                key={`${student.id}-${field.key}-${savedVal}`}
+                key={`${student.id}-${field.key}`}
                 type="number"
                 min="0"
                 max="100"
                 disabled={!isLessonDay || isRecordSaved}
                 defaultValue={numberInputValue(savedVal)}
                 onFocus={(e) => e.target.select()}
+                onChange={(e) => {
+                  if (e.target.value === "") return;
+                  handleQuickUpdate(field.key, parsePercentInput(e.target.value));
+                }}
                 onBlur={(e) => {
-                  const v = (e.target.value === "" || isNaN(Number(e.target.value))) ? 0 : parsePercentInput(e.target.value);
-                  handleQuickUpdate(field.key, v);
+                  if (e.target.value === "" || isNaN(Number(e.target.value))) handleQuickUpdate(field.key, 0);
                 }}
                 onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); }}
                 onWheel={(e) => e.target.blur()}
