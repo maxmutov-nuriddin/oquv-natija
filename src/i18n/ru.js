@@ -187,6 +187,7 @@ export const ru = {
   lesson_saving: "Сохранение...",
   lesson_saved: "Результаты урока сохранены.",
   lesson_auto_saved: "✅ Урок сохранён автоматически",
+  lesson_over: "🔒 Урок завершён — результаты сохранены и заблокированы.",
   lesson_error: "Не сохранено:",
 
   // Group form

@@ -187,6 +187,7 @@ export const uz = {
   lesson_saving: "Saqlanmoqda...",
   lesson_saved: "Dars natijalari saqlandi.",
   lesson_auto_saved: "✅ Dars avtomatik saqlandi",
+  lesson_over: "🔒 Dars tugadi — natijalar saqlandi va qulflandi.",
   lesson_error: "Saqlanmadi:",
 
   // Group form
