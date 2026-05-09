@@ -43,9 +43,7 @@ export function AuthPage({ login, normalizePhone, resetPassword }) {
         </div>
 
         <div className="auth-brand">
-          <div className="brand-mark">
-            <img src="/CoddyResultsRoboLogo.png" alt="CoddyResults" className="brand-logo brand-logo-robo auth-brand-logo" />
-          </div>
+          <img src="/CoddyResultsRoboLogo.png" alt="CoddyResults" className="brand-logo-robo auth-brand-logo" />
           <div>
             <h1>{t.brand_title}</h1>
             <p>{t.auth_subtitle}</p>

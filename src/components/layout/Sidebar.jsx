@@ -42,9 +42,7 @@ export function Sidebar({ activePage, setActivePage, teacher, logout, isOpen, on
         <X size={18} />
       </button>
       <div className="brand">
-        <div className="brand-mark">
-          <img src="/CoddyResultsRoboLogo.png" alt="CoddyResults" className="brand-logo brand-logo-robo" />
-        </div>
+        <img src="/CoddyResultsRoboLogo.png" alt="CoddyResults" className="brand-logo-robo" />
         <div>
           <h1>{t.brand_title}</h1>
           <p>{t.brand_subtitle}</p>
