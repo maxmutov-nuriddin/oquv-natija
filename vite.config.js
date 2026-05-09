@@ -9,9 +9,9 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["pwa-192.png", "pwa-512.png"],
       manifest: {
-        name: "Coddy Result",
-        short_name: "Coddy Result",
-        description: "Coddy Result — o'quvchilar natijalarini kuzatish va boshqarish tizimi",
+        name: "CoddyResults",
+        short_name: "CoddyResults",
+        description: "CoddyResults — o'quvchilar natijalarini kuzatish va boshqarish tizimi",
         theme_color: "#1cb0f6",
         background_color: "#f3f4f6",
         display: "standalone",

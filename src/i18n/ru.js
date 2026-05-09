@@ -1,6 +1,6 @@
 export const ru = {
   // Brand
-  brand_title: "Coddy Result",
+  brand_title: "CoddyResults",
   brand_subtitle: "Панель учителя",
 
   // Nav
