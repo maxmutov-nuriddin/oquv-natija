@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Award, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useT } from "../i18n/index.jsx";
 
 export function AuthPage({ login, normalizePhone, resetPassword }) {
@@ -44,7 +44,7 @@ export function AuthPage({ login, normalizePhone, resetPassword }) {
 
         <div className="auth-brand">
           <div className="brand-mark">
-            <Award size={24} />
+            <img src="/CoddyResultsRoboLogo.png" alt="CoddyResults" className="brand-logo brand-logo-robo auth-brand-logo" />
           </div>
           <div>
             <h1>{t.brand_title}</h1>

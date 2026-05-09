@@ -1,4 +1,4 @@
-import { Award, Download, X } from "lucide-react";
+import { Download, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { navItems } from "../../constants";
 import { useT } from "../../i18n/index.jsx";
@@ -43,7 +43,7 @@ export function Sidebar({ activePage, setActivePage, teacher, logout, isOpen, on
       </button>
       <div className="brand">
         <div className="brand-mark">
-          <Award size={22} />
+          <img src="/CoddyResultsRoboLogo.png" alt="CoddyResults" className="brand-logo brand-logo-robo" />
         </div>
         <div>
           <h1>{t.brand_title}</h1>

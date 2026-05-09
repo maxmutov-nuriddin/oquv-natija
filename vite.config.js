@@ -7,7 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["pwa-192.png", "pwa-512.png"],
+      includeAssets: ["CoddyResultsRoboLogo.png", "CoddyResultsRoboLogo.png", "pwa-192.png", "pwa-512.png"],
       manifest: {
         name: "CoddyResults",
         short_name: "CoddyResults",
@@ -22,20 +22,20 @@ export default defineConfig({
         lang: "uz",
         icons: [
           {
-            src: "pwa-192.png",
-            sizes: "192x192",
+            src: "CoddyResultsRoboLogo.png",
+            sizes: "1024x1024",
             type: "image/png",
             purpose: "any"
           },
           {
-            src: "pwa-512.png",
-            sizes: "512x512",
+            src: "CoddyResultsRoboLogo.png",
+            sizes: "1024x1024",
             type: "image/png",
             purpose: "maskable"
           },
           {
-            src: "pwa-512.png",
-            sizes: "512x512",
+            src: "CoddyResultsRoboLogo.png",
+            sizes: "1024x1024",
             type: "image/png",
             purpose: "any"
           }
@@ -43,7 +43,7 @@ export default defineConfig({
       },
       workbox: {
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-        globPatterns: ["**/*.{js,css,html,ico,svg,woff2}", "pwa-192.png", "pwa-512.png"],
+        globPatterns: ["**/*.{js,css,html,ico,svg,woff2}", "CoddyResultsRoboLogo.png", "CoddyResultsRoboLogo.png", "pwa-192.png", "pwa-512.png"],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,

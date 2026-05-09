@@ -64,7 +64,7 @@ button {
 .app-bg { min-height: 100vh; }
 .app-shell {
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
+  grid-template-columns: 340px minmax(0, 1fr);
   min-height: 100vh;
 }
 
@@ -91,17 +91,49 @@ button {
 
 .brand-mark {
   display: grid;
-  width: 56px;
-  height: 56px;
+  width: 96px;
+  height: 96px;
   place-items: center;
-  border-radius: var(--radius-sm);
-  background: #ffffff;
-  color: var(--blue);
-  box-shadow: 0 4px 0 var(--blue-dark);
+  border: 3px solid rgba(255, 255, 255, 0.34);
+  border-radius: 28px;
+  background: transparent;
+  color: #ffffff;
+  box-shadow: none;
+  overflow: hidden;
+  flex: 0 0 auto;
 }
 
-.brand h1 { margin: 0; font-size: 26px; font-weight: 900; }
-.brand p { margin: 4px 0 0; color: #e0f2fe; font-size: 14px; font-weight: 700; }
+.brand-logo {
+  display: block;
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+}
+
+.brand-logo-robo {
+  transform: none;
+}
+
+.auth-brand-logo {
+  width: 90px;
+  height: 90px;
+}
+
+.brand h1 {
+  margin: 0;
+  font-size: 27px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+.brand p {
+  margin: 10px 0 0;
+  color: #dff5ff;
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.1;
+}
 
 .nav-list { display: grid; gap: 12px; margin-top: 32px; }
 
@@ -902,7 +934,7 @@ button {
     top: 0;
     left: 0;
     height: 100vh;
-    width: 280px;
+    width: 320px;
     z-index: 200;
     transform: translateX(-100%);
     transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
