@@ -139,8 +139,8 @@ button {
 }
 
 .auth-brand-logo {
-  width: 64px;
-  height: 64px;
+  width: 90px;
+  height: 90px;
 }
 
 .brand h1 {
@@ -666,9 +666,9 @@ button {
 /* Auth */
 .auth-page { display: grid; place-items: center; min-height: 100vh; background: var(--bg); background-image: radial-gradient(#d1d5db 2px, transparent 2px); background-size: 32px 32px; padding: 24px; }
 .auth-card { background: white; border: 2px solid var(--line); border-bottom: 8px solid var(--line-dark); border-radius: var(--radius); padding: 48px; width: 100%; max-width: 500px; }
-.auth-brand { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; }
-.auth-brand h1 { margin: 0; font-size: 28px; font-weight: 900; }
-.auth-brand p { margin: 4px 0 0; color: var(--muted); font-size: 14px; font-weight: 600; }
+.auth-brand { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; margin-bottom: 36px; }
+.auth-brand h1 { margin: 0; font-size: 30px; font-weight: 900; letter-spacing: -0.5px; }
+.auth-brand p { margin: 0; color: var(--muted); font-size: 14px; font-weight: 600; }
 .auth-form { display: grid; gap: 24px; }
 .auth-form label { display: grid; gap: 8px; }
 .auth-form span { font-weight: 800; font-size: 14px; text-transform: uppercase; color: var(--muted); }
