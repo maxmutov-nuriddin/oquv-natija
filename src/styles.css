@@ -1,5 +1,44 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap');
 
+/* PWA Window Controls Overlay custom titlebar */
+#titlebar {
+  display: none;
+  position: fixed;
+  top: env(titlebar-area-y, 0);
+  left: env(titlebar-area-x, 0);
+  width: env(titlebar-area-width, 100%);
+  height: env(titlebar-area-height, 40px);
+  align-items: center;
+  padding: 0 14px;
+  gap: 10px;
+  background: #111827;
+  z-index: 10000;
+  -webkit-app-region: drag;
+  app-region: drag;
+  user-select: none;
+}
+
+@media (display-mode: window-controls-overlay) {
+  #titlebar { display: flex; }
+}
+
+#titlebar-logo {
+  height: calc(env(titlebar-area-height, 40px) - 6px);
+  width: auto;
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.4));
+}
+
+#titlebar-title {
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-weight: 900;
+  font-size: 15px;
+  color: #ffffff;
+  white-space: nowrap;
+  letter-spacing: -0.3px;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -91,8 +130,8 @@ button {
 
 .brand-mark {
   display: grid;
-  width: 96px;
-  height: 96px;
+  width: 85px;
+  height: 85px;
   place-items: center;
   border: 3px solid rgba(255, 255, 255, 0.34);
   border-radius: 28px;
@@ -105,8 +144,8 @@ button {
 
 .brand-logo {
   display: block;
-  width: 90px;
-  height: 90px;
+  width: 70px;
+  height: 70px;
   object-fit: contain;
 }
 
@@ -115,8 +154,8 @@ button {
 }
 
 .auth-brand-logo {
-  width: 90px;
-  height: 90px;
+  width: 70px;
+  height: 70px;
 }
 
 .brand h1 {
