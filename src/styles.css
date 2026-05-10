@@ -344,8 +344,8 @@ button {
 .current-lesson p { margin: 8px 0 0; font-size: 16px; font-weight: 700; opacity: 0.9; }
 
 /* Student Cards */
-.student-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-.student-card { padding: 16px; display: flex; flex-direction: column; gap: 10px; transition: transform 0.1s; }
+.student-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.student-card { padding: 16px; display: flex; flex-direction: column; gap: 10px; transition: transform 0.1s; min-width: 0; }
 .student-card:active { transform: translateY(4px); border-bottom-width: 2px; margin-bottom: 4px; }
 .student-card-top { border-color: var(--gold); border-bottom-color: var(--gold-dark); background: #fffcf0; }
 
@@ -943,8 +943,8 @@ button {
 .topbar-left { display: flex; align-items: flex-start; gap: 12px; }
 
 /* ── 768 px — tablets & phones ─────────────────────────────── */
-@media (max-width: 1100px) {
-  .student-grid { grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 1300px) {
+  .student-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 768px) {
