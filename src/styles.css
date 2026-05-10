@@ -557,9 +557,9 @@ button {
 .group-card-active { border-color: var(--blue); border-bottom-color: var(--blue-dark); border-left: 8px solid var(--blue); background: #e0f2fe; }
 
 .group-workspace { display: flex; flex-direction: column; gap: 24px; }
-.group-overview { display: grid; grid-template-columns: 1fr 1.5fr; gap: 32px; align-items: center; }
-.group-overview h3 { font-size: 40px; font-weight: 900; margin: 8px 0 16px; }
-.group-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.group-overview { display: flex; flex-direction: column; gap: 20px; }
+.group-overview h3 { font-size: 36px; font-weight: 900; margin: 4px 0 0; }
+.group-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
 .group-metrics div { border: 2px solid var(--line); border-bottom: 4px solid var(--line-dark); border-radius: var(--radius-sm); padding: 20px; text-align: center; background: #f8fafc; }
 .group-metrics strong { font-size: 28px; font-weight: 900; color: var(--blue); display: block; }
 .group-metrics span { font-size: 13px; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-top: 8px; display: block; }
@@ -1033,11 +1033,7 @@ button {
   }
   .group-list-panel { position: static; }
   .group-list { max-height: 260px; }
-  .group-overview {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-  .group-overview h3 { font-size: 30px; }
+  .group-overview h3 { font-size: 28px; }
   .group-metrics { grid-template-columns: repeat(3, 1fr); gap: 10px; }
   .group-metrics strong { font-size: 22px; }
 

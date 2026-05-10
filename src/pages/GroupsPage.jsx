@@ -164,9 +164,9 @@ export function GroupsPage({ groups, students, records, settings, date, currentT
             <section className="panel group-overview">
               <div>
                 <span className="eyebrow">{t.groups_selected_label}</span>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px", flexWrap: "wrap" }}>
                   <h3 style={{ margin: 0 }}>{activeGroupObject.name}</h3>
-                  <div style={{ display: "flex", gap: "8px" }}>
+                  <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
                     <button className="secondary-button" style={{ padding: "6px 12px", fontSize: "13px" }} onClick={() => setModal("edit-group")}>
                       {t.groups_edit}
                     </button>
