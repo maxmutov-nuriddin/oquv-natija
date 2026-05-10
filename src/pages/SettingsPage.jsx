@@ -126,40 +126,71 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
       <PanelHeader icon={Settings} title={t.settings_title} subtitle={t.settings_sub} />
 
       {status.message && (
-        <div className={cx("alert", status.type === "error" ? "alert-error" : "alert-success")} style={{ padding: "12px", borderRadius: "8px", marginBottom: "16px", fontWeight: "600", textAlign: "center" }}>
+        <div className={cx("alert", status.type === "error" ? "alert-error" : "alert-success")} style={{ padding: "12px", borderRadius: "8px", fontWeight: "600", textAlign: "center" }}>
           {status.message}
         </div>
       )}
 
-      <section className="panel">
-        <PanelHeader icon={UserRound} title={t.settings_profile_title} subtitle={t.settings_profile_sub} />
-        <div className="settings-grid">
-          <label className="setting-field">
-            <span>{t.settings_name_label}</span>
-            <input type="text" value={profileName} onChange={(e) => setProfileName(e.target.value)} placeholder={t.settings_name_ph} style={{ padding: "10px", borderRadius: "8px", border: "1px solid #e2e8f0", marginTop: "4px" }} />
-          </label>
-        </div>
-        <button className="primary-button" onClick={handleUpdateProfile} disabled={busy} style={{ marginTop: "16px" }}>
-          {busy ? <Loader2 size={17} className="spinner" /> : <CheckCircle2 size={17} />}
-          {t.settings_save_profile}
-        </button>
-      </section>
+      <div className="settings-two-col">
+        <div className="settings-side">
+          <section className="panel">
+            <PanelHeader icon={UserRound} title={t.settings_profile_title} subtitle={t.settings_profile_sub} />
+            <label className="setting-field">
+              <span>{t.settings_name_label}</span>
+              <input type="text" value={profileName} onChange={(e) => setProfileName(e.target.value)} placeholder={t.settings_name_ph} style={{ padding: "10px", borderRadius: "8px", border: "1px solid #e2e8f0", marginTop: "4px", fontSize: "16px", fontWeight: 700, color: "var(--text)", background: "white" }} />
+            </label>
+            <button className="primary-button" onClick={handleUpdateProfile} disabled={busy} style={{ marginTop: "16px" }}>
+              {busy ? <Loader2 size={17} className="spinner" /> : <CheckCircle2 size={17} />}
+              {t.settings_save_profile}
+            </button>
+          </section>
 
-      <section className="panel">
-        <PanelHeader icon={BarChart3} title={t.settings_reward_title} subtitle={t.settings_reward_sub} />
-        <div className="settings-grid">
-          <SettingInput label={t.settings_hw_coin}         value={draft.homeworkCoin}    onChange={(v) => update("homeworkCoin", v)} />
-          <SettingInput label={t.settings_att_coin}        value={draft.attendanceCoin}  onChange={(v) => update("attendanceCoin", v)} />
-          <SettingInput label={t.settings_act_coin}        value={draft.activityCoin}    onChange={(v) => update("activityCoin", v)} />
-          <SettingInput step="0.1" label={t.settings_hw_weight}  value={draft.homeworkWeight}   onChange={(v) => update("homeworkWeight", v)} />
-          <SettingInput step="0.1" label={t.settings_att_weight} value={draft.attendanceWeight} onChange={(v) => update("attendanceWeight", v)} />
-          <SettingInput step="0.1" label={t.settings_act_weight} value={draft.activityWeight}   onChange={(v) => update("activityWeight", v)} />
+          <section className="panel">
+            <PanelHeader icon={Clock3} title={t.settings_security_title} subtitle={t.settings_security_sub} />
+            <label className="setting-field">
+              <span>{t.settings_new_password}</span>
+              <div style={{ position: "relative" }}>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder={t.settings_password_ph}
+                  style={{ padding: "10px", borderRadius: "8px", border: "1px solid #e2e8f0", marginTop: "4px", width: "100%", paddingRight: "40px" }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{ position: "absolute", right: "12px", top: "calc(50% + 2px)", transform: "translateY(-50%)", background: "none", border: "none", color: "#64748b", cursor: "pointer", display: "flex", alignItems: "center" }}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </label>
+            <button className="danger-button" onClick={handleChangePassword} disabled={busy || !newPassword} style={{ marginTop: "16px" }}>
+              {busy ? <Loader2 size={17} className="spinner" /> : <CheckCircle2 size={17} />}
+              {t.settings_change_password}
+            </button>
+          </section>
         </div>
-        <button className="primary-button" onClick={handleSaveSettings} disabled={busy} style={{ marginTop: "16px" }}>
-          {busy ? <Loader2 size={17} className="spinner" /> : <Settings size={17} />}
-          {t.settings_save_settings}
-        </button>
-      </section>
+
+        <section className="panel">
+          <PanelHeader icon={BarChart3} title={t.settings_reward_title} subtitle={t.settings_reward_sub} />
+          <div className="settings-grid">
+            <span className="settings-group-label" style={{ gridColumn: "1 / -1" }}>{t.settings_coins_group || "Coin mukofotlari"}</span>
+            <SettingInput label={t.settings_hw_coin}  value={draft.homeworkCoin}   onChange={(v) => update("homeworkCoin", v)} />
+            <SettingInput label={t.settings_att_coin} value={draft.attendanceCoin} onChange={(v) => update("attendanceCoin", v)} />
+            <SettingInput label={t.settings_act_coin} value={draft.activityCoin}   onChange={(v) => update("activityCoin", v)} />
+            <span className="settings-group-label" style={{ gridColumn: "1 / -1" }}>{t.settings_weights_group || "Ball og'irliklari (jami 1.0)"}</span>
+            <SettingInput step="0.1" label={t.settings_hw_weight}  value={draft.homeworkWeight}   onChange={(v) => update("homeworkWeight", v)} />
+            <SettingInput step="0.1" label={t.settings_att_weight} value={draft.attendanceWeight} onChange={(v) => update("attendanceWeight", v)} />
+            <SettingInput step="0.1" label={t.settings_act_weight} value={draft.activityWeight}   onChange={(v) => update("activityWeight", v)} />
+          </div>
+          <button className="primary-button" onClick={handleSaveSettings} disabled={busy} style={{ marginTop: "16px", width: "100%", justifyContent: "center" }}>
+            {busy ? <Loader2 size={17} className="spinner" /> : <Settings size={17} />}
+            {t.settings_save_settings}
+          </button>
+        </section>
+      </div>
 
       <section className="panel">
         <PanelHeader icon={Send} title={t.tg_title} subtitle={t.tg_sub} />
@@ -232,35 +263,6 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
             )}
           </div>
         )}
-      </section>
-
-      <section className="panel">
-        <PanelHeader icon={Clock3} title={t.settings_security_title} subtitle={t.settings_security_sub} />
-        <div className="settings-grid">
-          <label className="setting-field">
-            <span>{t.settings_new_password}</span>
-            <div style={{ position: "relative" }}>
-              <input
-                type={showPassword ? "text" : "password"}
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder={t.settings_password_ph}
-                style={{ padding: "10px", borderRadius: "8px", border: "1px solid #e2e8f0", marginTop: "4px", width: "100%", paddingRight: "40px" }}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                style={{ position: "absolute", right: "12px", top: "calc(50% + 2px)", transform: "translateY(-50%)", background: "none", border: "none", color: "#64748b", cursor: "pointer", display: "flex", alignItems: "center" }}
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-          </label>
-        </div>
-        <button className="danger-button" onClick={handleChangePassword} disabled={busy || !newPassword} style={{ marginTop: "16px" }}>
-          {busy ? <Loader2 size={17} className="spinner" /> : <CheckCircle2 size={17} />}
-          {t.settings_change_password}
-        </button>
       </section>
 
       <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "12px 16px", background: isDemo ? "#fef9c3" : "#f0fdf4", border: `1px solid ${isDemo ? "#fde047" : "#bbf7d0"}`, borderRadius: "12px" }}>
