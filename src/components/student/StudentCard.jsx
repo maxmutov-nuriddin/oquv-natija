@@ -44,11 +44,10 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
 
   const gifts = student.gifts || [];
   const isStartOfWeek = dayjs(date).day() === 1;
-  const isStartOfMonth = dayjs(date).date() === 1;
   const isWeeklyWinner = student.id === weeklyWinner?.id;
   const isMonthlyWinner = student.id === monthlyWinner?.id;
 
-  const isVip = gifts.some(g => g.type === "vip" && g.count > 0) || (isWeeklyWinner && isStartOfWeek) || (isMonthlyWinner && isStartOfMonth);
+  const isVip = gifts.some(g => g.type === "vip" && g.count > 0) || isWeeklyWinner || isMonthlyWinner;
   const declining = isDeclineTrend(student.id, records, settings);
 
   const finalScore = Math.min(100, Math.round(
@@ -91,8 +90,8 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
               <span style={{ fontSize: "11px", fontWeight: 600, padding: "2px 6px", borderRadius: "999px", background: level.bg, color: level.color, border: `1px solid ${level.color}30`, flexShrink: 0 }}>
                 {level.emoji} {t[`level_${level.key}`] || level.name}
               </span>
-              {isWeeklyWinner && isStartOfWeek && <span className="vip-text-badge" style={{ background: "linear-gradient(135deg, #60a5fa, #2563eb)", color: "white" }}>{t.card_week_winner}</span>}
-              {isMonthlyWinner && isStartOfMonth && <span className="vip-text-badge" style={{ background: "linear-gradient(135deg, #f472b6, #db2777)", color: "white" }}>{t.card_month_winner}</span>}
+              {isWeeklyWinner && <span className="vip-text-badge" style={{ background: "linear-gradient(135deg, #60a5fa, #2563eb)", color: "white" }}>{t.card_week_winner}</span>}
+              {isMonthlyWinner && <span className="vip-text-badge" style={{ background: "linear-gradient(135deg, #f472b6, #db2777)", color: "white" }}>{t.card_month_winner}</span>}
               {declining && <span className="vip-text-badge" style={{ background: "#fef9c3", color: "#92400e", border: "1px solid #fde68a" }}>{t.card_decline}</span>}
               {gifts.filter(g => g.type === "vip").map((g, i) => (
                 <span key={i} className="vip-text-badge">{g.name}</span>

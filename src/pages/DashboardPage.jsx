@@ -68,6 +68,12 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
     [ranked, records, settings]
   );
 
+  const weekPeriodKey = useMemo(() => getPreviousWeekRange(date).start.format("YYYY-MM-DD"), [date]);
+  const monthPeriodKey = useMemo(() => getPreviousMonthRange(date).start.format("YYYY-MM"), [date]);
+  function getPeriodKeyForSource(source) {
+    return source === "weekly" ? weekPeriodKey : monthPeriodKey;
+  }
+
   const todayGroupRecords = useMemo(() => records.filter(r => r.date === date && groupStudents.some(s => s.id === r.studentId)), [records, date, groupStudents]);
   const alreadySpun = todayGroupRecords.some(r => r.dailyBonus !== undefined && r.dailyBonus !== null);
   const { t } = useT();
@@ -348,7 +354,7 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
                         );
                       })}
                       {vipPerks.map((vp, idx) => {
-                        const usedCount = s.usedVipPerks?.[`${vp.source}_${vp.id}`] || 0;
+                        const usedCount = s.usedVipPerks?.[`${vp.source}_${getPeriodKeyForSource(vp.source)}_${vp.id}`] || 0;
                         const maxUses = vp.count !== undefined ? vp.count : (vp.uses || 1);
                         const remaining = maxUses - usedCount;
                         if (remaining <= 0) return null;
@@ -363,7 +369,7 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
                               if (vp.id === "mystery_box") { setActiveMystery({ studentId: s.id, type: vp.source, mysteryType: `${tier}_${vp.source}`, vipPerk: vp }); setGiftModal("mystery-box"); }
                               else if (vp.id === "gift_coin") { setActiveGiftCoin({ studentId: s.id, type: vp.source, vipPerk: vp }); setGiftModal("gift-coin"); }
                               else {
-                                const perkKey = `${vp.source}_${vp.id}`;
+                                const perkKey = `${vp.source}_${getPeriodKeyForSource(vp.source)}_${vp.id}`;
                                 updateStudent(s.id, { usedVipPerks: { ...(s.usedVipPerks || {}), [perkKey]: (s.usedVipPerks?.[perkKey] || 0) + 1 } });
                               }
                             }}>
@@ -437,7 +443,7 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
                 nextGifts = nextGifts.map(item => item.id === mystery.giftItem.id ? { ...item, count: Math.max(0, Number(item.count || 0) - 1) } : item).filter(item => item.count > 0);
                 updateStudent(student.id, { gifts: nextGifts });
               } else {
-                const perkKey = `${mystery.vipPerk.source}_${mystery.vipPerk.id}`;
+                const perkKey = `${mystery.vipPerk.source}_${getPeriodKeyForSource(mystery.vipPerk.source)}_${mystery.vipPerk.id}`;
                 updateStudent(student.id, { gifts: nextGifts, usedVipPerks: { ...(student.usedVipPerks || {}), [perkKey]: (student.usedVipPerks?.[perkKey] || 0) + 1 } });
               }
               setGiftModal("");
@@ -466,7 +472,7 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
                 if (giftData.type === "shop") {
                   updateStudent(giver.id, { gifts: giver.gifts.map(item => item.id === "gift_coin" ? { ...item, count: Math.max(0, (item.count || 0) - 1) } : item).filter(item => item.count > 0) });
                 } else {
-                  const perkKey = `${giftData.type}_${giftData.vipPerk.id}`;
+                  const perkKey = `${giftData.type}_${getPeriodKeyForSource(giftData.type)}_${giftData.vipPerk.id}`;
                   updateStudent(giver.id, { usedVipPerks: { ...(giver.usedVipPerks || {}), [perkKey]: (giver.usedVipPerks?.[perkKey] || 0) + 1 } });
                 }
               }

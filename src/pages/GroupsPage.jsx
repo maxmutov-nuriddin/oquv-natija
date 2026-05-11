@@ -45,6 +45,11 @@ export function GroupsPage({ groups, students, records, settings, date, currentT
     const candidates = activeGroupStudents.filter(s => s.id !== monthlyWinner?.id);
     return getPeriodLeader(candidates, records, settings, getPreviousWeekRange(date));
   }, [activeGroupStudents, records, settings, date, monthlyWinner]);
+  const weekPeriodKey = useMemo(() => getPreviousWeekRange(date).start.format("YYYY-MM-DD"), [date]);
+  const monthPeriodKey = useMemo(() => getPreviousMonthRange(date).start.format("YYYY-MM"), [date]);
+  function getPeriodKeyForSource(source) {
+    return source === "weekly" ? weekPeriodKey : monthPeriodKey;
+  }
   const [modal, setModal] = useState("");
   const [editingStudent, setEditingStudent] = useState(null);
   const [expandedDate, setExpandedDate] = useState(null);
@@ -390,7 +395,7 @@ export function GroupsPage({ groups, students, records, settings, date, currentT
                             );
                           })}
                           {vipPerks.map((vp, idx) => {
-                            const usedCount = s.usedVipPerks?.[`${vp.source}_${vp.id}`] || 0;
+                            const usedCount = s.usedVipPerks?.[`${vp.source}_${getPeriodKeyForSource(vp.source)}_${vp.id}`] || 0;
                             const maxUses = vp.count !== undefined ? vp.count : (vp.uses || 1);
                             const remaining = maxUses - usedCount;
                             if (remaining <= 0) return null;
@@ -405,7 +410,7 @@ export function GroupsPage({ groups, students, records, settings, date, currentT
                                   setActiveGiftCoin({ studentId: s.id, type: vp.source, vipPerk: vp });
                                   setModal("gift-coin");
                                 } else {
-                                  const perkKey = `${vp.source}_${vp.id}`;
+                                  const perkKey = `${vp.source}_${getPeriodKeyForSource(vp.source)}_${vp.id}`;
                                   const usedVipPerks = { ...(s.usedVipPerks || {}) };
                                   usedVipPerks[perkKey] = (usedVipPerks[perkKey] || 0) + 1;
                                   updateStudent(s.id, { usedVipPerks });
@@ -521,7 +526,7 @@ export function GroupsPage({ groups, students, records, settings, date, currentT
                 }).filter(item => item.count > 0);
                 updateStudent(student.id, { gifts: nextGifts });
               } else {
-                const perkKey = `${mystery.vipPerk.source}_${mystery.vipPerk.id}`;
+                const perkKey = `${mystery.vipPerk.source}_${getPeriodKeyForSource(mystery.vipPerk.source)}_${mystery.vipPerk.id}`;
                 const usedVipPerks = { ...(student.usedVipPerks || {}) };
                 usedVipPerks[perkKey] = (usedVipPerks[perkKey] || 0) + 1;
                 updateStudent(student.id, { gifts: nextGifts, usedVipPerks });
@@ -560,7 +565,7 @@ export function GroupsPage({ groups, students, records, settings, date, currentT
                   }).filter(item => item.count > 0);
                   updateStudent(givingStudent.id, { gifts: newGifts });
                 } else {
-                  const perkKey = `${giftData.type}_${giftData.vipPerk.id}`;
+                  const perkKey = `${giftData.type}_${getPeriodKeyForSource(giftData.type)}_${giftData.vipPerk.id}`;
                   const usedVipPerks = { ...(givingStudent.usedVipPerks || {}) };
                   usedVipPerks[perkKey] = (usedVipPerks[perkKey] || 0) + 1;
                   updateStudent(givingStudent.id, { usedVipPerks });
