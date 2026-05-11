@@ -52,6 +52,17 @@ export function getPreviousMonthRange(date = dayjs()) {
   return { start, end };
 }
 
+export function getCurrentWeekRange(date = dayjs()) {
+  const d = dayjs(date).startOf("day");
+  const start = d.subtract((d.day() + 6) % 7, "day").startOf("day");
+  return { start, end: d.endOf("day") };
+}
+
+export function getCurrentMonthRange(date = dayjs()) {
+  const d = dayjs(date);
+  return { start: d.startOf("month").startOf("day"), end: d.endOf("day") };
+}
+
 export function getPeriodLeader(students, records, settings, range) {
   if (!students || !students.length) return null;
 
@@ -77,6 +88,18 @@ export function getPeriodLeader(students, records, settings, range) {
   })[0];
 
   return (leader && leader.periodCoins > 0) ? leader : null;
+}
+
+export function getScoreSummaryForRange(studentId, records, range) {
+  const studentRecords = records.filter((r) => r.studentId === studentId);
+  const periodRecords = getRecordsInRange(studentRecords, range.start, range.end)
+    .filter(r => r.homework > 0 || r.attendance > 0 || r.activity > 0);
+  if (!periodRecords.length) return null;
+  const count = periodRecords.length;
+  const avgHw  = Math.round(periodRecords.reduce((s, r) => s + Number(r.homework   || 0), 0) / count);
+  const avgAtt = Math.round(periodRecords.reduce((s, r) => s + Number(r.attendance || 0), 0) / count);
+  const avgAct = Math.round(periodRecords.reduce((s, r) => s + Number(r.activity   || 0), 0) / count);
+  return { avgHw, avgAtt, avgAct, count };
 }
 
 export function getScoreSummary(studentId, records, days, date = dayjs()) {
@@ -141,8 +164,10 @@ export function isRiseTrend(studentId, records, settings) {
 
 export function summarizeStudent(student, records, settings, date = dayjs()) {
   const studentRecords = records.filter((record) => record.studentId === student.id);
-  const weeklyRecords  = getWindowRecords(studentRecords, 7,  date);
-  const monthlyRecords = getWindowRecords(studentRecords, 30, date);
+  const weekRange = getCurrentWeekRange(date);
+  const weeklyRecords  = getRecordsInRange(studentRecords, weekRange.start, weekRange.end);
+  const monthRange = getCurrentMonthRange(date);
+  const monthlyRecords = getRecordsInRange(studentRecords, monthRange.start, monthRange.end);
 
   const rawCoins    = studentRecords.reduce((sum, r) => sum + (Number(r.coinsEarned) || calculateCoins(r, settings)), 0);
   const coins       = Math.max(0, rawCoins - (student.homeworkFines || 0));

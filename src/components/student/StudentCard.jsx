@@ -3,7 +3,7 @@ import { Coins, Settings, Star, Trash2, Trophy, User } from "lucide-react";
 import { availableGifts, scoreFields } from "../../constants";
 import { LEVELS } from "../../constants";
 import { useT } from "../../i18n/index.jsx";
-import { getScoreSummary, isDeclineTrend } from "../../lib/scoring";
+import { getScoreSummaryForRange, getCurrentWeekRange, getCurrentMonthRange, isDeclineTrend } from "../../lib/scoring";
 import { cx, getLevel, getPerformanceStatus, initials, numberInputValue, parsePercentInput } from "../../lib/utils";
 import { ProgressLine } from "../ui/ProgressLine";
 
@@ -261,7 +261,7 @@ function periodFinal(data, settings) {
 
 function WeakMetricHint({ studentId, records, date, settings }) {
   const { t } = useT();
-  const monthly = getScoreSummary(studentId, records, 30, date);
+  const monthly = getScoreSummaryForRange(studentId, records, getCurrentMonthRange(date));
   if (!monthly) return null;
 
   const overallScore = periodFinal(monthly, settings);
@@ -290,8 +290,8 @@ function WeakMetricHint({ studentId, records, date, settings }) {
 }
 
 function PeriodSummary({ studentId, records, date, settings }) {
-  const weekly  = getScoreSummary(studentId, records, 7,  date);
-  const monthly = getScoreSummary(studentId, records, 30, date);
+  const weekly  = getScoreSummaryForRange(studentId, records, getCurrentWeekRange(date));
+  const monthly = getScoreSummaryForRange(studentId, records, getCurrentMonthRange(date));
   if (!weekly && !monthly) return null;
   return (
     <div className="period-summary-row">
