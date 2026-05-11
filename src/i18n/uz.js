@@ -107,8 +107,8 @@ export const uz = {
 
   // Performance status
   status_good: "Yaxshi",
-  status_behind: "Ortda",
-  status_bad: "Yomon",
+  status_behind: "O'rtacha",
+  status_bad: "Past",
 
   // Group activity
   group_active: "Aktiv",
