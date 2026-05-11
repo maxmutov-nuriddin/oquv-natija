@@ -213,6 +213,10 @@ export function rankStudents(students, records, settings, date = dayjs()) {
   });
   const weeklyRanks = new Map(weekly.map((student, index) => [student.id, index + 1]));
   const monthlyRanks = new Map(monthly.map((student, index) => [student.id, index + 1]));
+  const dayOfWeek = dayjs(date).day();
+  const dayOfMonth = dayjs(date).date();
+  const isMonday = dayOfWeek === 1;
+  const isFirstOfMonth = dayOfMonth === 1;
   return summarized
     .map((student) => ({
       ...student,
@@ -220,6 +224,14 @@ export function rankStudents(students, records, settings, date = dayjs()) {
       monthlyRank: monthlyRanks.get(student.id)
     }))
     .sort((a, b) => {
+      if (isFirstOfMonth) {
+        if (b.monthlyCoins !== a.monthlyCoins) return b.monthlyCoins - a.monthlyCoins;
+        return b.finalScore - a.finalScore;
+      }
+      if (isMonday) {
+        if (b.weeklyCoins !== a.weeklyCoins) return b.weeklyCoins - a.weeklyCoins;
+        return b.finalScore - a.finalScore;
+      }
       if (b.coins !== a.coins) return b.coins - a.coins;
       return b.finalScore - a.finalScore;
     });
