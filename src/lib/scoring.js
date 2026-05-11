@@ -177,6 +177,9 @@ export function summarizeStudent(student, records, settings, date = dayjs()) {
   const activeLessons = monthlyRecords.filter(
     r => r.homework > 0 || r.attendance > 0 || r.activity > 0
   );
+  const activeWeeklyLessons = weeklyRecords.filter(
+    r => r.homework > 0 || r.attendance > 0 || r.activity > 0
+  );
 
   let computedFinalScore;
   if (activeLessons.length > 0) {
@@ -192,24 +195,37 @@ export function summarizeStudent(student, records, settings, date = dayjs()) {
     computedFinalScore = finalScore(student, settings);
   }
 
+  let weeklyFinalScore = 0;
+  if (activeWeeklyLessons.length > 0) {
+    const n = activeWeeklyLessons.length;
+    const avgHw  = activeWeeklyLessons.reduce((s, r) => s + Number(r.homework   || 0), 0) / n;
+    const avgAtt = activeWeeklyLessons.reduce((s, r) => s + Number(r.attendance || 0), 0) / n;
+    const avgAct = activeWeeklyLessons.reduce((s, r) => s + Number(r.activity   || 0), 0) / n;
+    weeklyFinalScore = finalScore(
+      { homeworkScore: avgHw, attendanceScore: avgAtt, activityScore: avgAct },
+      settings
+    );
+  }
+
   return {
     ...student,
     coins,
     weeklyCoins,
     monthlyCoins,
     finalScore: computedFinalScore,
+    weeklyFinalScore,
   };
 }
 
 export function rankStudents(students, records, settings, date = dayjs()) {
   const summarized = students.map((student) => summarizeStudent(student, records, settings, date));
   const weekly = [...summarized].sort((a, b) => {
-    if (b.weeklyCoins !== a.weeklyCoins) return b.weeklyCoins - a.weeklyCoins;
-    return b.finalScore - a.finalScore;
+    if (b.weeklyFinalScore !== a.weeklyFinalScore) return b.weeklyFinalScore - a.weeklyFinalScore;
+    return b.weeklyCoins - a.weeklyCoins;
   });
   const monthly = [...summarized].sort((a, b) => {
-    if (b.monthlyCoins !== a.monthlyCoins) return b.monthlyCoins - a.monthlyCoins;
-    return b.finalScore - a.finalScore;
+    if (b.finalScore !== a.finalScore) return b.finalScore - a.finalScore;
+    return b.monthlyCoins - a.monthlyCoins;
   });
   const weeklyRanks = new Map(weekly.map((student, index) => [student.id, index + 1]));
   const monthlyRanks = new Map(monthly.map((student, index) => [student.id, index + 1]));
@@ -225,15 +241,15 @@ export function rankStudents(students, records, settings, date = dayjs()) {
     }))
     .sort((a, b) => {
       if (isFirstOfMonth) {
-        if (b.monthlyCoins !== a.monthlyCoins) return b.monthlyCoins - a.monthlyCoins;
-        return b.finalScore - a.finalScore;
+        if (b.finalScore !== a.finalScore) return b.finalScore - a.finalScore;
+        return b.monthlyCoins - a.monthlyCoins;
       }
       if (isMonday) {
-        if (b.weeklyCoins !== a.weeklyCoins) return b.weeklyCoins - a.weeklyCoins;
-        return b.finalScore - a.finalScore;
+        if (b.weeklyFinalScore !== a.weeklyFinalScore) return b.weeklyFinalScore - a.weeklyFinalScore;
+        return b.weeklyCoins - a.weeklyCoins;
       }
-      if (b.coins !== a.coins) return b.coins - a.coins;
-      return b.finalScore - a.finalScore;
+      if (b.finalScore !== a.finalScore) return b.finalScore - a.finalScore;
+      return b.coins - a.coins;
     });
 }
 
