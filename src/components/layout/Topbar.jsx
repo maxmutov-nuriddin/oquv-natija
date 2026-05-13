@@ -1,28 +1,17 @@
 import dayjs from "dayjs";
 import { CalendarDays, Loader2, Menu, Search, Send, Users } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { navItems } from "../../constants";
 import { useT } from "../../i18n/index.jsx";
 
-function toMin(time) {
-  const [h, m] = time.split(":").map(Number);
-  return h * 60 + m;
-}
-
-export function Topbar({ activePage, date, setDate, query, setQuery, selectedGroup, groups, setSelectedGroup, currentGroup, currentTime, onSendResults, onMenuClick }) {
+export function Topbar({ activePage, date, setDate, query, setQuery, selectedGroup, groups, setSelectedGroup, onSendResults, onMenuClick }) {
   const { t } = useT();
   const pageTitle = t[`nav_${activePage}`] || navItems.find((item) => item.id === activePage)?.label || "Dashboard";
   const [sendStatus, setSendStatus] = useState("");
   const [sending, setSending] = useState(false);
 
-  const showSendBtn = useMemo(() => {
-    if (!currentGroup?.lessonEnd || !currentTime) return false;
-    const diff = toMin(currentGroup.lessonEnd) - toMin(currentTime);
-    return diff > 0 && diff <= 15;
-  }, [currentGroup, currentTime]);
-
   async function handleSend() {
-    if (!onSendResults) return;
+    if (!onSendResults || !selectedGroup) return;
     setSending(true);
     setSendStatus("");
     try {
@@ -50,17 +39,15 @@ export function Topbar({ activePage, date, setDate, query, setQuery, selectedGro
       </div>
 
       <div className="control-row">
-        {showSendBtn && (
-          <button
-            className="primary-button"
-            onClick={handleSend}
-            disabled={sending}
-            style={{ height: "54px", padding: "0 20px", fontSize: "14px", whiteSpace: "nowrap" }}
-          >
-            {sending ? <Loader2 size={15} className="spinner" /> : <Send size={15} />}
-            {sending ? t.topbar_sending : (sendStatus || t.topbar_send_results)}
-          </button>
-        )}
+        <button
+          className="primary-button"
+          onClick={handleSend}
+          disabled={sending || !selectedGroup}
+          style={{ height: "54px", padding: "0 20px", fontSize: "14px", whiteSpace: "nowrap" }}
+        >
+          {sending ? <Loader2 size={15} className="spinner" /> : <Send size={15} />}
+          {sending ? t.topbar_sending : (sendStatus || t.topbar_send_results)}
+        </button>
 
         <label className="control control-search">
           <Search size={17} />

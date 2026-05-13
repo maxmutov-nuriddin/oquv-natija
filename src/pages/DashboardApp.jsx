@@ -46,9 +46,10 @@ export function DashboardApp({ teacher, logout, updateProfile, changePassword })
   }
 
   async function handleSendResults() {
-    if (!currentGroup) return;
+    const targetGroup = groups.find((group) => group.name === selectedGroup);
+    if (!targetGroup) return;
     setLessonLocked(true);
-    const groupStudents = students.filter(s => s.group === currentGroup.name);
+    const groupStudents = students.filter(s => s.group === targetGroup.name);
     const studentsWithScores = groupStudents.map(student => {
       const record = records.find(r => r.studentId === student.id && r.date === date);
       return {
@@ -58,7 +59,7 @@ export function DashboardApp({ teacher, logout, updateProfile, changePassword })
         activityScore: record?.activity ?? 0,
       };
     });
-    await sendLessonReport({ group: currentGroup, students: studentsWithScores, date, settings });
+    await sendLessonReport({ group: targetGroup, students: studentsWithScores, date, settings });
   }
 
   return (
@@ -86,8 +87,6 @@ export function DashboardApp({ teacher, logout, updateProfile, changePassword })
             selectedGroup={selectedGroup}
             groups={groups}
             setSelectedGroup={setManualGroup}
-            currentGroup={currentGroup}
-            currentTime={currentTime}
             onSendResults={handleSendResults}
             onMenuClick={() => setSidebarOpen(true)}
           />

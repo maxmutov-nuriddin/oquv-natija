@@ -95,7 +95,7 @@ export const uz = {
   card_extra_task_done: "✅ Qo'shimcha vazifa bajarildi",
   card_zero2_title: "⚠️ 2 marta uy vazifasi yo'q!",
   card_zero2_text: "Barcha privelegiyalar bloklangan. Aktivlashtirish uchun 500 coin shtraf to'lang.",
-  card_pay_fine: "To'lash (500 coin)",
+  card_pay_fine: "To'lash (1000 coin)",
   card_zero3_title: "🚨 3 marta uy vazifasi yo'q!",
   card_zero3_text: "Privelegiyalar bloklangan. Coin bilan aktivlashtirish mumkin emas — ota-onasiga aloqaga chiqing.",
   card_contacted: "Aloqaga chiqildi",
