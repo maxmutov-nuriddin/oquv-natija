@@ -238,6 +238,8 @@ export const ru = {
   settings_save_profile: "Сохранить профиль",
   settings_reward_title: "Награды и формула",
   settings_reward_sub: "Стоимость монет и веса итоговых оценок",
+  settings_coins_group: "Награды монетами",
+  settings_weights_group: "Веса оценок (сумма 1.0)",
   settings_hw_coin: "Монеты за Д/З",
   settings_att_coin: "Монеты за кл. работу",
   settings_act_coin: "Монеты за активность",

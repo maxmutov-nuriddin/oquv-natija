@@ -238,6 +238,8 @@ export const uz = {
   settings_save_profile: "Profilni saqlash",
   settings_reward_title: "Mukofot va Formula",
   settings_reward_sub: "Coin qiymatlari va yakuniy natija og'irliklari",
+  settings_coins_group: "Coin mukofotlari",
+  settings_weights_group: "Ball og'irliklari (jami 1.0)",
   settings_hw_coin: "Uy vazifa coini",
   settings_att_coin: "Sinf vazifa coini",
   settings_act_coin: "Aktivlik coini",

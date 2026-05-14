@@ -23,7 +23,7 @@ import { FunModal } from "../components/ui/FunModal";
 import { PanelHeader } from "../components/ui/PanelHeader";
 import { StatCard } from "../components/ui/StatCard";
 
-export function DashboardPage({ groups, students, records, settings, selectedGroup, currentGroup, currentTime, date, query, onEditStudent, onDeleteStudent, saveLessonRecords, updateStudent, isLessonLocked = false, onUnlock }) {
+export function DashboardPage({ groups, students, records, settings, selectedGroup, currentGroup, currentTime, date, onEditStudent, onDeleteStudent, saveLessonRecords, updateStudent, isLessonLocked = false, onUnlock }) {
   const monthlyWinner = useMemo(() => getPeriodLeader(students.filter(s => s.group === selectedGroup), records, settings, getPreviousMonthRange(date)), [students, selectedGroup, records, settings, date]);
   const weeklyWinner = useMemo(() => {
     const candidates = students.filter(s => s.group === selectedGroup && s.id !== monthlyWinner?.id);
@@ -42,10 +42,7 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
   }, [groups, selectedGroup, currentTime, isLessonDay]);
 
   const groupStudents = useMemo(() => students.filter((student) => student.group === selectedGroup), [students, selectedGroup]);
-  const ranked = useMemo(() => {
-    const filtered = groupStudents.filter((student) => student.name.toLowerCase().includes(query.toLowerCase()));
-    return rankStudents(filtered, records, settings, date);
-  }, [groupStudents, query, records, settings, date]);
+  const ranked = useMemo(() => rankStudents(groupStudents, records, settings, date), [groupStudents, records, settings, date]);
 
   const chartData = ranked.map((student) => ({
     name: student.name.split(" ")[0],
@@ -242,7 +239,6 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
           <div className="winner-icon">
             <Medal size={28} />
           </div>
-          <span>{t.dash_winners}</span>
           <div className="winner-list">
             <div>
               <p>{t.dash_prev_week}</p>
@@ -568,6 +564,8 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
           records={records}
           settings={settings}
           groups={groups}
+          date={date}
+          onUpdateStudent={updateStudent}
           onClose={() => setProfileStudent(null)}
         />
       )}

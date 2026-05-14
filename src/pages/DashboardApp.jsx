@@ -16,14 +16,13 @@ const AnalyticsPage  = lazy(() => import("./AnalyticsPage").then(m => ({ default
 const PrivilegesPage = lazy(() => import("./PrivilegesPage").then(m => ({ default: m.PrivilegesPage })));
 const SettingsPage   = lazy(() => import("./SettingsPage").then(m => ({ default: m.SettingsPage })));
 
-export function DashboardApp({ teacher, logout, updateProfile, changePassword }) {
+export function DashboardApp({ teacher, logout, updateProfile, changePassword, register }) {
   const { t } = useT();
   const { students, groups, records, settings, loading, error, isDemo, addGroup, updateGroup, deleteGroup, addStudent, updateStudent, saveLessonRecords, deleteStudent, saveSettings } =
     useDashboardData();
   const [activePage, setActivePage] = useState("dashboard");
   const [date, setDate] = useState(dayjs().format("YYYY-MM-DD"));
   const [currentTime, setCurrentTime] = useState(dayjs().format("HH:mm"));
-  const [query, setQuery] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -82,8 +81,6 @@ export function DashboardApp({ teacher, logout, updateProfile, changePassword })
             activePage={activePage}
             date={date}
             setDate={(value) => { setDate(value); setManualGroup(""); }}
-            query={query}
-            setQuery={setQuery}
             selectedGroup={selectedGroup}
             groups={groups}
             setSelectedGroup={setManualGroup}
@@ -114,7 +111,6 @@ export function DashboardApp({ teacher, logout, updateProfile, changePassword })
                   currentGroup={currentGroup}
                   currentTime={currentTime}
                   date={date}
-                  query={query}
                   onEditStudent={setEditingStudent}
                   onDeleteStudent={handleDeleteStudent}
                   saveLessonRecords={saveLessonRecords}
@@ -130,14 +126,11 @@ export function DashboardApp({ teacher, logout, updateProfile, changePassword })
                   records={records}
                   settings={settings}
                   date={date}
-                  currentTime={currentTime}
-                  query={query}
                   addGroup={addGroup}
                   updateGroup={updateGroup}
                   deleteGroup={deleteGroup}
                   addStudent={addStudent}
                   updateStudent={updateStudent}
-                  saveLessonRecords={saveLessonRecords}
                   deleteStudent={handleDeleteStudent}
                   selectedGroup={selectedGroup}
                   setDate={setDate}
@@ -160,6 +153,7 @@ export function DashboardApp({ teacher, logout, updateProfile, changePassword })
                   updateProfile={updateProfile}
                   changePassword={changePassword}
                   isDemo={isDemo}
+                  register={register}
                 />
               )}
               {activePage === "privileges" && <PrivilegesPage />}
@@ -167,6 +161,10 @@ export function DashboardApp({ teacher, logout, updateProfile, changePassword })
           )}
         </main>
       </div>
+
+      <footer className="app-footer">
+        Created by <a href="https://mvnuriddin.netlify.app" target="_blank" rel="noreferrer" style={{ color: "inherit", fontWeight: 700, textDecoration: "none" }}>mv_nuriddin</a> &nbsp;·&nbsp; 2025
+      </footer>
 
       {editingStudent && (
         <Modal title={t.app_edit_student} onClose={() => setEditingStudent(null)}>

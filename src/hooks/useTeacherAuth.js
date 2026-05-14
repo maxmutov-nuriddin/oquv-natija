@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signOut, updatePassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, EmailAuthProvider, onAuthStateChanged, reauthenticateWithCredential, signInWithEmailAndPassword, signOut, updatePassword } from "firebase/auth";
 import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
-import { auth, db, hasFirebaseConfig } from "../firebase";
+import { auth, db, hasFirebaseConfig, secondaryAuth, secondaryDb } from "../firebase";
 
 function normalizePhone(phone) {
   return String(phone || "").replace(/\D/g, "").slice(0, 9);
@@ -45,6 +45,10 @@ export function useTeacherAuth() {
         if (db) {
           const snapshot = await getDoc(doc(db, "teachers", user.uid));
           profile = snapshot.exists() ? snapshot.data() : null;
+          if (profile && !profile.role) {
+            await setDoc(doc(db, "teachers", user.uid), { role: "teacher" }, { merge: true });
+            profile = { ...profile, role: "teacher" };
+          }
         }
       } catch {
         profile = null;
@@ -53,7 +57,8 @@ export function useTeacherAuth() {
       setTeacher({
         uid: user.uid,
         phone: profile?.phone || user.email?.split("@")[0] || "",
-        name: profile?.name || "O'qituvchi"
+        name: profile?.name || "O'qituvchi",
+        role: profile?.role || "teacher"
       });
       setLoading(false);
     });
@@ -63,18 +68,20 @@ export function useTeacherAuth() {
     () => ({
       normalizePhone,
       async register({ name, phone, password }) {
-        if (!hasFirebaseConfig || !auth || !db) throw new Error("Firebase config topilmadi.");
+        if (!hasFirebaseConfig || !secondaryAuth || !db) throw new Error("Firebase config topilmadi.");
         const cleanPhone = normalizePhone(phone);
         if (!name.trim()) throw new Error("O'qituvchi ismini kiriting.");
         if (!uzPhoneIsValid(cleanPhone)) throw new Error("Raqam 9 ta raqam bo'lishi kerak. Masalan: 901234567");
 
         try {
-          const result = await createUserWithEmailAndPassword(auth, phoneToEmail(cleanPhone), password);
-          await setDoc(doc(db, "teachers", result.user.uid), {
+          const result = await createUserWithEmailAndPassword(secondaryAuth, phoneToEmail(cleanPhone), password);
+          await setDoc(doc(secondaryDb, "teachers", result.user.uid), {
             name: name.trim(),
             phone: cleanPhone,
+            role: "teacher",
             createdAt: serverTimestamp()
           });
+          await signOut(secondaryAuth);
           return result.user;
         } catch (error) {
           throw new Error(messageForError(error));
@@ -102,24 +109,36 @@ export function useTeacherAuth() {
       async logout() {
         if (auth) await signOut(auth);
       },
-      async updateProfile({ name }) {
+      async updateProfile({ name, phone }) {
         if (!auth?.currentUser || !db) throw new Error("Tizimga kirmagansiz.");
         if (!name?.trim()) throw new Error("Ismni kiriting.");
+        const updates = { name: name.trim() };
+        if (phone !== undefined) {
+          const cleanPhone = normalizePhone(phone);
+          if (!uzPhoneIsValid(cleanPhone)) throw new Error("Raqam 9 ta raqam bo'lishi kerak. Masalan: 901234567");
+          updates.phone = cleanPhone;
+        }
         try {
-          await setDoc(doc(db, "teachers", auth.currentUser.uid), { name: name.trim() }, { merge: true });
+          await setDoc(doc(db, "teachers", auth.currentUser.uid), updates, { merge: true });
         } catch (error) {
           throw new Error(messageForError(error));
         }
       },
-      async changePassword(newPassword) {
+      async changePassword({ oldPassword, newPassword }) {
         if (!hasFirebaseConfig || !auth) throw new Error("Demo rejimida parolni o'zgartirib bo'lmaydi.");
         if (!auth.currentUser) throw new Error("Tizimga kirmagansiz.");
-        if (newPassword.length < 6) throw new Error("Parol kamida 6 ta belgidan iborat bo'lishi kerak.");
+        if (!oldPassword) throw new Error("Eski parolni kiriting.");
+        if (newPassword.length < 6) throw new Error("Yangi parol kamida 6 ta belgidan iborat bo'lishi kerak.");
         try {
+          const credential = EmailAuthProvider.credential(auth.currentUser.email, oldPassword);
+          await reauthenticateWithCredential(auth.currentUser, credential);
           await updatePassword(auth.currentUser, newPassword);
         } catch (error) {
+          if (error.code === "auth/wrong-password" || error.code === "auth/invalid-credential") {
+            throw new Error("Eski parol noto'g'ri.");
+          }
           if (error.code === "auth/requires-recent-login") {
-            throw new Error("Xavfsizlik yuzasidan, parolni o'zgartirish uchun qaytadan tizimga kirishingiz kerak.");
+            throw new Error("Xavfsizlik yuzasidan qaytadan tizimga kiring.");
           }
           throw new Error(messageForError(error));
         }

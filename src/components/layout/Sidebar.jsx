@@ -106,6 +106,11 @@ export function Sidebar({ activePage, setActivePage, teacher, logout, isOpen, on
         <div className="avatar avatar-small">{initials(teacher?.name || "O")}</div>
         <div>
           <strong>{teacher?.name || t.sidebar_teacher}</strong>
+          {teacher?.role && (
+            <span style={{ display: "block", fontSize: "13px", fontWeight: 700, color: teacher.role === "admin" ? "#fff176" : "#e0f2fe", marginTop: "2px", textTransform: "capitalize", opacity: teacher.role === "admin" ? 1 : 0.75 }}>
+              {teacher.role}
+            </span>
+          )}
         </div>
         <button type="button" onClick={logout} className="logout-btn-small">{t.sidebar_logout}</button>
       </div>

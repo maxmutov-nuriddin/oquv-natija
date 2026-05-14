@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react";
-import { BarChart3, CheckCircle2, Clock3, Eye, EyeOff, Loader2, Send, Settings, UserRound } from "lucide-react";
+import { BarChart3, CheckCircle2, Clock3, Eye, EyeOff, Loader2, Send, Settings, UserPlus, UserRound } from "lucide-react";
 import { useT } from "../i18n/index.jsx";
 import { cx } from "../lib/utils";
 import { PanelHeader } from "../components/ui/PanelHeader";
 import { SettingInput } from "../components/ui/SettingInput";
 
-export function SettingsPage({ settings, saveSettings, teacher, updateProfile, changePassword, isDemo }) {
+export function SettingsPage({ settings, saveSettings, teacher, updateProfile, changePassword, isDemo, register }) {
   const { t } = useT();
   const [draft, setDraft] = useState(settings);
   const [profileName, setProfileName] = useState(teacher?.name || "");
+  const [profilePhone, setProfilePhone] = useState(teacher?.phone || "");
+  const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [showOldPassword, setShowOldPassword] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [botToken, setBotToken] = useState(settings?.telegramBotToken || "");
   const [showToken, setShowToken] = useState(false);
@@ -17,8 +20,13 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
   const [tgChats, setTgChats] = useState(null);
   const [fetchingChats, setFetchingChats] = useState(false);
   const [copiedId, setCopiedId] = useState("");
-  const [status, setStatus] = useState({ type: "", message: "" });
+  const [profileStatus, setProfileStatus] = useState({ type: "", message: "" });
+  const [passwordStatus, setPasswordStatus] = useState({ type: "", message: "" });
+  const [scoreStatus, setScoreStatus] = useState({ type: "", message: "" });
   const [busy, setBusy] = useState(false);
+  const [newTeacher, setNewTeacher] = useState({ name: "", phone: "" });
+  const [teacherStatus, setTeacherStatus] = useState({ type: "", text: "" });
+  const [teacherBusy, setTeacherBusy] = useState(false);
 
   useEffect(() => {
     setDraft(settings);
@@ -29,16 +37,53 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
     setDraft((current) => ({ ...current, [key]: Number(value) }));
   }
 
+  async function handleUpdateProfile() {
+    setBusy(true);
+    try {
+      await updateProfile({ name: profileName, phone: profilePhone });
+      setProfileStatus({ type: "success", message: t.settings_profile_saved });
+    } catch (e) {
+      setProfileStatus({ type: "error", message: e.message });
+    } finally {
+      setBusy(false);
+      setTimeout(() => setProfileStatus({ type: "", message: "" }), 3000);
+    }
+  }
+
+  async function handleChangePassword() {
+    if (!oldPassword) {
+      setPasswordStatus({ type: "error", message: "Eski parolni kiriting." });
+      return;
+    }
+    if (!newPassword || newPassword.length < 6) {
+      setPasswordStatus({ type: "error", message: t.settings_password_short });
+      return;
+    }
+    setBusy(true);
+    setPasswordStatus({ type: "", message: "" });
+    try {
+      await changePassword({ oldPassword, newPassword });
+      setOldPassword("");
+      setNewPassword("");
+      setPasswordStatus({ type: "success", message: t.settings_password_saved });
+      alert(t.settings_password_alert);
+    } catch (e) {
+      setPasswordStatus({ type: "error", message: e.message });
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function handleSaveSettings() {
     setBusy(true);
     try {
       await saveSettings({ ...draft, telegramBotToken: botToken.trim() });
-      setStatus({ type: "success", message: t.settings_saved });
+      setScoreStatus({ type: "success", message: t.settings_saved });
     } catch (e) {
-      setStatus({ type: "error", message: e.message });
+      setScoreStatus({ type: "error", message: e.message });
     } finally {
       setBusy(false);
-      setTimeout(() => setStatus({ type: "", message: "" }), 3000);
+      setTimeout(() => setScoreStatus({ type: "", message: "" }), 3000);
     }
   }
 
@@ -68,12 +113,6 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
     }
   }
 
-  function copyId(id) {
-    navigator.clipboard.writeText(id).catch(() => {});
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(""), 2000);
-  }
-
   async function handleSaveToken() {
     setBusy(true);
     setTgSaveMsg({ type: "", text: "" });
@@ -88,154 +127,180 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
     }
   }
 
-  async function handleUpdateProfile() {
-    setBusy(true);
-    try {
-      await updateProfile({ name: profileName });
-      setStatus({ type: "success", message: t.settings_profile_saved });
-    } catch (e) {
-      setStatus({ type: "error", message: e.message });
-    } finally {
-      setBusy(false);
-      setTimeout(() => setStatus({ type: "", message: "" }), 3000);
-    }
+  function copyId(id) {
+    navigator.clipboard.writeText(id).catch(() => {});
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(""), 2000);
   }
 
-  async function handleChangePassword() {
-    if (!newPassword) return;
-    if (newPassword.length < 6) {
-      setStatus({ type: "error", message: t.settings_password_short });
-      return;
-    }
-    setBusy(true);
-    setStatus({ type: "", message: "" });
+  async function handleCreateTeacher(e) {
+    e.preventDefault();
+    setTeacherStatus({ type: "", text: "" });
+    setTeacherBusy(true);
     try {
-      await changePassword(newPassword);
-      setNewPassword("");
-      setStatus({ type: "success", message: t.settings_password_saved });
-      alert(t.settings_password_alert);
-    } catch (e) {
-      setStatus({ type: "error", message: e.message });
+      await register({ name: newTeacher.name, phone: newTeacher.phone, password: "123456" });
+      setTeacherStatus({ type: "success", text: `✅ ${newTeacher.name} yaratildi. Parol: 123456` });
+      setNewTeacher({ name: "", phone: "" });
+    } catch (err) {
+      setTeacherStatus({ type: "error", text: err.message });
     } finally {
-      setBusy(false);
+      setTeacherBusy(false);
     }
   }
 
   return (
     <div className="page-stack">
-      <PanelHeader icon={Settings} title={t.settings_title} subtitle={t.settings_sub} />
-
-      {status.message && (
-        <div className={cx("alert", status.type === "error" ? "alert-error" : "alert-success")} style={{ padding: "12px", borderRadius: "8px", fontWeight: "600", textAlign: "center" }}>
-          {status.message}
-        </div>
-      )}
-
-      <div className="settings-two-col">
-        <div className="settings-side">
-          <section className="panel">
-            <PanelHeader icon={UserRound} title={t.settings_profile_title} subtitle={t.settings_profile_sub} />
-            <label className="setting-field">
-              <span>{t.settings_name_label}</span>
-              <input type="text" value={profileName} onChange={(e) => setProfileName(e.target.value)} placeholder={t.settings_name_ph} style={{ padding: "10px", borderRadius: "8px", border: "1px solid #e2e8f0", marginTop: "4px", fontSize: "16px", fontWeight: 700, color: "var(--text)", background: "white" }} />
-            </label>
-            <button className="primary-button" onClick={handleUpdateProfile} disabled={busy} style={{ marginTop: "16px" }}>
-              {busy ? <Loader2 size={17} className="spinner" /> : <CheckCircle2 size={17} />}
+      {/* Account */}
+      <section className="panel">
+        <PanelHeader icon={UserRound} title={t.settings_profile_title} subtitle={t.settings_profile_sub} />
+        <div className="settings-account-grid">
+          <div className="settings-account-block">
+            <label className="settings-label">{t.settings_name_label}</label>
+            <input
+              type="text"
+              className="settings-input"
+              value={profileName}
+              onChange={(e) => setProfileName(e.target.value)}
+              placeholder={t.settings_name_ph}
+            />
+            <label className="settings-label" style={{ marginTop: "12px" }}>{t.auth_phone}</label>
+            <div className="phone-field" style={{ marginTop: "6px" }}>
+              <b>+998</b>
+              <input
+                inputMode="numeric"
+                maxLength="9"
+                value={profilePhone}
+                onChange={(e) => setProfilePhone(e.target.value.replace(/\D/g, "").slice(0, 9))}
+                placeholder="901234567"
+              />
+            </div>
+            {profileStatus.message && (
+              <p className={cx("settings-status", profileStatus.type === "error" ? "settings-status-error" : "settings-status-ok")}>
+                {profileStatus.message}
+              </p>
+            )}
+            <button className="primary-button" onClick={handleUpdateProfile} disabled={busy} style={{ marginTop: "12px" }}>
+              {busy ? <Loader2 size={16} className="spinner" /> : <CheckCircle2 size={16} />}
               {t.settings_save_profile}
             </button>
-          </section>
-
-          <section className="panel">
-            <PanelHeader icon={Clock3} title={t.settings_security_title} subtitle={t.settings_security_sub} />
-            <label className="setting-field">
-              <span>{t.settings_new_password}</span>
-              <div style={{ position: "relative" }}>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder={t.settings_password_ph}
-                  style={{ padding: "10px", borderRadius: "8px", border: "1px solid #e2e8f0", marginTop: "4px", width: "100%", paddingRight: "40px" }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  style={{ position: "absolute", right: "12px", top: "calc(50% + 2px)", transform: "translateY(-50%)", background: "none", border: "none", color: "#64748b", cursor: "pointer", display: "flex", alignItems: "center" }}
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-            </label>
-            <button className="danger-button" onClick={handleChangePassword} disabled={busy || !newPassword} style={{ marginTop: "16px" }}>
-              {busy ? <Loader2 size={17} className="spinner" /> : <CheckCircle2 size={17} />}
-              {t.settings_change_password}
-            </button>
-          </section>
-        </div>
-
-        <section className="panel">
-          <PanelHeader icon={BarChart3} title={t.settings_reward_title} subtitle={t.settings_reward_sub} />
-          <div className="settings-grid">
-            <span className="settings-group-label" style={{ gridColumn: "1 / -1" }}>{t.settings_coins_group || "Coin mukofotlari"}</span>
-            <SettingInput label={t.settings_hw_coin}  value={draft.homeworkCoin}   onChange={(v) => update("homeworkCoin", v)} />
-            <SettingInput label={t.settings_att_coin} value={draft.attendanceCoin} onChange={(v) => update("attendanceCoin", v)} />
-            <SettingInput label={t.settings_act_coin} value={draft.activityCoin}   onChange={(v) => update("activityCoin", v)} />
-            <SettingInput label={t.settings_hw_fine}  value={draft.homeworkFine ?? 1000} onChange={(v) => update("homeworkFine", v)} />
-            <span className="settings-group-label" style={{ gridColumn: "1 / -1" }}>{t.settings_weights_group || "Ball og'irliklari (jami 1.0)"}</span>
-            <SettingInput step="0.1" label={t.settings_hw_weight}  value={draft.homeworkWeight}   onChange={(v) => update("homeworkWeight", v)} />
-            <SettingInput step="0.1" label={t.settings_att_weight} value={draft.attendanceWeight} onChange={(v) => update("attendanceWeight", v)} />
-            <SettingInput step="0.1" label={t.settings_act_weight} value={draft.activityWeight}   onChange={(v) => update("activityWeight", v)} />
           </div>
-          <button className="primary-button" onClick={handleSaveSettings} disabled={busy} style={{ marginTop: "16px", width: "100%", justifyContent: "center" }}>
-            {busy ? <Loader2 size={17} className="spinner" /> : <Settings size={17} />}
-            {t.settings_save_settings}
-          </button>
-        </section>
-      </div>
 
-      <section className="panel">
-        <PanelHeader icon={Send} title={t.tg_title} subtitle={t.tg_sub} />
-        <div style={{ background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "8px", padding: "12px", fontSize: "12px", color: "#0369a1", marginBottom: "16px", whiteSpace: "pre-line", lineHeight: 1.6 }}>
-          {t.tg_token_hint}
-        </div>
-        <div className="settings-grid">
-          <label className="setting-field">
-            <span>{t.tg_token_label}</span>
-            <div style={{ position: "relative" }}>
+          <div className="settings-account-block">
+            <label className="settings-label">Eski parol</label>
+            <div style={{ position: "relative", marginTop: "6px" }}>
               <input
-                type={showToken ? "text" : "password"}
-                value={botToken}
-                onChange={(e) => setBotToken(e.target.value)}
-                placeholder={t.tg_token_ph}
-                style={{ padding: "10px", borderRadius: "8px", border: "1px solid #e2e8f0", marginTop: "4px", width: "100%", paddingRight: "40px", fontFamily: "monospace", fontSize: "12px" }}
+                type={showOldPassword ? "text" : "password"}
+                className="settings-input"
+                value={oldPassword}
+                onChange={(e) => setOldPassword(e.target.value)}
+                placeholder="Joriy parolingiz"
+                style={{ paddingRight: "44px" }}
               />
               <button
                 type="button"
-                onClick={() => setShowToken(!showToken)}
-                style={{ position: "absolute", right: "12px", top: "calc(50% + 2px)", transform: "translateY(-50%)", background: "none", border: "none", color: "#64748b", cursor: "pointer", display: "flex", alignItems: "center" }}
+                onClick={() => setShowOldPassword(!showOldPassword)}
+                style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#64748b", cursor: "pointer", display: "flex", alignItems: "center", padding: 0 }}
               >
-                {showToken ? <EyeOff size={18} /> : <Eye size={18} />}
+                {showOldPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
-          </label>
+            <label className="settings-label" style={{ marginTop: "12px" }}>{t.settings_new_password}</label>
+            <div style={{ position: "relative", marginTop: "6px" }}>
+              <input
+                type={showPassword ? "text" : "password"}
+                className="settings-input"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder={t.settings_password_ph}
+                style={{ paddingRight: "44px" }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#64748b", cursor: "pointer", display: "flex", alignItems: "center", padding: 0 }}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+            {passwordStatus.message && (
+              <p className={cx("settings-status", passwordStatus.type === "error" ? "settings-status-error" : "settings-status-ok")}>
+                {passwordStatus.message}
+              </p>
+            )}
+            <button className="danger-button" onClick={handleChangePassword} disabled={busy || !oldPassword || !newPassword} style={{ marginTop: "12px" }}>
+              {busy ? <Loader2 size={16} className="spinner" /> : <Clock3 size={16} />}
+              {t.settings_change_password}
+            </button>
+          </div>
         </div>
-        <div style={{ display: "flex", gap: "8px", marginTop: "16px", flexWrap: "wrap" }}>
+      </section>
+
+      {/* Scoring */}
+      <section className="panel">
+        <PanelHeader icon={BarChart3} title={t.settings_reward_title} subtitle={t.settings_reward_sub} />
+        <div className="settings-section-label">{t.settings_coins_group || "Coin mukofotlari"}</div>
+        <div className="settings-grid" style={{ marginBottom: "20px" }}>
+          <SettingInput label={t.settings_hw_coin}  value={draft.homeworkCoin}   onChange={(v) => update("homeworkCoin", v)} />
+          <SettingInput label={t.settings_att_coin} value={draft.attendanceCoin} onChange={(v) => update("attendanceCoin", v)} />
+          <SettingInput label={t.settings_act_coin} value={draft.activityCoin}   onChange={(v) => update("activityCoin", v)} />
+          <SettingInput label={t.settings_hw_fine}  value={draft.homeworkFine ?? 1000} onChange={(v) => update("homeworkFine", v)} />
+        </div>
+        <div className="settings-section-label">{t.settings_weights_group || "Ball og'irliklari (jami 1.0)"}</div>
+        <div className="settings-grid" style={{ marginBottom: "20px" }}>
+          <SettingInput step="0.1" label={t.settings_hw_weight}  value={draft.homeworkWeight}   onChange={(v) => update("homeworkWeight", v)} />
+          <SettingInput step="0.1" label={t.settings_att_weight} value={draft.attendanceWeight} onChange={(v) => update("attendanceWeight", v)} />
+          <SettingInput step="0.1" label={t.settings_act_weight} value={draft.activityWeight}   onChange={(v) => update("activityWeight", v)} />
+        </div>
+        {scoreStatus.message && (
+          <p className={cx("settings-status", scoreStatus.type === "error" ? "settings-status-error" : "settings-status-ok")} style={{ marginBottom: "8px" }}>
+            {scoreStatus.message}
+          </p>
+        )}
+        <button className="primary-button" onClick={handleSaveSettings} disabled={busy} style={{ width: "100%", justifyContent: "center" }}>
+          {busy ? <Loader2 size={16} className="spinner" /> : <Settings size={16} />}
+          {t.settings_save_settings}
+        </button>
+      </section>
+
+      {/* Telegram */}
+      <section className="panel">
+        <PanelHeader icon={Send} title={t.tg_title} subtitle={t.tg_sub} />
+        <div className="settings-info-box" style={{ marginBottom: "16px" }}>
+          {t.tg_token_hint}
+        </div>
+        <label className="settings-label">{t.tg_token_label}</label>
+        <div style={{ position: "relative", marginTop: "6px" }}>
+          <input
+            type={showToken ? "text" : "password"}
+            className="settings-input"
+            value={botToken}
+            onChange={(e) => setBotToken(e.target.value)}
+            placeholder={t.tg_token_ph}
+            style={{ paddingRight: "44px", fontFamily: "monospace", fontSize: "13px" }}
+          />
+          <button
+            type="button"
+            onClick={() => setShowToken(!showToken)}
+            style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#64748b", cursor: "pointer", display: "flex", alignItems: "center", padding: 0 }}
+          >
+            {showToken ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        </div>
+        <div style={{ display: "flex", gap: "10px", marginTop: "14px", flexWrap: "wrap" }}>
           <button className="primary-button" onClick={handleSaveToken} disabled={busy}>
-            {busy ? <Loader2 size={17} className="spinner" /> : <Send size={17} />}
+            {busy ? <Loader2 size={16} className="spinner" /> : <Send size={16} />}
             {t.tg_save_token}
           </button>
           <button className="secondary-button" onClick={handleFetchChats} disabled={fetchingChats || !botToken.trim()}>
-            {fetchingChats ? <Loader2 size={17} className="spinner" /> : <Send size={17} />}
+            {fetchingChats ? <Loader2 size={16} className="spinner" /> : <Send size={16} />}
             {fetchingChats ? t.tg_fetch_loading : t.tg_fetch_btn}
           </button>
         </div>
-
         {tgSaveMsg.text && (
-          <p style={{ marginTop: "10px", fontWeight: 600, fontSize: "14px", color: tgSaveMsg.type === "error" ? "#dc2626" : "#16a34a" }}>
+          <p className={cx("settings-status", tgSaveMsg.type === "error" ? "settings-status-error" : "settings-status-ok")} style={{ marginTop: "10px" }}>
             {tgSaveMsg.text}
           </p>
         )}
-
         {tgChats !== null && (
           <div style={{ marginTop: "16px" }}>
             <p style={{ fontSize: "12px", color: "#64748b", marginBottom: "8px" }}>{t.tg_fetch_hint}</p>
@@ -245,7 +310,7 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 <p style={{ fontSize: "12px", fontWeight: 700, color: "#0f172a", marginBottom: "2px" }}>{t.tg_chats_title}:</p>
                 {tgChats.map(chat => (
-                  <div key={chat.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "8px", padding: "10px 12px" }}>
+                  <div key={chat.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "10px 14px" }}>
                     <div>
                       <strong style={{ fontSize: "13px" }}>{chat.title}</strong>
                       <code style={{ display: "block", fontSize: "12px", color: "#64748b", marginTop: "2px" }}>{chat.id}</code>
@@ -266,7 +331,54 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
         )}
       </section>
 
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "12px 16px", background: isDemo ? "#fef9c3" : "#f0fdf4", border: `1px solid ${isDemo ? "#fde047" : "#bbf7d0"}`, borderRadius: "12px" }}>
+      {/* Admin: create teacher */}
+      {teacher?.role === "admin" && (
+        <section className="panel">
+          <PanelHeader icon={UserPlus} title="Yangi o'qituvchi yaratish" subtitle="Parol avtomatik 123456 qo'yiladi" />
+          <form onSubmit={handleCreateTeacher} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+            <div className="settings-account-grid">
+              <div>
+                <label className="settings-label">Ism familiya</label>
+                <input
+                  type="text"
+                  className="settings-input"
+                  style={{ marginTop: "6px" }}
+                  value={newTeacher.name}
+                  onChange={e => setNewTeacher(p => ({ ...p, name: e.target.value }))}
+                  placeholder="Abdullayev Jasur"
+                  required
+                />
+              </div>
+              <div>
+                <label className="settings-label">Telefon raqam</label>
+                <div className="phone-field" style={{ marginTop: "6px" }}>
+                  <b>+998</b>
+                  <input
+                    inputMode="numeric"
+                    maxLength="9"
+                    value={newTeacher.phone}
+                    onChange={e => setNewTeacher(p => ({ ...p, phone: e.target.value.replace(/\D/g, "").slice(0, 9) }))}
+                    placeholder="901234567"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+            {teacherStatus.text && (
+              <p className={cx("settings-status", teacherStatus.type === "error" ? "settings-status-error" : "settings-status-ok")}>
+                {teacherStatus.text}
+              </p>
+            )}
+            <button className="primary-button" type="submit" disabled={teacherBusy} style={{ justifyContent: "center" }}>
+              {teacherBusy ? <Loader2 size={16} className="spinner" /> : <UserPlus size={16} />}
+              {teacherBusy ? "Yaratilmoqda..." : "O'qituvchi yaratish (parol: 123456)"}
+            </button>
+          </form>
+        </section>
+      )}
+
+      {/* Status */}
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "14px 18px", background: isDemo ? "#fef9c3" : "#f0fdf4", border: `2px solid ${isDemo ? "#fde047" : "#bbf7d0"}`, borderRadius: "14px" }}>
         <span className={cx("live-dot", isDemo ? "live-dot-demo" : "live-dot-online")} />
         <div>
           <strong style={{ fontSize: "13px", color: isDemo ? "#854d0e" : "#166534" }}>{isDemo ? t.sidebar_demo : t.sidebar_live}</strong>

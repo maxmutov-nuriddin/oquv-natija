@@ -18,6 +18,11 @@ export const hasFirebaseConfig = Boolean(firebaseConfig.apiKey && firebaseConfig
 export const app = hasFirebaseConfig ? initializeApp(firebaseConfig) : null;
 export const db = app ? getFirestore(app) : null;
 export const auth = app ? getAuth(app) : null;
+
+// Secondary app — faqat yangi foydalanuvchi yaratish uchun (admin sessionini buzmaslik uchun)
+export const secondaryApp = hasFirebaseConfig ? initializeApp(firebaseConfig, "secondary") : null;
+export const secondaryAuth = secondaryApp ? getAuth(secondaryApp) : null;
+export const secondaryDb = secondaryApp ? getFirestore(secondaryApp) : null;
 export const analyticsPromise = app ? isSupported().then((supported) => (supported ? getAnalytics(app) : null)) : Promise.resolve(null);
 
 export async function ensureAdminSession() {

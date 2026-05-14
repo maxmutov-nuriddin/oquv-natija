@@ -21,6 +21,7 @@ function mapDocs(snapshot) {
 export function useDashboardData() {
   const [data, setData] = useState(initialData);
   const recordsRef = useRef([]);
+  const uidRef = useRef(null);
 
   useEffect(() => {
     recordsRef.current = data.records;
@@ -62,11 +63,15 @@ export function useDashboardData() {
     setData((current) => ({ ...current, loading: true, error: "", isDemo: false }));
 
     ensureAdminSession()
-      .then(() => {
+      .then(async (user) => {
+        if (!mounted) return;
+        uidRef.current = user.uid;
+        const base = `users/${user.uid}`;
+
         if (!mounted) return;
         unsubscribers = [
           onSnapshot(
-            collection(db, "students"),
+            collection(db, base, "students"),
             (snapshot) => {
               setData((current) => ({ ...current, students: mapDocs(snapshot) }));
               markReady("students");
@@ -74,7 +79,7 @@ export function useDashboardData() {
             (error) => handleSnapshotError("students", error)
           ),
           onSnapshot(
-            collection(db, "groups"),
+            collection(db, base, "groups"),
             (snapshot) => {
               setData((current) => ({ ...current, groups: mapDocs(snapshot) }));
               markReady("groups");
@@ -82,7 +87,7 @@ export function useDashboardData() {
             (error) => handleSnapshotError("groups", error)
           ),
           onSnapshot(
-            collection(db, "records"),
+            collection(db, base, "records"),
             (snapshot) => {
               setData((current) => ({ ...current, records: mapDocs(snapshot) }));
               markReady("records");
@@ -90,7 +95,7 @@ export function useDashboardData() {
             (error) => handleSnapshotError("records", error)
           ),
           onSnapshot(
-            doc(db, "settings", "reward-system"),
+            doc(db, base, "settings", "reward-system"),
             (snapshot) => {
               setData((current) => ({
                 ...current,
@@ -118,6 +123,16 @@ export function useDashboardData() {
   }, []);
 
   const actions = useMemo(() => {
+    function base() {
+      return `users/${uidRef.current}`;
+    }
+    function userCol(name) {
+      return collection(db, base(), name);
+    }
+    function userDoc(...segments) {
+      return doc(db, base(), ...segments);
+    }
+
     return {
       async addGroup(group) {
         const nextGroup = {
@@ -133,7 +148,7 @@ export function useDashboardData() {
 
         if (hasFirebaseConfig && db) {
           await ensureAdminSession();
-          await addDoc(collection(db, "groups"), { ...nextGroup, createdAt: serverTimestamp() });
+          await addDoc(userCol("groups"), { ...nextGroup, createdAt: serverTimestamp() });
           return;
         }
 
@@ -156,7 +171,7 @@ export function useDashboardData() {
 
         if (hasFirebaseConfig && db) {
           await ensureAdminSession();
-          await addDoc(collection(db, "students"), { ...nextStudent, createdAt: serverTimestamp() });
+          await addDoc(userCol("students"), { ...nextStudent, createdAt: serverTimestamp() });
           return;
         }
 
@@ -171,7 +186,7 @@ export function useDashboardData() {
       async updateGroup(groupId, values) {
         if (hasFirebaseConfig && db) {
           await ensureAdminSession();
-          const groupRef = doc(db, "groups", groupId);
+          const groupRef = userDoc("groups", groupId);
           const groupSnap = await getDoc(groupRef);
           const oldName = groupSnap.data()?.name;
           const newName = values.name;
@@ -180,17 +195,15 @@ export function useDashboardData() {
           batch.update(groupRef, values);
 
           if (newName && oldName && newName !== oldName) {
-            const q = query(collection(db, "students"), where("group", "==", oldName));
+            const q = query(userCol("students"), where("group", "==", oldName));
             const snapshot = await getDocs(q);
             snapshot.forEach((studentDoc) => {
               batch.update(studentDoc.ref, { group: newName });
             });
           }
-          
+
           await batch.commit();
-          // Local state will be updated by onSnapshot automatically
         } else {
-          // Local-only mode
           setData((current) => {
             const group = current.groups.find(g => g.id === groupId);
             const oldName = group?.name;
@@ -199,9 +212,7 @@ export function useDashboardData() {
               ...current,
               groups: current.groups.map((g) => (g.id === groupId ? { ...g, ...values } : g)),
               students: current.students.map((s) => {
-                if (newName && oldName && s.group === oldName) {
-                  return { ...s, group: newName };
-                }
+                if (newName && oldName && s.group === oldName) return { ...s, group: newName };
                 return s;
               })
             };
@@ -212,39 +223,34 @@ export function useDashboardData() {
         if (hasFirebaseConfig && db) {
           await ensureAdminSession();
 
-          const groupRef = doc(db, "groups", groupId);
+          const groupRef = userDoc("groups", groupId);
           const groupSnap = await getDoc(groupRef);
           const groupName = groupSnap.data()?.name;
           if (!groupName) return;
 
-          // Faqat shu guruh studentlarini topamiz
           const studentsSnap = await getDocs(
-            query(collection(db, "students"), where("group", "==", groupName))
+            query(userCol("students"), where("group", "==", groupName))
           );
           const studentIds = studentsSnap.docs.map(d => d.id);
 
-          // Shu studentlarning recordlarini topamiz (10talik chunklar bilan)
           const recordRefs = [];
           for (let i = 0; i < studentIds.length; i += 10) {
             const chunk = studentIds.slice(i, i + 10);
             const recordsSnap = await getDocs(
-              query(collection(db, "records"), where("studentId", "in", chunk))
+              query(userCol("records"), where("studentId", "in", chunk))
             );
             recordsSnap.docs.forEach(d => recordRefs.push(d.ref));
           }
 
-          // Hammasini 500talik batch'larda o'chiramiz
           const allRefs = [groupRef, ...studentsSnap.docs.map(d => d.ref), ...recordRefs];
           for (let i = 0; i < allRefs.length; i += 500) {
             const batch = writeBatch(db);
             allRefs.slice(i, i + 500).forEach(ref => batch.delete(ref));
             await batch.commit();
           }
-          // onSnapshot avtomatik local state ni yangilaydi
           return;
         }
 
-        // Demo rejim: faqat local state
         setData((current) => {
           const groupToDelete = current.groups.find((g) => g.id === groupId);
           const deletedStudentIds = new Set(
@@ -272,13 +278,7 @@ export function useDashboardData() {
           if (hw === 0 && att === 0 && act === 0 && !hasBonus) {
             recordsToDelete.push({ studentId: student.id, date });
           } else {
-            const record = {
-              studentId: student.id,
-              date,
-              homework: hw,
-              attendance: att,
-              activity: act,
-            };
+            const record = { studentId: student.id, date, homework: hw, attendance: att, activity: act };
             const baseCoins = calculateCoins(record, settings);
             let coinsEarned;
             if (dailyBonus === "penalty") {
@@ -290,18 +290,14 @@ export function useDashboardData() {
             }
             rows.push({
               student,
-              record: {
-                ...record,
-                coinsEarned,
-                ...(hasBonus ? { dailyBonus } : {})
-              }
+              record: { ...record, coinsEarned, ...(hasBonus ? { dailyBonus } : {}) }
             });
           }
         });
 
         setData((current) => {
           let nextRecords = [...current.records];
-          
+
           recordsToDelete.forEach(({ studentId, date }) => {
             const recordId = `${studentId}-${date}`;
             nextRecords = nextRecords.filter((item) => item.id !== recordId);
@@ -335,20 +331,20 @@ export function useDashboardData() {
 
         if (hasFirebaseConfig && db) {
           await ensureAdminSession();
-          
+
           const savePromises = rows.flatMap(({ student, record }) => [
-            setDoc(doc(db, "records", `${student.id}-${date}`), record, { merge: true }),
-            updateDoc(doc(db, "students", student.id), {
+            setDoc(userDoc("records", `${student.id}-${date}`), record, { merge: true }),
+            updateDoc(userDoc("students", student.id), {
               homeworkScore: record.homework,
               attendanceScore: record.attendance,
               activityScore: record.activity
             })
           ]);
 
-          const deletePromises = recordsToDelete.map(({ studentId, date }) => 
-            deleteDoc(doc(db, "records", `${studentId}-${date}`))
+          const deletePromises = recordsToDelete.map(({ studentId, date }) =>
+            deleteDoc(userDoc("records", `${studentId}-${date}`))
           );
-          
+
           await Promise.all([...savePromises, ...deletePromises]);
         }
       },
@@ -356,7 +352,7 @@ export function useDashboardData() {
         setData((current) => ({ ...current, settings: nextSettings }));
         if (hasFirebaseConfig && db) {
           await ensureAdminSession();
-          await setDoc(doc(db, "settings", "reward-system"), nextSettings, { merge: true });
+          await setDoc(userDoc("settings", "reward-system"), nextSettings, { merge: true });
         }
       },
       async deleteStudent(studentId) {
@@ -377,7 +373,10 @@ export function useDashboardData() {
         if (hasFirebaseConfig && db) {
           await ensureAdminSession();
           const recordIds = recordsRef.current.filter((record) => record.studentId === studentId).map((record) => record.id);
-          await Promise.all([deleteDoc(doc(db, "students", studentId)), ...recordIds.map((recordId) => deleteDoc(doc(db, "records", recordId)))]);
+          await Promise.all([
+            deleteDoc(userDoc("students", studentId)),
+            ...recordIds.map((recordId) => deleteDoc(userDoc("records", recordId)))
+          ]);
         }
       },
       async updateStudent(studentId, values) {
@@ -385,14 +384,14 @@ export function useDashboardData() {
           const student = current.students.find(s => s.id === studentId);
           const oldGroup = student?.group;
           const newGroup = values.group || oldGroup;
-          
+
           let nextGroups = current.groups;
           if (oldGroup !== newGroup) {
-             nextGroups = current.groups.map(g => {
-               if (g.name === oldGroup) return { ...g, studentsCount: Math.max(0, (g.studentsCount || 0) - 1) };
-               if (g.name === newGroup) return { ...g, studentsCount: (g.studentsCount || 0) + 1 };
-               return g;
-             });
+            nextGroups = current.groups.map(g => {
+              if (g.name === oldGroup) return { ...g, studentsCount: Math.max(0, (g.studentsCount || 0) - 1) };
+              if (g.name === newGroup) return { ...g, studentsCount: (g.studentsCount || 0) + 1 };
+              return g;
+            });
           }
 
           return {
@@ -401,10 +400,10 @@ export function useDashboardData() {
             groups: nextGroups
           };
         });
-        
+
         if (hasFirebaseConfig && db) {
           await ensureAdminSession();
-          await updateDoc(doc(db, "students", studentId), values);
+          await updateDoc(userDoc("students", studentId), values);
         }
       }
     };

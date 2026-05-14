@@ -5,9 +5,18 @@ import { X } from "lucide-react";
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { LEVELS } from "../../constants";
 import { useT } from "../../i18n/index.jsx";
+import { getScoreSummaryForRange, getCurrentWeekRange, getCurrentMonthRange } from "../../lib/scoring";
 import { getLevel, getPerformanceStatus, initials } from "../../lib/utils";
 
-export function StudentProfileModal({ student, records, settings, groups, onClose }) {
+function periodFinal(data, settings) {
+  return Math.min(100, Math.round(
+    data.avgHw  * Number(settings?.homeworkWeight  ?? 0.4) +
+    data.avgAtt * Number(settings?.attendanceWeight ?? 0.3) +
+    data.avgAct * Number(settings?.activityWeight   ?? 0.3)
+  ));
+}
+
+export function StudentProfileModal({ student, records, settings, groups, date, onUpdateStudent, onClose }) {
   const { t } = useT();
   useEffect(() => {
     const orig = document.body.style.overflow;
@@ -18,6 +27,17 @@ export function StudentProfileModal({ student, records, settings, groups, onClos
   const studentRecords = records
     .filter(r => r.studentId === student.id)
     .sort((a, b) => (a.date > b.date ? 1 : -1));
+
+  // ── Homework penalty ───────────────────────────────────────────────────
+  const ignoredZeroDates = student.ignoredZeroDates || [];
+  const zeroRecords = records.filter(r =>
+    r.studentId === student.id &&
+    r.homework === 0 &&
+    (r.attendance > 0 || r.activity > 0) &&
+    !ignoredZeroDates.includes(r.date)
+  );
+  const zeroCount = zeroRecords.length;
+  const homeworkFine = settings?.homeworkFine ?? 1000;
 
   // ── Stats ──────────────────────────────────────────────────────────────
   const totalLessons = studentRecords.length;
@@ -123,6 +143,33 @@ export function StudentProfileModal({ student, records, settings, groups, onClos
               </div>
             </div>
           </div>
+
+          {/* ── Weekly / Monthly period summary ───────────────── */}
+          {date && (() => {
+            const weekly  = getScoreSummaryForRange(student.id, records, getCurrentWeekRange(date));
+            const monthly = getScoreSummaryForRange(student.id, records, getCurrentMonthRange(date));
+            if (!weekly && !monthly) return null;
+            return (
+              <div className="period-summary-row">
+                {weekly  && (() => { const score = periodFinal(weekly,  settings); const st = getPerformanceStatus(score); return (
+                  <div className="period-chip" style={{ borderColor: st.border, background: st.bg }}>
+                    <span className="period-chip-title">{t.period_weekly}</span>
+                    <span className="period-chip-count">{t.period_lessons(weekly.count)}</span>
+                    <span className="period-chip-badge" style={{ color: st.color }}>{t[`status_${st.key}`]}</span>
+                    <span className="period-chip-score" style={{ color: st.color }}>{score}%</span>
+                  </div>
+                ); })()}
+                {monthly && (() => { const score = periodFinal(monthly, settings); const st = getPerformanceStatus(score); return (
+                  <div className="period-chip" style={{ borderColor: st.border, background: st.bg }}>
+                    <span className="period-chip-title">{t.period_monthly}</span>
+                    <span className="period-chip-count">{t.period_lessons(monthly.count)}</span>
+                    <span className="period-chip-badge" style={{ color: st.color }}>{t[`status_${st.key}`]}</span>
+                    <span className="period-chip-score" style={{ color: st.color }}>{score}%</span>
+                  </div>
+                ); })()}
+              </div>
+            );
+          })()}
 
           {/* ── Quick stats ────────────────────────────────────── */}
           <div className="profile-stats-row">
@@ -232,6 +279,62 @@ export function StudentProfileModal({ student, records, settings, groups, onClos
           {totalLessons === 0 && (
             <div style={{ textAlign: "center", padding: "40px", color: "#94a3b8", fontSize: "15px", fontWeight: 600 }}>
               {t.profile_no_history}
+            </div>
+          )}
+
+          {/* ── Homework warnings ─────────────────────────────── */}
+          {(student.scorePenalty > 0 || zeroCount >= 2) && (
+            <div className="profile-section" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              <h4 className="profile-section-title">⚠️ Ogohlantirishlar</h4>
+
+              {student.scorePenalty > 0 && (
+                <div style={{ background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: "10px", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
+                  <span style={{ fontSize: "14px", fontWeight: 700, color: "#b91c1c" }}>Ball jarima: −{student.scorePenalty}%</span>
+                  <button
+                    type="button"
+                    style={{ fontSize: "12px", fontWeight: 800, padding: "6px 14px", border: "1px solid #fca5a5", borderRadius: "8px", background: "white", color: "#b91c1c", cursor: "pointer", flexShrink: 0 }}
+                    onClick={() => onUpdateStudent?.(student.id, { scorePenalty: 0 })}
+                  >
+                    Tiklash
+                  </button>
+                </div>
+              )}
+
+              {zeroCount === 2 && (
+                <div style={{ background: "#fef9c3", border: "1px solid #fde68a", borderRadius: "10px", padding: "12px 16px", display: "flex", flexDirection: "column", gap: "10px" }}>
+                  <strong style={{ fontSize: "14px", color: "#92400e" }}>{t.card_zero2_title}</strong>
+                  <span style={{ fontSize: "13px", color: "#92400e" }}>{t.card_zero2_text(homeworkFine)}</span>
+                  <button
+                    type="button"
+                    className="primary-button"
+                    style={{ justifyContent: "center", background: "#d97706", borderColor: "#d97706" }}
+                    onClick={() => {
+                      const newDates = [...ignoredZeroDates, ...zeroRecords.map(r => r.date)];
+                      onUpdateStudent?.(student.id, { ignoredZeroDates: newDates, scorePenalty: (student.scorePenalty || 0) + 10 });
+                    }}
+                  >
+                    {t.card_pay_fine(homeworkFine)}
+                  </button>
+                </div>
+              )}
+
+              {zeroCount >= 3 && (
+                <div style={{ background: "#fee2e2", border: "1px solid #fca5a5", borderRadius: "10px", padding: "12px 16px", display: "flex", flexDirection: "column", gap: "10px" }}>
+                  <strong style={{ fontSize: "14px", color: "#b91c1c" }}>{t.card_zero3_title}</strong>
+                  <span style={{ fontSize: "13px", color: "#b91c1c" }}>{t.card_zero3_text}</span>
+                  <button
+                    type="button"
+                    className="danger-button"
+                    style={{ justifyContent: "center" }}
+                    onClick={() => {
+                      const newDates = [...ignoredZeroDates, ...zeroRecords.map(r => r.date)];
+                      onUpdateStudent?.(student.id, { ignoredZeroDates: newDates, scorePenalty: (student.scorePenalty || 0) + 15 });
+                    }}
+                  >
+                    {t.card_contacted}
+                  </button>
+                </div>
+              )}
             </div>
           )}
 

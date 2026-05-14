@@ -13,7 +13,6 @@ import { GroupForm } from "../components/forms/GroupForm";
 import { BuyGiftModal } from "../components/forms/BuyGiftModal";
 import { StudentForm } from "../components/forms/StudentForm";
 import { MysteryBoxModal } from "../components/games/MysteryBoxModal";
-import { LessonEntryPanel } from "../components/groups/LessonEntryPanel";
 import { StudentCard } from "../components/student/StudentCard";
 import { EmptyState } from "../components/ui/EmptyState";
 import { ExportButton } from "../components/ui/ExportButton";
@@ -27,7 +26,7 @@ function getGroupActivityStatus(score) {
   return             { key: "weak",    color: "#dc2626", bg: "#fee2e2", border: "#fca5a5" };
 }
 
-export function GroupsPage({ groups, students, records, settings, date, currentTime, query, addGroup, updateGroup, deleteGroup, addStudent, updateStudent, saveLessonRecords, deleteStudent, selectedGroup, setDate }) {
+export function GroupsPage({ groups, students, records, settings, date, addGroup, updateGroup, deleteGroup, addStudent, updateStudent, deleteStudent, selectedGroup, setDate }) {
   const { t } = useT();
   const [activeGroup, setActiveGroup] = useState(groups[0]?.name || "");
   const activeGroupStudents = useMemo(() => students.filter(s => s.group === activeGroup), [students, activeGroup]);
@@ -74,12 +73,10 @@ export function GroupsPage({ groups, students, records, settings, date, currentT
       ? weekDays.filter((day) => activeGroupObject.weekdays.includes(day.value)).map((day) => t.weekday_short[day.value] || day.label).join(", ")
       : t.groups_no_days;
 
-  const ranked = useMemo(() => {
-    return rankStudents(
-      students.filter((student) => student.group === activeGroup && student.name.toLowerCase().includes(query.toLowerCase())),
-      records, settings, date
-    );
-  }, [students, activeGroup, query, records, settings, date]);
+  const ranked = useMemo(() => rankStudents(
+    students.filter((student) => student.group === activeGroup),
+    records, settings, date
+  ), [students, activeGroup, records, settings, date]);
 
   const monthly = ranked.map((student) => ({ name: student.name.split(" ")[0], monthly: student.monthlyCoins }));
 
@@ -196,16 +193,6 @@ export function GroupsPage({ groups, students, records, settings, date, currentT
                 </div>
               </div>
             </section>
-
-            <LessonEntryPanel
-              group={activeGroupObject}
-              students={activeGroupStudents}
-              records={records}
-              date={date}
-              currentTime={currentTime}
-              settings={settings}
-              saveLessonRecords={saveLessonRecords}
-            />
 
             <section className="panel">
               <PanelHeader icon={CalendarDays} title={t.groups_history_title} subtitle={t.groups_history_sub} />
