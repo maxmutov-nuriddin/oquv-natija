@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Award, BarChart3, Coins, Medal, Pencil, Star, Trophy, Users } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { availableGifts, vipData, allPrivileges } from "../constants";
@@ -85,6 +85,35 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
   const [activeMystery, setActiveMystery] = useState(null);
   const [activeGiftCoin, setActiveGiftCoin] = useState(null);
   const [activeBlockFriend, setActiveBlockFriend] = useState(null);
+  const [pickedStudent, setPickedStudent] = useState(null);
+  const [picking, setPicking] = useState(false);
+  const pickIntervalRef = useRef(null);
+
+  const attendedStudents = useMemo(() =>
+    groupStudents.filter(s => {
+      const rec = todayGroupRecords.find(r => r.studentId === s.id);
+      return rec && (rec.homework > 0 || rec.attendance > 0);
+    }),
+    [groupStudents, todayGroupRecords]
+  );
+
+  function pickRandomStudent() {
+    const pool = attendedStudents.length ? attendedStudents : groupStudents;
+    if (!pool.length || picking) return;
+    setPicking(true);
+    setPickedStudent(null);
+    let i = 0;
+    pickIntervalRef.current = setInterval(() => {
+      setPickedStudent(pool[i % pool.length]);
+      i++;
+    }, 80);
+    setTimeout(() => {
+      clearInterval(pickIntervalRef.current);
+      const winner = pool[Math.floor(Math.random() * pool.length)];
+      setPickedStudent(winner);
+      setPicking(false);
+    }, 1500);
+  }
 
 
   const showComicButton = useMemo(() => {
@@ -123,17 +152,47 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
       <CurrentLessonBanner group={currentGroup} date={date} time={currentTime} />
 
       {selectedGroup && isLessonDay && !alreadySpun && (
-        <section className="panel" style={{ padding: "16px" }}>
-          <button
-            className="primary-button"
-            style={{ width: "100%", justifyContent: "center", padding: "16px", background: "linear-gradient(135deg, #eab308, #d97706)", fontSize: "16px", boxShadow: "0 4px 15px rgba(234, 179, 8, 0.4)", border: "none" }}
-            onClick={() => setShowBonusDrum(true)}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <section className="panel" style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button
+              className="primary-button"
+              style={{ flex: 1, justifyContent: "center", padding: "16px", background: "linear-gradient(135deg, #eab308, #d97706)", fontSize: "16px", boxShadow: "0 4px 15px rgba(234, 179, 8, 0.4)", border: "none" }}
+              onClick={() => setShowBonusDrum(true)}
+            >
               <span style={{ fontSize: "20px" }}>🎰</span>
               <span>{t.dash_bonus_btn}</span>
+            </button>
+            <button
+              className="primary-button"
+              style={{ flexShrink: 0, justifyContent: "center", padding: "16px 20px", background: "linear-gradient(135deg, #8b5cf6, #6d28d9)", fontSize: "16px", boxShadow: "0 4px 15px rgba(109,40,217,0.35)", border: "none" }}
+              onClick={pickRandomStudent}
+              disabled={picking || !groupStudents.length}
+            >
+              <span style={{ fontSize: "20px" }}>🎲</span>
+            </button>
+          </div>
+          {pickedStudent && (
+            <div style={{
+              display: "flex", alignItems: "center", gap: "12px",
+              padding: "12px 16px", borderRadius: "12px",
+              background: picking ? "#f5f3ff" : "linear-gradient(135deg, #ede9fe, #ddd6fe)",
+              border: `2px solid ${picking ? "#c4b5fd" : "#7c3aed"}`,
+              transition: "all 0.15s"
+            }}>
+              <div style={{
+                width: "40px", height: "40px", borderRadius: "50%",
+                background: "linear-gradient(135deg, #8b5cf6, #6d28d9)",
+                color: "white", display: "flex", alignItems: "center", justifyContent: "center",
+                fontWeight: 900, fontSize: "14px", flexShrink: 0
+              }}>
+                {pickedStudent.name.split(" ").map(p => p[0]).join("").slice(0, 2).toUpperCase()}
+              </div>
+              <div>
+                <div style={{ fontWeight: 900, fontSize: "16px", color: "#4c1d95" }}>{pickedStudent.name}</div>
+                {!picking && <div style={{ fontSize: "12px", color: "#7c3aed", fontWeight: 600 }}>🎯 Tanlandi!</div>}
+              </div>
             </div>
-          </button>
+          )}
         </section>
       )}
 

@@ -170,7 +170,7 @@ export function summarizeStudent(student, records, settings, date = dayjs()) {
   const monthlyRecords = getRecordsInRange(studentRecords, monthRange.start, monthRange.end);
 
   const rawCoins    = studentRecords.reduce((sum, r) => sum + (Number(r.coinsEarned) || calculateCoins(r, settings)), 0);
-  const coins       = Math.max(0, rawCoins - (student.homeworkFines || 0));
+  const coins       = Math.max(0, rawCoins);
   const weeklyCoins = weeklyRecords.reduce((sum, r)  => sum + (Number(r.coinsEarned) || calculateCoins(r, settings)), 0);
   const monthlyCoins= monthlyRecords.reduce((sum, r) => sum + (Number(r.coinsEarned) || calculateCoins(r, settings)), 0);
 
@@ -194,6 +194,8 @@ export function summarizeStudent(student, records, settings, date = dayjs()) {
   } else {
     computedFinalScore = finalScore(student, settings);
   }
+  const scorePenalty = Number(student.scorePenalty || 0);
+  if (scorePenalty > 0) computedFinalScore = Math.max(0, computedFinalScore - scorePenalty);
 
   let weeklyFinalScore = 0;
   if (activeWeeklyLessons.length > 0) {

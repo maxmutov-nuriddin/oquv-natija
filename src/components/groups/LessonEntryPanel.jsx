@@ -49,10 +49,39 @@ export function LessonEntryPanel({ group, students, records, date, currentTime, 
   }, [students, records, date]);
 
   function update(studentId, key, value) {
+    setEntries((current) => {
+      const entry = current[studentId] || {};
+      const parsed = parsePercentInput(value);
+      const updated = { ...entry, [key]: parsed };
+      // sinf ishi yoki uy ishi o'zgarganda aktivlikni avtomatik hisoblash
+      if (key === "attendanceScore" || key === "homeworkScore") {
+        const att = key === "attendanceScore" ? parsed : (entry.attendanceScore || 0);
+        const hw  = key === "homeworkScore"   ? parsed : (entry.homeworkScore  || 0);
+        updated.activityScore = (att > 0 || hw > 0) ? Math.round((att + hw) / 2) : 0;
+      }
+      return { ...current, [studentId]: updated };
+    });
+  }
+
+  function markPresent(studentId, isPresent) {
     setEntries((current) => ({
       ...current,
-      [studentId]: { ...current[studentId], [key]: parsePercentInput(value) }
+      [studentId]: {
+        ...current[studentId],
+        attendanceScore: isPresent ? 100 : 0,
+        activityScore: isPresent ? 100 : 0
+      }
     }));
+  }
+
+  function markAllPresent() {
+    setEntries((current) => {
+      const next = {};
+      students.forEach((s) => {
+        next[s.id] = { ...(current[s.id] || {}), attendanceScore: 100, activityScore: 100 };
+      });
+      return next;
+    });
   }
 
   async function submit(event) {
@@ -100,44 +129,76 @@ export function LessonEntryPanel({ group, students, records, date, currentTime, 
       {!students.length && <EmptyState title={t.lesson_no_students_title} text={t.lesson_no_students_text} />}
       {!!students.length && (
         <form onSubmit={submit}>
+          {!locked && isLessonDay && !isLessonOver && (
+            <div style={{ display: "flex", gap: "8px", marginBottom: "12px", flexWrap: "wrap" }}>
+              <button
+                type="button"
+                onClick={markAllPresent}
+                style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 16px", background: "#16a34a", color: "white", border: "none", borderRadius: "8px", fontWeight: 700, fontSize: "13px", cursor: "pointer" }}
+              >
+                ✓ Hammasi keldi
+              </button>
+            </div>
+          )}
           <div className="lesson-table-scroll">
           <div className="lesson-table">
             <div className="lesson-table-head">
               <span>{t.lesson_col_student}</span>
               <span>{t.lesson_col_hw}</span>
               <span>{t.lesson_col_att}</span>
-              <span>{t.lesson_col_act}</span>
             </div>
-            {students.map((student) => (
-              <div className="lesson-row" key={student.id}>
-                <div className="lesson-student">
-                  <div className="avatar avatar-small">{initials(student.name)}</div>
-                  <strong>{student.name}</strong>
+            {students.map((student) => {
+              const isPresent = (entries[student.id]?.attendanceScore || 0) > 0;
+              return (
+                <div className="lesson-row" key={student.id}>
+                  <div className="lesson-student">
+                    <div className="avatar avatar-small">{initials(student.name)}</div>
+                    <strong>{student.name}</strong>
+                    {!locked && isLessonDay && !isLessonOver && (
+                      <button
+                        type="button"
+                        onClick={() => markPresent(student.id, !isPresent)}
+                        title={isPresent ? "Kelmadi deb belgilash" : "Keldi deb belgilash"}
+                        style={{
+                          marginLeft: "auto",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          width: "32px", height: "32px", borderRadius: "50%", border: "2px solid",
+                          cursor: "pointer", flexShrink: 0, fontSize: "15px", fontWeight: 900,
+                          background: isPresent ? "#dcfce7" : "#fee2e2",
+                          borderColor: isPresent ? "#16a34a" : "#dc2626",
+                          color: isPresent ? "#16a34a" : "#dc2626"
+                        }}
+                      >
+                        {isPresent ? "✓" : "✗"}
+                      </button>
+                    )}
+                  </div>
+                  {scoreFields.filter(f => f.key !== "activityScore").map((field) => (
+                    <input
+                      key={field.key}
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="5"
+                      disabled={!isLessonDay || isLessonOver || locked}
+                      value={numberInputValue(entries[student.id]?.[field.key])}
+                      onChange={(event) => {
+                        const raw = Number(event.target.value);
+                        if (event.target.value !== "" && raw > 100) { event.target.value = "100"; }
+                        update(student.id, field.key, event.target.value);
+                      }}
+                      onBlur={(event) => {
+                        const raw = Number(event.target.value);
+                        const rounded = isNaN(raw) || event.target.value === "" ? 0 : Math.min(100, Math.round(raw / 5) * 5);
+                        event.target.value = String(rounded);
+                        update(student.id, field.key, rounded);
+                      }}
+                      aria-label={`${student.name} ${field.label}`}
+                    />
+                  ))}
                 </div>
-                {scoreFields.map((field) => (
-                  <input
-                    key={field.key}
-                    type="number"
-                    min="0"
-                    max="100"
-                    disabled={!isLessonDay || isLessonOver || locked}
-                    value={numberInputValue(entries[student.id]?.[field.key])}
-                    onChange={(event) => {
-                      if (event.target.value !== "" && Number(event.target.value) > 100) {
-                        event.target.value = "100";
-                      }
-                      update(student.id, field.key, event.target.value);
-                    }}
-                    onBlur={(event) => {
-                      if (event.target.value === "" || isNaN(Number(event.target.value))) {
-                        update(student.id, field.key, 0);
-                      }
-                    }}
-                    aria-label={`${student.name} ${field.label}`}
-                  />
-                ))}
-              </div>
-            ))}
+              );
+            })}
           </div>
           </div>
           <div style={{ position: "sticky", bottom: "16px", zIndex: 10, marginTop: "16px", padding: "12px", background: "#ffffff", borderRadius: "12px", boxShadow: "0 4px 20px rgba(0,0,0,0.08)", border: "1px solid #e2e8f0" }}>

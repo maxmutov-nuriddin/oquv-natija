@@ -20,11 +20,14 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
   const attended = hw > 0 || att > 0 || act > 0;
 
   async function handleQuickUpdate(key, value) {
+    const newHw  = key === "homeworkScore"   ? value : hw;
+    const newAtt = key === "attendanceScore" ? value : att;
+    const autoAct = (newHw > 0 || newAtt > 0) ? Math.round((newHw + newAtt) / 2) : 0;
     const updatedStudent = {
       ...student,
-      homeworkScore: hw,
-      attendanceScore: att,
-      activityScore: act,
+      homeworkScore: newHw,
+      attendanceScore: newAtt,
+      activityScore: autoAct,
       [key]: value
     };
     if (saveLessonRecords) {
@@ -161,9 +164,9 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
       </div>
 
       <div className="quick-edit">
-        {scoreFields.map((field) => {
+        {scoreFields.filter(f => f.key !== "activityScore").map((field) => {
           const Icon = field.icon;
-          const savedVal = field.key === "homeworkScore" ? hw : field.key === "attendanceScore" ? att : act;
+          const savedVal = field.key === "homeworkScore" ? hw : att;
           return (
             <label key={field.key}>
               <span>
@@ -175,6 +178,7 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
                 type="number"
                 min="0"
                 max="100"
+                step="5"
                 disabled={!isLessonDay || isRecordSaved}
                 defaultValue={numberInputValue(savedVal)}
                 onFocus={(e) => e.target.select()}
@@ -185,10 +189,10 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
                   handleQuickUpdate(field.key, clamped);
                 }}
                 onBlur={(e) => {
-                  if (e.target.value === "" || isNaN(Number(e.target.value))) {
-                    e.target.value = "0";
-                    handleQuickUpdate(field.key, 0);
-                  }
+                  const raw = Number(e.target.value);
+                  const rounded = isNaN(raw) || e.target.value === "" ? 0 : Math.min(100, Math.round(raw / 5) * 5);
+                  e.target.value = String(rounded);
+                  handleQuickUpdate(field.key, rounded);
                 }}
                 onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); }}
                 onWheel={(e) => e.target.blur()}
@@ -213,20 +217,33 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
         </button>
       </div>
 
+      {student.scorePenalty > 0 && (
+        <div style={{ background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: "8px", padding: "7px 12px", fontSize: "12px", fontWeight: 700, color: "#b91c1c", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+          <span>⚠️ Ball jarima: −{student.scorePenalty}%</span>
+          <button
+            type="button"
+            style={{ fontSize: "11px", fontWeight: 800, padding: "3px 10px", border: "1px solid #fca5a5", borderRadius: "6px", background: "white", color: "#b91c1c", cursor: "pointer" }}
+            onClick={() => onUpdateStudent?.(student.id, { scorePenalty: 0 })}
+          >
+            Tiklash
+          </button>
+        </div>
+      )}
+
       {zeroCount === 2 && (
         <div style={{ background: "#fef9c3", color: "#92400e", padding: "10px", borderRadius: "8px", marginTop: "12px", fontSize: "13px", display: "flex", flexDirection: "column", gap: "8px", border: "1px solid #fde68a" }}>
           <strong style={{ display: "flex", alignItems: "center", gap: "6px" }}>{t.card_zero2_title}</strong>
-          <span>{t.card_zero2_text}</span>
+          <span>{t.card_zero2_text(settings.homeworkFine ?? 1000)}</span>
           <button
             type="button"
             className="primary-button"
             style={{ width: "100%", padding: "8px", justifyContent: "center", marginTop: "4px", background: "#d97706", borderColor: "#d97706" }}
             onClick={() => {
               const newDates = [...ignoredZeroDates, ...zeroRecords.map(r => r.date)];
-              onUpdateStudent?.(student.id, { homeworkFines: (student.homeworkFines || 0) + 500, ignoredZeroDates: newDates });
+              onUpdateStudent?.(student.id, { ignoredZeroDates: newDates, scorePenalty: (student.scorePenalty || 0) + 10 });
             }}
           >
-            {t.card_pay_fine}
+            {t.card_pay_fine(settings.homeworkFine ?? 1000)}
           </button>
         </div>
       )}
@@ -241,7 +258,7 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
             style={{ width: "100%", padding: "8px", justifyContent: "center", marginTop: "4px" }}
             onClick={() => {
               const newDates = [...ignoredZeroDates, ...zeroRecords.map(r => r.date)];
-              onUpdateStudent?.(student.id, { ignoredZeroDates: newDates });
+              onUpdateStudent?.(student.id, { ignoredZeroDates: newDates, scorePenalty: (student.scorePenalty || 0) + 15 });
             }}
           >
             {t.card_contacted}

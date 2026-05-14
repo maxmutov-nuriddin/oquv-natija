@@ -180,6 +180,7 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
             <SettingInput label={t.settings_hw_coin}  value={draft.homeworkCoin}   onChange={(v) => update("homeworkCoin", v)} />
             <SettingInput label={t.settings_att_coin} value={draft.attendanceCoin} onChange={(v) => update("attendanceCoin", v)} />
             <SettingInput label={t.settings_act_coin} value={draft.activityCoin}   onChange={(v) => update("activityCoin", v)} />
+            <SettingInput label={t.settings_hw_fine}  value={draft.homeworkFine ?? 1000} onChange={(v) => update("homeworkFine", v)} />
             <span className="settings-group-label" style={{ gridColumn: "1 / -1" }}>{t.settings_weights_group || "Ball og'irliklari (jami 1.0)"}</span>
             <SettingInput step="0.1" label={t.settings_hw_weight}  value={draft.homeworkWeight}   onChange={(v) => update("homeworkWeight", v)} />
             <SettingInput step="0.1" label={t.settings_att_weight} value={draft.attendanceWeight} onChange={(v) => update("attendanceWeight", v)} />

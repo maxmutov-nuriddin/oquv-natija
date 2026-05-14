@@ -19,9 +19,9 @@ export async function sendIntroMessage({ group, settings }) {
     `📚 <b>${name}</b> guruhiga har dars tugagach natijalar avtomatik yuboriladi.\n` +
     `📚 После каждого урока группы <b>${name}</b> результаты будут отправляться автоматически.\n\n` +
     `Nima ko'rsatiladi / Что показывается:\n` +
-    `🟢 Yaxshi / Хорошо (80%+)\n` +
-    `🟡 O'rtacha / Средне (50–79%)\n` +
-    `🔴 Past / Плохо (&lt;50%)\n` +
+    `🟢 Yaxshi / Хорошо (70%+)\n` +
+    `🟡 O'rtacha / Средне (40–69%)\n` +
+    `🔴 Past / Плохо (&lt;40%)\n` +
     `👻 Kelmagan / Отсутствовал\n\n` +
     `✅ Tizim faol! | Система активна!`;
 
@@ -38,14 +38,14 @@ export async function sendIntroMessage({ group, settings }) {
 }
 
 function scoreEmoji(score) {
-  if (score >= 80) return "🟢";
-  if (score >= 50) return "🟡";
+  if (score >= 70) return "🟢";
+  if (score >= 40) return "🟡";
   return "🔴";
 }
 
 function scoreLabel(score) {
-  if (score >= 80) return "Yaxshi ✅";
-  if (score >= 50) return "O'rtacha ⚠️";
+  if (score >= 70) return "Yaxshi ✅";
+  if (score >= 40) return "O'rtacha ⚠️";
   return "Past ❌";
 }
 

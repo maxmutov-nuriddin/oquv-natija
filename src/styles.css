@@ -345,8 +345,10 @@ button {
 
 /* Student Cards */
 .student-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
-.student-card { padding: 16px; display: flex; flex-direction: column; gap: 10px; transition: transform 0.1s; min-width: 0; }
+.student-card { padding: 16px; display: flex; flex-direction: column; gap: 10px; transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, opacity 0.15s; min-width: 0; }
 .student-card:active { transform: translateY(4px); border-bottom-width: 2px; margin-bottom: 4px; }
+.student-card:focus-within { border-color: var(--blue); border-bottom-color: var(--blue-dark); box-shadow: 0 0 0 4px rgba(37,99,235,0.25), 0 8px 32px rgba(37,99,235,0.18); transform: translateY(-3px) scale(1.01); background: #f0f6ff; z-index: 2; position: relative; }
+.student-grid:has(.student-card:focus-within) .student-card:not(:focus-within) { opacity: 0.45; }
 .student-card-top { border-color: var(--gold); border-bottom-color: var(--gold-dark); background: #fffcf0; }
 
 .student-head { display: flex; justify-content: space-between; align-items: center; }
@@ -505,7 +507,7 @@ button {
 .period-chip-badge { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.03em; margin-top: 2px; }
 .period-chip-score { font-size: 18px; font-weight: 900; line-height: 1; }
 
-.quick-edit { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.quick-edit { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 .quick-edit label {
   border: 2px solid var(--line); border-bottom: 4px solid var(--line-dark);
   border-radius: var(--radius-sm); padding: 8px; display: flex; flex-direction: column; gap: 4px; text-align: center;
@@ -566,8 +568,8 @@ button {
 
 /* Lesson Table */
 .lesson-table { border: 2px solid var(--line); border-bottom: 6px solid var(--line-dark); border-radius: var(--radius-sm); overflow: hidden; background: white; }
-.lesson-table-head { display: grid; grid-template-columns: minmax(220px, 1fr) repeat(3, minmax(110px, 0.4fr)); gap: 16px; background: var(--line-soft); padding: 16px 24px; font-weight: 900; font-size: 14px; color: var(--muted); text-transform: uppercase; }
-.lesson-row { display: grid; grid-template-columns: minmax(220px, 1fr) repeat(3, minmax(110px, 0.4fr)); gap: 16px; padding: 16px 24px; border-top: 2px solid var(--line); align-items: center; }
+.lesson-table-head { display: grid; grid-template-columns: minmax(220px, 1fr) repeat(2, minmax(110px, 0.4fr)); gap: 16px; background: var(--line-soft); padding: 16px 24px; font-weight: 900; font-size: 14px; color: var(--muted); text-transform: uppercase; }
+.lesson-row { display: grid; grid-template-columns: minmax(220px, 1fr) repeat(2, minmax(110px, 0.4fr)); gap: 16px; padding: 16px 24px; border-top: 2px solid var(--line); align-items: center; }
 .lesson-student { display: flex; align-items: center; gap: 12px; }
 .lesson-student strong { font-size: 18px; font-weight: 900; }
 .lesson-row input { width: 100%; border: 2px solid var(--line); border-bottom: 4px solid var(--line-dark); border-radius: var(--radius-xs); min-height: 52px; text-align: center; font-weight: 900; font-size: 20px; outline: none; }
