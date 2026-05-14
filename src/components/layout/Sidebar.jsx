@@ -114,6 +114,10 @@ export function Sidebar({ activePage, setActivePage, teacher, logout, isOpen, on
         </div>
         <button type="button" onClick={logout} className="logout-btn-small">{t.sidebar_logout}</button>
       </div>
+
+      <footer className="app-footer">
+        Created by <a href="https://mvnuriddin.netlify.app" target="_blank" rel="noreferrer" style={{ color: "inherit", fontWeight: 700, textDecoration: "none" }}>mv_nuriddin</a> &nbsp;·&nbsp; 2025
+      </footer>
     </aside>
   );
 }

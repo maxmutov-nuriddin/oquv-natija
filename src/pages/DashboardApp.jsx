@@ -162,10 +162,6 @@ export function DashboardApp({ teacher, logout, updateProfile, changePassword, r
         </main>
       </div>
 
-      <footer className="app-footer">
-        Created by <a href="https://mvnuriddin.netlify.app" target="_blank" rel="noreferrer" style={{ color: "inherit", fontWeight: 700, textDecoration: "none" }}>mv_nuriddin</a> &nbsp;·&nbsp; 2025
-      </footer>
-
       {editingStudent && (
         <Modal title={t.app_edit_student} onClose={() => setEditingStudent(null)}>
           <StudentForm groups={groups} initialData={editingStudent} onSubmit={(values) => updateStudent(editingStudent.id, values)} onSaved={() => setEditingStudent(null)} />

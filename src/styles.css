@@ -103,7 +103,7 @@ button {
 .app-bg { min-height: 100vh; }
 .app-shell {
   display: grid;
-  grid-template-columns: 340px minmax(0, 1fr);
+  grid-template-columns: 335px minmax(0, 1fr);
   min-height: 100vh;
 }
 
@@ -230,7 +230,7 @@ button {
 
 /* Main Content */
 .main-content { padding: 32px; min-width: 0; }
-.app-footer { position: fixed; bottom: 2.5px; left: 50%; transform: translateX(-50%); width: 97%; z-index: 100; padding: 3px 18px; text-align: center; font-size: 11px; font-weight: 600; color: #94a3b8; background: rgba(255,255,255,0.75); backdrop-filter: blur(10px); border: 1px solid rgba(0,0,0,0.08); border-radius: 999px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+.app-footer { margin: 0 -24px -24px; padding: 6px 0; text-align: center; font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.75); }
 
 .topbar {
   display: grid;
