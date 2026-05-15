@@ -9,6 +9,7 @@ export function AuthPage({ login, normalizePhone, resetPassword }) {
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   function update(key, value) {
     setForm((current) => ({ ...current, [key]: key === "phone" ? normalizePhone(value) : value }));
@@ -21,6 +22,7 @@ export function AuthPage({ login, normalizePhone, resetPassword }) {
     try {
       if (mode === "forgot") {
         await resetPassword(form);
+        setResetSent(true);
         setSaving(false);
       } else {
         await login(form);
@@ -48,70 +50,94 @@ export function AuthPage({ login, normalizePhone, resetPassword }) {
           <p>{t.auth_subtitle}</p>
         </div>
 
-        <form className="auth-form" onSubmit={submit}>
-          {mode === "register" && (
-            <label>
-              <span>{t.auth_teacher_name}</span>
-              <input value={form.name} onChange={(event) => update("name", event.target.value)} placeholder={t.auth_name_placeholder} required />
-            </label>
-          )}
-
-          <label>
-            <span>{t.auth_phone}</span>
-            <div className="phone-field">
-              <b>+998</b>
-              <input
-                inputMode="numeric"
-                maxLength="9"
-                value={form.phone}
-                onChange={(event) => update("phone", event.target.value)}
-                placeholder="901234567"
-                required
-              />
+        {mode === "forgot" && resetSent ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px", padding: "8px 0" }}>
+            <div style={{ background: "#f0fdf4", border: "2px solid #86efac", borderRadius: "12px", padding: "16px", textAlign: "center" }}>
+              <div style={{ fontSize: "32px", marginBottom: "8px" }}>🔑</div>
+              <strong style={{ display: "block", color: "#15803d", fontSize: "15px", marginBottom: "6px" }}>
+                {lang === "ru" ? "Свяжитесь с администратором" : "Administrator bilan bog'laning"}
+              </strong>
+              <p style={{ color: "#166534", fontSize: "13px", margin: 0 }}>
+                {lang === "ru"
+                  ? `Для сброса пароля номера +998 ${form.phone} обратитесь к администратору системы.`
+                  : `+998 ${form.phone} raqami uchun parolni tiklash uchun tizim administratoriga murojaat qiling.`}
+              </p>
             </div>
-          </label>
-
-          {(mode === "login" || mode === "register") && (
-            <label>
-              <span>{t.auth_password}</span>
-              <div style={{ position: "relative" }}>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  minLength="6"
-                  value={form.password}
-                  onChange={(event) => update("password", event.target.value)}
-                  placeholder={t.auth_password_placeholder}
-                  required
-                  style={{ paddingRight: "40px" }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#64748b", cursor: "pointer", display: "flex", alignItems: "center", padding: "4px" }}
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-            </label>
-          )}
-
-          {error && <p className="form-error">{error}</p>}
-
-          <button className="primary-button auth-submit" type="submit" disabled={saving}>
-            {saving && <Loader2 size={18} className="spinner" />}
-            {saving ? t.auth_checking : mode === "forgot" ? t.auth_reset : t.auth_login}
-          </button>
-
-          {mode === "login" ? (
-            <button type="button" className="text-button" style={{ marginTop: "12px", background: "none", border: "none", color: "#64748b", cursor: "pointer", width: "100%" }} onClick={() => setMode("forgot")}>
-              {t.auth_forgot}
-            </button>
-          ) : (
-            <button type="button" className="text-button" style={{ marginTop: "12px", background: "none", border: "none", color: "#64748b", cursor: "pointer", width: "100%" }} onClick={() => setMode("login")}>
+            <button
+              type="button"
+              className="primary-button"
+              style={{ width: "100%", justifyContent: "center" }}
+              onClick={() => { setMode("login"); setResetSent(false); setError(""); }}
+            >
               {t.auth_back}
             </button>
-          )}
-        </form>
+          </div>
+        ) : (
+          <form className="auth-form" onSubmit={submit}>
+            {mode === "register" && (
+              <label>
+                <span>{t.auth_teacher_name}</span>
+                <input value={form.name} onChange={(event) => update("name", event.target.value)} placeholder={t.auth_name_placeholder} required />
+              </label>
+            )}
+
+            <label>
+              <span>{t.auth_phone}</span>
+              <div className="phone-field">
+                <b>+998</b>
+                <input
+                  inputMode="numeric"
+                  maxLength="9"
+                  value={form.phone}
+                  onChange={(event) => update("phone", event.target.value)}
+                  placeholder="901234567"
+                  required
+                />
+              </div>
+            </label>
+
+            {(mode === "login" || mode === "register") && (
+              <label>
+                <span>{t.auth_password}</span>
+                <div style={{ position: "relative" }}>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    minLength="6"
+                    value={form.password}
+                    onChange={(event) => update("password", event.target.value)}
+                    placeholder={t.auth_password_placeholder}
+                    required
+                    style={{ paddingRight: "40px" }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#64748b", cursor: "pointer", display: "flex", alignItems: "center", padding: "4px" }}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </label>
+            )}
+
+            {error && <p className="form-error">{error}</p>}
+
+            <button className="primary-button auth-submit" type="submit" disabled={saving}>
+              {saving && <Loader2 size={18} className="spinner" />}
+              {saving ? t.auth_checking : mode === "forgot" ? t.auth_reset : t.auth_login}
+            </button>
+
+            {mode === "login" ? (
+              <button type="button" className="text-button" style={{ marginTop: "12px", background: "none", border: "none", color: "#64748b", cursor: "pointer", width: "100%" }} onClick={() => { setMode("forgot"); setError(""); }}>
+                {t.auth_forgot}
+              </button>
+            ) : (
+              <button type="button" className="text-button" style={{ marginTop: "12px", background: "none", border: "none", color: "#64748b", cursor: "pointer", width: "100%" }} onClick={() => { setMode("login"); setError(""); }}>
+                {t.auth_back}
+              </button>
+            )}
+          </form>
+        )}
       </section>
     </main>
   );

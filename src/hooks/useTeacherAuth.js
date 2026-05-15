@@ -100,11 +100,9 @@ export function useTeacherAuth() {
         }
       },
       async resetPassword({ phone }) {
-        if (!hasFirebaseConfig || !auth) throw new Error("Firebase config topilmadi.");
         const cleanPhone = normalizePhone(phone);
         if (!uzPhoneIsValid(cleanPhone)) throw new Error("Raqam 9 ta raqam bo'lishi kerak. Masalan: 901234567");
-        
-        throw new Error("Parolni tiklash uchun tizim administratori bilan bog'laning.");
+        return { phone: cleanPhone };
       },
       async logout() {
         if (auth) await signOut(auth);

@@ -50,13 +50,13 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
   const groupStudents = useMemo(() => students.filter((student) => student.group === selectedGroup), [students, selectedGroup]);
   const ranked = useMemo(() => rankStudents(groupStudents, records, settings, date), [groupStudents, records, settings, date]);
 
-  const chartData = ranked.map((student) => ({
+  const chartData = useMemo(() => ranked.map((student) => ({
     name: student.name.split(" ")[0],
     coin: student.coins,
     score: student.finalScore
-  }));
-  const totalCoins = ranked.reduce((sum, student) => sum + student.coins, 0);
-  const averageScore = ranked.length ? Math.round(ranked.reduce((sum, student) => sum + student.finalScore, 0) / ranked.length) : 0;
+  })), [ranked]);
+  const totalCoins = useMemo(() => ranked.reduce((sum, student) => sum + student.coins, 0), [ranked]);
+  const averageScore = useMemo(() => ranked.length ? Math.round(ranked.reduce((sum, student) => sum + student.finalScore, 0) / ranked.length) : 0, [ranked]);
   const previousMonthLeader = useMemo(
     () => getPeriodLeader(groupStudents, records, settings, getPreviousMonthRange(date)),
     [groupStudents, records, settings, date]

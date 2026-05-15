@@ -337,20 +337,28 @@ export function useDashboardData() {
         if (hasFirebaseConfig && db) {
           await ensureAdminSession();
 
-          const savePromises = rows.flatMap(({ student, record }) => [
-            setDoc(userDoc("records", `${student.id}-${date}`), record, { merge: true }),
-            updateDoc(userDoc("students", student.id), {
+          const batch = writeBatch(db);
+          rows.forEach(({ student, record }) => {
+            batch.set(userDoc("records", `${student.id}-${date}`), record, { merge: true });
+            batch.update(userDoc("students", student.id), {
               homeworkScore: record.homework,
               attendanceScore: record.attendance,
               activityScore: record.activity
-            })
-          ]);
+            });
+          });
+          recordsToDelete.forEach(({ studentId, date: d }) => {
+            batch.delete(userDoc("records", `${studentId}-${d}`));
+          });
 
-          const deletePromises = recordsToDelete.map(({ studentId, date }) =>
-            deleteDoc(userDoc("records", `${studentId}-${date}`))
-          );
-
-          await Promise.all([...savePromises, ...deletePromises]);
+          try {
+            await batch.commit();
+          } catch (error) {
+            setData((current) => ({
+              ...current,
+              error: `Dars natijalarini saqlashda xato: ${error?.message || "noma'lum xato"}`
+            }));
+            throw error;
+          }
         }
       },
       async saveSettings(nextSettings) {
