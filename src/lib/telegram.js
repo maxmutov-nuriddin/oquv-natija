@@ -91,6 +91,9 @@ export async function sendLessonReport({ group, students, date, settings }) {
     text += `   ⚡ Aktivlik: <b>${s.act}%</b>\n`;
     text += `   🏆 Umumiy ball: <b>${s.score}%</b> — ${scoreLabel(s.score)}\n`;
     text += `   🪙 Bugungi coin: <b>+${s.coins}</b>\n`;
+    if (s.missCount >= 3) {
+      text += `   🚨 Uy vazifasi <b>${s.missCount}</b> marta qilinmadi!\n`;
+    }
     text += `${LINE}\n`;
   });
 
@@ -109,6 +112,29 @@ export async function sendLessonReport({ group, students, date, settings }) {
     body: JSON.stringify({ chat_id: chatId, text, parse_mode: "HTML" })
   });
 
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.description || `HTTP ${res.status}`);
+  }
+}
+
+export async function sendHomeworkWarning({ group, students, settings }) {
+  const token  = String(settings?.telegramBotToken || "").trim();
+  const chatId = String(group?.telegramChatId      || "").trim();
+  if (!token || !chatId || !students.length) return;
+
+  let text = `🚨 <b>${group.name}</b> — Uy vazifasi ogohlantirishi\n${LINE}\n\n`;
+  text += `Quyidagi o'quvchilar <b>3 marta va undan ko'p</b> uy vazifasini bajarmadi:\n\n`;
+  students.forEach(s => {
+    text += `❌ <b>${s.name}</b> — <b>${s.missCount}</b> marta\n`;
+  });
+  text += `\n${LINE}\n⚠️ Iltimos, diqqat qiling!`;
+
+  const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chat_id: chatId, text, parse_mode: "HTML" })
+  });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.description || `HTTP ${res.status}`);

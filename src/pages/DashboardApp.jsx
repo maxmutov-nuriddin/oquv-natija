@@ -51,11 +51,19 @@ export function DashboardApp({ teacher, logout, updateProfile, changePassword, r
     const groupStudents = students.filter(s => s.group === targetGroup.name);
     const studentsWithScores = groupStudents.map(student => {
       const record = records.find(r => r.studentId === student.id && r.date === date);
+      const ignoredZeroDates = student.ignoredZeroDates || [];
+      const missCount = records.filter(r =>
+        r.studentId === student.id &&
+        r.homework === 0 &&
+        (r.attendance > 0 || r.activity > 0) &&
+        !ignoredZeroDates.includes(r.date)
+      ).length;
       return {
         ...student,
         homeworkScore: record?.homework ?? 0,
         attendanceScore: record?.attendance ?? 0,
         activityScore: record?.activity ?? 0,
+        missCount,
       };
     });
     await sendLessonReport({ group: targetGroup, students: studentsWithScores, date, settings });
