@@ -123,6 +123,7 @@ export function DashboardApp({ teacher, logout, updateProfile, changePassword, r
                   onDeleteStudent={handleDeleteStudent}
                   saveLessonRecords={saveLessonRecords}
                   updateStudent={updateStudent}
+                  updateGroup={updateGroup}
                   isLessonLocked={lessonLocked}
                   onUnlock={() => setLessonLocked(false)}
                 />

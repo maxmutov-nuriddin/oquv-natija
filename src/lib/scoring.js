@@ -170,9 +170,10 @@ export function summarizeStudent(student, records, settings, date = dayjs()) {
   const monthlyRecords = getRecordsInRange(studentRecords, monthRange.start, monthRange.end);
 
   const rawCoins    = studentRecords.reduce((sum, r) => sum + (Number(r.coinsEarned) || calculateCoins(r, settings)), 0);
-  const coins       = Math.max(0, rawCoins);
+  const duelBonus   = Number(student.duelCoins || 0);
+  const coins       = Math.max(0, rawCoins + duelBonus);
   const weeklyCoins = weeklyRecords.reduce((sum, r)  => sum + (Number(r.coinsEarned) || calculateCoins(r, settings)), 0);
-  const monthlyCoins= monthlyRecords.reduce((sum, r) => sum + (Number(r.coinsEarned) || calculateCoins(r, settings)), 0);
+  const monthlyCoins= monthlyRecords.reduce((sum, r) => sum + (Number(r.coinsEarned) || calculateCoins(r, settings)), 0) + duelBonus;
 
   const activeLessons = monthlyRecords.filter(
     r => r.homework > 0 || r.attendance > 0 || r.activity > 0

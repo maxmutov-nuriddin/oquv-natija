@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Award, BarChart3, Coins, Medal, Pencil, Star, Trophy, Users } from "lucide-react";
+import { Award, BarChart3, Coins, Medal, Monitor, Pencil, Star, Trophy, Users } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { availableGifts, vipData, allPrivileges } from "../constants";
 import { calculateCoins, getPeriodLeader, getPreviousMonthRange, getPreviousWeekRange, isDeclineTrend, rankStudents } from "../lib/scoring";
@@ -22,8 +22,10 @@ import { EmptyState } from "../components/ui/EmptyState";
 import { FunModal } from "../components/ui/FunModal";
 import { PanelHeader } from "../components/ui/PanelHeader";
 import { StatCard } from "../components/ui/StatCard";
+import { ProjectorView } from "../components/senior/ProjectorView";
+import { ClanPanel } from "../components/senior/ClanPanel";
 
-export function DashboardPage({ groups, students, records, settings, selectedGroup, currentGroup, currentTime, date, onEditStudent, onDeleteStudent, saveLessonRecords, updateStudent, isLessonLocked = false, onUnlock }) {
+export function DashboardPage({ groups, students, records, settings, selectedGroup, currentGroup, currentTime, date, onEditStudent, onDeleteStudent, saveLessonRecords, updateStudent, updateGroup, isLessonLocked = false, onUnlock }) {
   const monthlyWinner = useMemo(() => getPeriodLeader(students.filter(s => s.group === selectedGroup), records, settings, getPreviousMonthRange(date)), [students, selectedGroup, records, settings, date]);
   const weeklyWinner = useMemo(() => {
     const candidates = students.filter(s => s.group === selectedGroup && s.id !== monthlyWinner?.id);
@@ -73,7 +75,9 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
 
   const todayGroupRecords = useMemo(() => records.filter(r => r.date === date && groupStudents.some(s => s.id === r.studentId)), [records, date, groupStudents]);
   const alreadySpun = todayGroupRecords.some(r => r.dailyBonus !== undefined && r.dailyBonus !== null);
+  const isSenior = selectedGroup.toLowerCase().includes("senior");
   const { t } = useT();
+  const [showProjector, setShowProjector] = useState(false);
   const [showBonusDrum, setShowBonusDrum] = useState(false);
   const [profileStudent, setProfileStudent] = useState(null);
   const [showComic, setShowComic] = useState(false);
@@ -253,6 +257,42 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
           </div>
         </aside>
       </section>
+
+      {isSenior && selectedGroup && (
+        <section className="panel" style={{ padding: "16px" }}>
+          <button
+            className="primary-button"
+            style={{
+              width: "100%", justifyContent: "center", padding: "14px",
+              background: "linear-gradient(135deg, #0f172a, #1e293b)",
+              fontSize: "15px", border: "none", boxShadow: "0 4px 20px rgba(15,23,42,0.4)",
+            }}
+            onClick={() => setShowProjector(true)}
+          >
+            <Monitor size={18} />
+            <span>📺 Proyektor Reytingi</span>
+          </button>
+        </section>
+      )}
+
+      {selectedGroup && (
+        <ClanPanel
+          groups={groups}
+          selectedGroup={selectedGroup}
+          students={groupStudents}
+          ranked={ranked}
+          updateGroup={updateGroup}
+        />
+      )}
+
+      {showProjector && (
+        <ProjectorView
+          ranked={ranked}
+          selectedGroup={selectedGroup}
+          date={date}
+          onClose={() => setShowProjector(false)}
+        />
+      )}
 
       {decliningStudents.length > 0 && (
         <section style={{
