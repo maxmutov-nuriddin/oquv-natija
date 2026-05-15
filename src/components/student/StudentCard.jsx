@@ -206,7 +206,10 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
                 defaultValue={numberInputValue(savedVal)}
                 onFocus={(e) => e.target.select()}
                 onChange={(e) => {
-                  if (e.target.value === "") return;
+                  if (e.target.value === "") {
+                    handleQuickUpdate(field.key, 0);
+                    return;
+                  }
                   const clamped = parsePercentInput(e.target.value);
                   e.target.value = String(clamped);
                   handleQuickUpdate(field.key, clamped);
