@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Award, BarChart3, Coins, Medal, Monitor, Pencil, Star, Trophy, Users } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { availableGifts, vipData, allPrivileges } from "../constants";
-import { calculateCoins, getPeriodLeader, getPreviousMonthRange, getPreviousWeekRange, isDeclineTrend, rankStudents } from "../lib/scoring";
+import { calculateCoins, getCurrentWeekRange, getPeriodLeader, getPreviousMonthRange, getPreviousWeekRange, isDeclineTrend, rankStudents } from "../lib/scoring";
 import { getAutoTitle } from "../lib/titles";
 import { initials } from "../lib/utils";
 import { useT } from "../i18n/index.jsx";
@@ -25,6 +25,9 @@ import { PanelHeader } from "../components/ui/PanelHeader";
 import { StatCard } from "../components/ui/StatCard";
 import { ProjectorView } from "../components/senior/ProjectorView";
 import { ClanPanel } from "../components/senior/ClanPanel";
+import { BossBattle } from "../components/battles/BossBattle";
+import { GroupMatch } from "../components/battles/GroupMatch";
+import { ClanBattle } from "../components/battles/ClanBattle";
 
 export function DashboardPage({ groups, students, records, settings, selectedGroup, currentGroup, currentTime, date, onEditStudent, onDeleteStudent, saveLessonRecords, updateStudent, updateGroup, isLessonLocked = false, onUnlock }) {
   const monthlyWinner = useMemo(() => getPeriodLeader(students.filter(s => s.group === selectedGroup), records, settings, getPreviousMonthRange(date)), [students, selectedGroup, records, settings, date]);
@@ -77,6 +80,7 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
   const todayGroupRecords = useMemo(() => records.filter(r => r.date === date && groupStudents.some(s => s.id === r.studentId)), [records, date, groupStudents]);
   const alreadySpun = todayGroupRecords.some(r => r.dailyBonus !== undefined && r.dailyBonus !== null);
   const isSenior = selectedGroup.toLowerCase().includes("senior");
+  const selectedGroupObj = useMemo(() => groups.find(g => g.name === selectedGroup), [groups, selectedGroup]);
 
   const autoTitles = useMemo(() => {
     if (!isSenior) return {};
@@ -286,15 +290,57 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
         </section>
       )}
 
-      {selectedGroup && (
-        <ClanPanel
-          groups={groups}
-          selectedGroup={selectedGroup}
-          students={groupStudents}
-          ranked={ranked}
-          updateGroup={updateGroup}
-        />
-      )}
+      {selectedGroup && selectedGroupObj && (() => {
+        const isJunior = !isSenior;
+        const isAutoRandom = !!settings?.battleRandomWeekly;
+        const weekKey = getCurrentWeekRange(date).start.format("YYYY-MM-DD");
+        const battleVisible = (enabledKey, targetKey) => {
+          if (!settings?.[enabledKey]) return false;
+          const target = settings?.[targetKey] || "all";
+          if (target === "all") return true;
+          if (target === "senior") return isSenior;
+          if (target === "junior") return isJunior;
+          return false;
+        };
+        const showBoss  = isAutoRandom
+          ? selectedGroupObj?.activeBoss?.weekKey === weekKey
+          : battleVisible("bossBattleEnabled",  "bossBattleTarget");
+        const showMatch = isAutoRandom
+          ? selectedGroupObj?.activeMatch?.weekKey === weekKey
+          : battleVisible("groupMatchEnabled",  "groupMatchTarget");
+        const showClan  = isAutoRandom
+          ? (selectedGroupObj?.clanBattles || []).some(b => b.weekKey === weekKey)
+          : battleVisible("clanBattleEnabled",  "clanBattleTarget");
+        const clanCount = (selectedGroupObj?.clans || []).length;
+        const hasTwoClans = clanCount >= 2;
+
+        return (
+          <>
+            {(showBoss || showMatch) && (
+              <div style={{ display: "grid", gridTemplateColumns: showBoss && showMatch ? "1fr 1fr" : "1fr", gap: "24px" }}>
+                {showBoss && (
+                  <BossBattle group={selectedGroupObj} groupStudents={groupStudents} records={records} settings={settings} date={date} updateGroup={updateGroup} updateStudent={updateStudent} />
+                )}
+                {showMatch && (
+                  <GroupMatch group={selectedGroupObj} groups={groups} students={students} records={records} settings={settings} date={date} updateGroup={updateGroup} updateStudent={updateStudent} />
+                )}
+              </div>
+            )}
+            <div style={{ display: "grid", gridTemplateColumns: hasTwoClans && showClan ? "1fr 1fr" : "1fr", gap: "24px" }}>
+              <ClanPanel
+                groups={groups}
+                selectedGroup={selectedGroup}
+                students={groupStudents}
+                ranked={ranked}
+                updateGroup={updateGroup}
+              />
+              {hasTwoClans && showClan && (
+                <ClanBattle group={selectedGroupObj} ranked={ranked} updateGroup={updateGroup} updateStudent={updateStudent} date={date} />
+              )}
+            </div>
+          </>
+        );
+      })()}
 
       {showProjector && (
         <ProjectorView

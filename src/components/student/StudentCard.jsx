@@ -211,7 +211,7 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
                 type="number"
                 min="0"
                 max="100"
-                step="5"
+                step="1"
                 disabled={!isLessonDay || isRecordSaved}
                 defaultValue={numberInputValue(savedVal)}
                 onFocus={(e) => e.target.select()}
@@ -226,7 +226,7 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
                 }}
                 onBlur={(e) => {
                   const raw = Number(e.target.value);
-                  const rounded = isNaN(raw) || e.target.value === "" ? 0 : Math.min(100, Math.round(raw / 5) * 5);
+                  const rounded = isNaN(raw) || e.target.value === "" ? 0 : Math.min(100, Math.round(raw));
                   e.target.value = String(rounded);
                   handleQuickUpdate(field.key, rounded);
                 }}

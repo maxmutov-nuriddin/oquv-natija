@@ -47,6 +47,15 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
     setDraft((current) => ({ ...current, [key]: Number(value) }));
   }
 
+  async function saveBattleSetting(key, value) {
+    const newDraft = { ...draft, [key]: value };
+    setDraft(newDraft);
+    try {
+      await saveSettings({ ...newDraft, telegramBotToken: botToken.trim() });
+    } catch (e) { }
+  }
+
+
   async function handleUpdateProfile() {
     setBusy(true);
     try {
@@ -404,6 +413,126 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
           {busy ? <Loader2 size={16} className="spinner" /> : <Settings size={16} />}
           Unvon sozlamalarini saqlash
         </button>
+      </section>
+
+      {/* Battles */}
+      <section className="panel">
+        <PanelHeader
+          icon={Settings}
+          title="⚔️ Chempionatlar"
+          subtitle="Har bir chempionatni yoqish/o'chirish va kimga ko'rsatish"
+        />
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          {[
+            { emoji: "🐉", label: "Boss Battle",     enabledKey: "bossBattleEnabled",  targetKey: "bossBattleTarget"  },
+            { emoji: "⚔️", label: "Guruh vs Guruh",  enabledKey: "groupMatchEnabled",  targetKey: "groupMatchTarget"  },
+            { emoji: "🏴", label: "Klan Jangi",      enabledKey: "clanBattleEnabled",  targetKey: "clanBattleTarget"  },
+          ].map(battle => {
+            const isOn = draft[battle.enabledKey] === true;
+            const currentTarget = draft[battle.targetKey] || "all";
+            return (
+              <div key={battle.enabledKey} style={{
+                border: `1.5px solid ${isOn ? "#7c3aed40" : "#e2e8f0"}`,
+                borderLeft: `4px solid ${isOn ? "#7c3aed" : "#e2e8f0"}`,
+                borderRadius: "12px", padding: "12px 16px",
+                background: isOn ? "#ede9fe22" : "#f8fafc",
+                transition: "all 0.2s",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <span style={{ fontSize: "22px" }}>{battle.emoji}</span>
+                    <span style={{ fontSize: "14px", fontWeight: 800, color: isOn ? "#4c1d95" : "#94a3b8" }}>{battle.label}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => saveBattleSetting(battle.enabledKey, !isOn)}
+                    style={{
+                      flexShrink: 0, width: "44px", height: "24px", borderRadius: "999px",
+                      border: "none", cursor: "pointer", position: "relative",
+                      background: isOn ? "#7c3aed" : "#cbd5e1",
+                      transition: "background 0.2s",
+                    }}
+                  >
+                    <span style={{
+                      position: "absolute", top: "3px",
+                      left: isOn ? "22px" : "3px",
+                      width: "18px", height: "18px", borderRadius: "50%",
+                      background: "white", transition: "left 0.2s",
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                    }} />
+                  </button>
+                </div>
+                {isOn && (
+                  <div style={{ display: "flex", gap: "6px", marginTop: "10px" }}>
+                    {[
+                      { value: "all",    label: "Barcha guruhlar" },
+                      { value: "senior", label: "Faqat Senior" },
+                      { value: "junior", label: "Faqat Junior" },
+                    ].map(opt => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => saveBattleSetting(battle.targetKey, opt.value)}
+                        style={{
+                          padding: "5px 14px", borderRadius: "8px", cursor: "pointer",
+                          fontSize: "12px", fontWeight: 700,
+                          border: `2px solid ${currentTarget === opt.value ? "#7c3aed" : "#e2e8f0"}`,
+                          background: currentTarget === opt.value ? "#ede9fe" : "white",
+                          color: currentTarget === opt.value ? "#7c3aed" : "#64748b",
+                        }}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        {/* Auto-random weekly toggle */}
+        {(() => {
+          const isAutoRandom = draft.battleRandomWeekly === true;
+          return (
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              marginTop: "14px", padding: "12px 16px", borderRadius: "12px",
+              border: `1.5px solid ${isAutoRandom ? "#7c3aed40" : "#e2e8f0"}`,
+              borderLeft: `4px solid ${isAutoRandom ? "#7c3aed" : "#e2e8f0"}`,
+              background: isAutoRandom ? "#ede9fe22" : "#f8fafc",
+            }}>
+              <div>
+                <div style={{ fontSize: "14px", fontWeight: 800, color: isAutoRandom ? "#4c1d95" : "#94a3b8" }}>
+                  🎲 Haftalik avto-random
+                </div>
+                <div style={{ fontSize: "11px", fontWeight: 600, color: "#94a3b8", marginTop: "2px" }}>
+                  Har hafta boshida chempionatlar avtomatik randomlanadi
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => saveBattleSetting("battleRandomWeekly", !isAutoRandom)}
+                style={{
+                  flexShrink: 0, width: "44px", height: "24px", borderRadius: "999px",
+                  border: "none", cursor: "pointer", position: "relative",
+                  background: isAutoRandom ? "#7c3aed" : "#cbd5e1",
+                  transition: "background 0.2s",
+                }}
+              >
+                <span style={{
+                  position: "absolute", top: "3px",
+                  left: isAutoRandom ? "22px" : "3px",
+                  width: "18px", height: "18px", borderRadius: "50%",
+                  background: "white", transition: "left 0.2s",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                }} />
+              </button>
+            </div>
+          );
+        })()}
+        <p style={{ fontSize: "11px", color: "#94a3b8", fontWeight: 600, marginTop: "8px", textAlign: "center" }}>
+          ✅ O'zgarishlar avtomatik saqlanadi
+        </p>
       </section>
 
       {/* Telegram */}

@@ -14,4 +14,10 @@ export const defaultSettings = {
   titleMachineMinLessons: 3,
   titleGhostEnabled: true,
   titleGhostThreshold: 5,
+  bossBattleEnabled: true,
+  bossBattleTarget: "all",
+  groupMatchEnabled: true,
+  groupMatchTarget: "all",
+  clanBattleEnabled: true,
+  clanBattleTarget: "all",
 };

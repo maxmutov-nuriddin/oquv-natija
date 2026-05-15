@@ -179,7 +179,7 @@ export function LessonEntryPanel({ group, students, records, date, currentTime, 
                       type="number"
                       min="0"
                       max="100"
-                      step="5"
+                      step="1"
                       disabled={!isLessonDay || isLessonOver || locked}
                       value={numberInputValue(entries[student.id]?.[field.key])}
                       onChange={(event) => {
@@ -189,7 +189,7 @@ export function LessonEntryPanel({ group, students, records, date, currentTime, 
                       }}
                       onBlur={(event) => {
                         const raw = Number(event.target.value);
-                        const rounded = isNaN(raw) || event.target.value === "" ? 0 : Math.min(100, Math.round(raw / 5) * 5);
+                        const rounded = isNaN(raw) || event.target.value === "" ? 0 : Math.min(100, Math.round(raw));
                         event.target.value = String(rounded);
                         update(student.id, field.key, rounded);
                       }}
