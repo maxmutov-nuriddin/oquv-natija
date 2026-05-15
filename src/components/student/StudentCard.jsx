@@ -23,7 +23,14 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
     const newHw  = key === "homeworkScore"   ? value : hw;
     const newAtt = key === "attendanceScore" ? value : att;
     const autoAct = (newHw > 0 || newAtt > 0) ? Math.round((newHw + newAtt) / 2) : 0;
-    const updatedStudent = { ...student, homeworkScore: newHw, attendanceScore: newAtt, activityScore: autoAct, [key]: value };
+    const updatedStudent = {
+      ...student,
+      homeworkScore: newHw,
+      attendanceScore: newAtt,
+      activityScore: autoAct,
+      [key]: value,
+      ...(hasBonusDrum ? { dailyBonus } : {})
+    };
     if (saveLessonRecords) {
       await saveLessonRecords({ date, settings, students: [updatedStudent] });
     }

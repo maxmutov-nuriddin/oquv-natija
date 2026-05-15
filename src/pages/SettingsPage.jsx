@@ -5,7 +5,7 @@ import { cx } from "../lib/utils";
 import { PanelHeader } from "../components/ui/PanelHeader";
 import { SettingInput } from "../components/ui/SettingInput";
 
-export function SettingsPage({ settings, saveSettings, teacher, updateProfile, changePassword, isDemo, register }) {
+export function SettingsPage({ settings, saveSettings, teacher, updateProfile, changePassword, isDemo, register, restoreDataFromUid }) {
   const { t } = useT();
   const [draft, setDraft] = useState(settings);
   const [profileName, setProfileName] = useState(teacher?.name || "");
@@ -27,11 +27,21 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
   const [newTeacher, setNewTeacher] = useState({ name: "", phone: "" });
   const [teacherStatus, setTeacherStatus] = useState({ type: "", text: "" });
   const [teacherBusy, setTeacherBusy] = useState(false);
+  const [restoreUid, setRestoreUid] = useState("");
+  const [restoreStatus, setRestoreStatus] = useState({ type: "", text: "" });
+  const [restoreBusy, setRestoreBusy] = useState(false);
 
   useEffect(() => {
     setDraft(settings);
     setBotToken(settings?.telegramBotToken || "");
   }, [settings]);
+
+  useEffect(() => {
+    if (teacher) {
+      setProfileName(teacher.name || "");
+      setProfilePhone(String(teacher.phone || ""));
+    }
+  }, [teacher]);
 
   function update(key, value) {
     setDraft((current) => ({ ...current, [key]: Number(value) }));
@@ -40,7 +50,7 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
   async function handleUpdateProfile() {
     setBusy(true);
     try {
-      await updateProfile({ name: profileName, phone: profilePhone });
+      await updateProfile({ name: profileName });
       setProfileStatus({ type: "success", message: t.settings_profile_saved });
     } catch (e) {
       setProfileStatus({ type: "error", message: e.message });
@@ -71,6 +81,21 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
       setPasswordStatus({ type: "error", message: e.message });
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function handleRestoreData(e) {
+    e.preventDefault();
+    setRestoreBusy(true);
+    setRestoreStatus({ type: "", text: "" });
+    try {
+      const count = await restoreDataFromUid(restoreUid);
+      setRestoreStatus({ type: "success", text: `✅ ${count} ta ma'lumot muvaffaqiyatli tiklandi. Sahifani yangilang.` });
+      setRestoreUid("");
+    } catch (err) {
+      setRestoreStatus({ type: "error", text: err.message });
+    } finally {
+      setRestoreBusy(false);
     }
   }
 
@@ -164,15 +189,15 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
               placeholder={t.settings_name_ph}
             />
             <label className="settings-label" style={{ marginTop: "12px" }}>{t.auth_phone}</label>
-            <div className="phone-field" style={{ marginTop: "6px" }}>
+            <div
+              className="phone-field"
+              style={{ marginTop: "6px", cursor: "not-allowed" }}
+              title="Telefon raqamni o'zgartirib bo'lmaydi"
+            >
               <b>+998</b>
-              <input
-                inputMode="numeric"
-                maxLength="9"
-                value={profilePhone}
-                onChange={(e) => setProfilePhone(e.target.value.replace(/\D/g, "").slice(0, 9))}
-                placeholder="901234567"
-              />
+              <div style={{ flex: 1, fontSize: "14px", color: "#64748b", userSelect: "none" }}>
+                {profilePhone}
+              </div>
             </div>
             {profileStatus.message && (
               <p className={cx("settings-status", profileStatus.type === "error" ? "settings-status-error" : "settings-status-ok")}>
@@ -376,6 +401,37 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
           </form>
         </section>
       )}
+
+      {/* Ma'lumotlarni tiklash */}
+      <section className="panel" style={{ border: "2px solid #fca5a5" }}>
+        <PanelHeader icon={Settings} title="Ma'lumotlarni tiklash" subtitle="Telefon o'zgartirish sabab yo'qolgan ma'lumotlarni qaytarish" />
+        <p style={{ fontSize: "13px", color: "#64748b", marginBottom: "14px" }}>
+          Firebase Console → Firestore → <code>users</code> kolleksiyasini oching → ma'lumotlari bor eski document ID ni nusxalab quyiga kiriting.
+        </p>
+        <form onSubmit={handleRestoreData} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <div>
+            <label className="settings-label">Eski UID (document ID)</label>
+            <input
+              type="text"
+              className="settings-input"
+              style={{ marginTop: "6px", fontFamily: "monospace", fontSize: "13px" }}
+              value={restoreUid}
+              onChange={e => setRestoreUid(e.target.value.trim())}
+              placeholder="abc123xyz..."
+              required
+            />
+          </div>
+          {restoreStatus.text && (
+            <p className={cx("settings-status", restoreStatus.type === "error" ? "settings-status-error" : "settings-status-ok")}>
+              {restoreStatus.text}
+            </p>
+          )}
+          <button className="danger-button" type="submit" disabled={restoreBusy || !restoreUid} style={{ justifyContent: "center" }}>
+            {restoreBusy ? <Loader2 size={16} className="spinner" /> : <Settings size={16} />}
+            {restoreBusy ? "Tiklanmoqda..." : "Ma'lumotlarni tiklash"}
+          </button>
+        </form>
+      </section>
 
       {/* Status */}
       <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "14px 18px", background: isDemo ? "#fef9c3" : "#f0fdf4", border: `2px solid ${isDemo ? "#fde047" : "#bbf7d0"}`, borderRadius: "14px" }}>

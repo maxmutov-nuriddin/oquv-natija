@@ -5,7 +5,7 @@ import { AuthPage } from "./pages/AuthPage";
 import { DashboardApp } from "./pages/DashboardApp";
 
 export default function App() {
-  const { teacher, loading, login, register, resetPassword, logout, normalizePhone, updateProfile, changePassword } = useTeacherAuth();
+  const { teacher, loading, login, register, resetPassword, logout, normalizePhone, updateProfile, changePassword, restoreDataFromUid } = useTeacherAuth();
 
   if (loading) {
     return (
@@ -23,7 +23,7 @@ export default function App() {
       />
       <Route
         path="/*"
-        element={teacher ? <DashboardApp teacher={teacher} logout={logout} updateProfile={updateProfile} changePassword={changePassword} register={register} /> : <Navigate to="/login" replace />}
+        element={teacher ? <DashboardApp teacher={teacher} logout={logout} updateProfile={updateProfile} changePassword={changePassword} register={register} restoreDataFromUid={restoreDataFromUid} /> : <Navigate to="/login" replace />}
       />
     </Routes>
   );

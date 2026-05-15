@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createUserWithEmailAndPassword, EmailAuthProvider, onAuthStateChanged, reauthenticateWithCredential, signInWithEmailAndPassword, signOut, updatePassword } from "firebase/auth";
-import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, serverTimestamp, setDoc, writeBatch } from "firebase/firestore";
 import { auth, db, hasFirebaseConfig, secondaryAuth, secondaryDb } from "../firebase";
 
 function normalizePhone(phone) {
@@ -123,6 +123,41 @@ export function useTeacherAuth() {
         } catch (error) {
           throw new Error(messageForError(error));
         }
+      },
+      async restoreDataFromUid(oldUid) {
+        if (!auth?.currentUser || !db) throw new Error("Tizimga kirmagansiz.");
+        if (!oldUid?.trim()) throw new Error("Eski UID ni kiriting.");
+        const currentUid = auth.currentUser.uid;
+        if (oldUid.trim() === currentUid) throw new Error("Bu sizning joriy UID ingiz — farqli UID kiriting.");
+
+        const colNames = ["students", "groups", "records"];
+        const allWrites = [];
+        let totalDocs = 0;
+
+        for (const name of colNames) {
+          const snap = await getDocs(collection(db, `users/${oldUid.trim()}`, name));
+          for (const d of snap.docs) {
+            allWrites.push({ path: `users/${currentUid}/${name}/${d.id}`, data: d.data() });
+            totalDocs++;
+          }
+        }
+        const settingsSnap = await getDoc(doc(db, `users/${oldUid.trim()}/settings/reward-system`));
+        if (settingsSnap.exists()) {
+          allWrites.push({ path: `users/${currentUid}/settings/reward-system`, data: settingsSnap.data() });
+          totalDocs++;
+        }
+
+        if (totalDocs === 0) throw new Error("Bu UID ostida hech qanday ma'lumot topilmadi.");
+
+        for (let i = 0; i < allWrites.length; i += 490) {
+          const batch = writeBatch(db);
+          allWrites.slice(i, i + 490).forEach(({ path, data }) => {
+            batch.set(doc(db, path), data);
+          });
+          await batch.commit();
+        }
+
+        return totalDocs;
       },
       async changePassword({ oldPassword, newPassword }) {
         if (!hasFirebaseConfig || !auth) throw new Error("Demo rejimida parolni o'zgartirib bo'lmaydi.");

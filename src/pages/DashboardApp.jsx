@@ -16,7 +16,7 @@ const AnalyticsPage  = lazy(() => import("./AnalyticsPage").then(m => ({ default
 const PrivilegesPage = lazy(() => import("./PrivilegesPage").then(m => ({ default: m.PrivilegesPage })));
 const SettingsPage   = lazy(() => import("./SettingsPage").then(m => ({ default: m.SettingsPage })));
 
-export function DashboardApp({ teacher, logout, updateProfile, changePassword, register }) {
+export function DashboardApp({ teacher, logout, updateProfile, changePassword, register, restoreDataFromUid }) {
   const { t } = useT();
   const { students, groups, records, settings, loading, error, isDemo, addGroup, updateGroup, deleteGroup, addStudent, updateStudent, saveLessonRecords, deleteStudent, saveSettings } =
     useDashboardData();
@@ -154,6 +154,7 @@ export function DashboardApp({ teacher, logout, updateProfile, changePassword, r
                   changePassword={changePassword}
                   isDemo={isDemo}
                   register={register}
+                  restoreDataFromUid={restoreDataFromUid}
                 />
               )}
               {activePage === "privileges" && <PrivilegesPage />}
