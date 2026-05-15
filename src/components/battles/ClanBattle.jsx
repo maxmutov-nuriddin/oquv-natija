@@ -2,8 +2,9 @@ import { useState } from "react";
 import { Plus, Shield, X } from "lucide-react";
 import { getCurrentWeekRange } from "../../lib/scoring";
 import { initials } from "../../lib/utils";
+import { BATTLE_STAKE_OPTIONS } from "../../constants";
+import { ConfirmModal } from "../ui/ConfirmModal";
 
-const STAKE_OPTIONS = [30, 50, 100, 150, 200];
 
 const CLAN_INFO = `• Ikki klan haftalik o'rtacha ball bo'yicha raqobatlashadi
 • Yuqori o'rtachali klan g'olib — har a'zoga tikish qo'shiladi
@@ -14,8 +15,9 @@ export function ClanBattle({ group, ranked, updateGroup, updateStudent, date }) 
   const clans   = group?.clans || [];
   const battles = group?.clanBattles || [];
   const weekKey = getCurrentWeekRange(date).start.format("YYYY-MM-DD");
-  const [showCreate, setShowCreate] = useState(false);
-  const [showInfo,   setShowInfo]   = useState(false);
+  const [showCreate,  setShowCreate]  = useState(false);
+  const [showInfo,    setShowInfo]    = useState(false);
+  const [confirmData, setConfirmData] = useState(null);
   const [form, setForm] = useState({ clan1Id: "", clan2Id: "", stake: 50 });
 
   function clanWeeklyAvg(clan) {
@@ -37,30 +39,44 @@ export function ClanBattle({ group, ranked, updateGroup, updateStudent, date }) 
   }
 
   function endBattle(battle) {
-    if (!window.confirm("Jangni tugatib, coinlarni taqsimlash?")) return;
     const clan1 = clans.find(c => c.id === battle.clan1Id);
     const clan2 = clans.find(c => c.id === battle.clan2Id);
     if (!clan1 || !clan2) return;
     const s1 = clanWeeklyAvg(clan1);
     const s2 = clanWeeklyAvg(clan2);
-    const winnerClan = s1 > s2 ? clan1 : s2 > s1 ? clan2 : null;
-    const loserClan  = s1 > s2 ? clan2 : s2 > s1 ? clan1 : null;
-    if (winnerClan) {
-      winnerClan.memberIds?.forEach(id => {
-        const s = ranked.find(r => r.id === id);
-        updateStudent(id, { duelCoins: (s?.duelCoins || 0) + battle.stake });
-      });
-      loserClan?.memberIds?.forEach(id => {
-        const s = ranked.find(r => r.id === id);
-        updateStudent(id, { duelCoins: Math.max(0, (s?.duelCoins || 0) - battle.stake) });
-      });
-    }
-    updateGroup(group.id, { clanBattles: battles.filter(b => b.id !== battle.id) });
+    const c1Win = s1 > s2, c2Win = s2 > s1;
+    setConfirmData({
+      message: (c1Win || c2Win)
+        ? `G'olib klanga +${battle.stake} coin, yutqazgandan -${battle.stake} coin beriladimi?`
+        : "Jangni tugatmoqchimisiz? (Hozircha teng)",
+      onOk: () => {
+        const winnerClan = c1Win ? clan1 : c2Win ? clan2 : null;
+        const loserClan  = c1Win ? clan2 : c2Win ? clan1 : null;
+        if (winnerClan) {
+          winnerClan.memberIds?.forEach(id => {
+            const s = ranked.find(r => r.id === id);
+            updateStudent(id, { duelCoins: (s?.duelCoins || 0) + battle.stake });
+          });
+          loserClan?.memberIds?.forEach(id => {
+            const s = ranked.find(r => r.id === id);
+            updateStudent(id, { duelCoins: Math.max(0, (s?.duelCoins || 0) - battle.stake) });
+          });
+        }
+        updateGroup(group.id, { clanBattles: battles.filter(b => b.id !== battle.id) });
+        setConfirmData(null);
+      },
+    });
   }
 
   function cancelBattle(battle) {
-    if (!window.confirm("Jangni bekor qilish? Coinlar o'zgartirilmaydi.")) return;
-    updateGroup(group.id, { clanBattles: battles.filter(b => b.id !== battle.id) });
+    setConfirmData({
+      message: "Jangni bekor qilish? Coinlar o'zgartirilmaydi.",
+      danger: true,
+      onOk: () => {
+        updateGroup(group.id, { clanBattles: battles.filter(b => b.id !== battle.id) });
+        setConfirmData(null);
+      },
+    });
   }
 
   if (clans.length < 2) return null;
@@ -212,7 +228,7 @@ export function ClanBattle({ group, ranked, updateGroup, updateStudent, date }) 
               <div>
                 <span style={{ fontSize: "12px", fontWeight: 800, textTransform: "uppercase", color: "var(--muted)", display: "block", marginBottom: "8px" }}>Tikish (coin / a'zo)</span>
                 <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                  {STAKE_OPTIONS.map(s => (
+                  {BATTLE_STAKE_OPTIONS.map(s => (
                     <button key={s} type="button" onClick={() => setForm(f => ({ ...f, stake: s }))}
                       style={{
                         padding: "8px 16px", borderRadius: "999px", cursor: "pointer", fontSize: "14px", fontWeight: 800,
@@ -234,6 +250,15 @@ export function ClanBattle({ group, ranked, updateGroup, updateStudent, date }) 
             </div>
           </div>
         </div>
+      )}
+
+      {confirmData && (
+        <ConfirmModal
+          message={confirmData.message}
+          danger={confirmData.danger}
+          onConfirm={confirmData.onOk}
+          onCancel={() => setConfirmData(null)}
+        />
       )}
     </section>
   );

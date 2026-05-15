@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Plus, Settings, Trash2, Users, X } from "lucide-react";
 import { initials } from "../../lib/utils";
+import { ConfirmModal } from "../ui/ConfirmModal";
 
 const CLAN_COLORS = ["#7c3aed", "#dc2626", "#2563eb", "#16a34a", "#d97706", "#0891b2"];
 const CLAN_EMOJIS = ["🐉", "⚔️", "🔥", "👾", "💀", "🦅", "🌑", "🐺", "⚡", "🌊"];
@@ -18,9 +19,10 @@ export function ClanPanel({ groups, selectedGroup, students, ranked, updateGroup
     return { ...clan, members, avgScore, totalCoins };
   }).sort((a, b) => b.avgScore - a.avgScore);
 
-  const [showCreate, setShowCreate] = useState(false);
-  const [editClan, setEditClan] = useState(null);
-  const [form, setForm] = useState({ name: "", emoji: "🐉", color: "#7c3aed" });
+  const [showCreate,  setShowCreate]  = useState(false);
+  const [editClan,    setEditClan]    = useState(null);
+  const [confirmData, setConfirmData] = useState(null);
+  const [form,     setForm]     = useState({ name: "", emoji: "🐉", color: "#7c3aed" });
   const [editForm, setEditForm] = useState(null);
 
   function saveClan() {
@@ -32,8 +34,14 @@ export function ClanPanel({ groups, selectedGroup, students, ranked, updateGroup
   }
 
   function deleteClan(clanId) {
-    if (!window.confirm("Klanni o'chirishni tasdiqlaysizmi?") || !group) return;
-    updateGroup(group.id, { clans: clans.filter(c => c.id !== clanId) });
+    setConfirmData({
+      message: "Klanni o'chirishni tasdiqlaysizmi?",
+      danger: true,
+      onOk: () => {
+        if (group) updateGroup(group.id, { clans: clans.filter(c => c.id !== clanId) });
+        setConfirmData(null);
+      },
+    });
   }
 
   function openEdit(clan) {
@@ -274,6 +282,15 @@ export function ClanPanel({ groups, selectedGroup, students, ranked, updateGroup
             </div>
           </div>
         </div>
+      )}
+
+      {confirmData && (
+        <ConfirmModal
+          message={confirmData.message}
+          danger={confirmData.danger}
+          onConfirm={confirmData.onOk}
+          onCancel={() => setConfirmData(null)}
+        />
       )}
     </section>
   );

@@ -3,18 +3,19 @@ import { CalendarDays, Loader2, Menu, Send, Users } from "lucide-react";
 import { useState } from "react";
 import { navItems } from "../../constants";
 import { useT } from "../../i18n/index.jsx";
+import { ConfirmModal } from "../ui/ConfirmModal";
 
 export function Topbar({ activePage, date, setDate, selectedGroup, groups, setSelectedGroup, onSendResults, onMenuClick }) {
   const { t } = useT();
   const pageTitle = t[`nav_${activePage}`] || navItems.find((item) => item.id === activePage)?.label || "Dashboard";
-  const [sendStatus, setSendStatus] = useState("");
-  const [sending, setSending] = useState(false);
+  const [sendStatus,   setSendStatus]   = useState("");
+  const [sending,      setSending]      = useState(false);
+  const [confirmData,  setConfirmData]  = useState(null);
 
-  async function handleSend() {
-    if (!onSendResults || !selectedGroup) return;
-    if (!window.confirm(`"${selectedGroup}" guruhi natijalarini Telegramga jo'natilsinmi?`)) return;
+  async function doSend() {
     setSending(true);
     setSendStatus("");
+    setConfirmData(null);
     try {
       await onSendResults();
       setSendStatus(t.topbar_send_done);
@@ -26,7 +27,16 @@ export function Topbar({ activePage, date, setDate, selectedGroup, groups, setSe
     }
   }
 
+  function handleSend() {
+    if (!onSendResults || !selectedGroup) return;
+    setConfirmData({
+      message: `"${selectedGroup}" guruhi natijalarini Telegramga jo'natilsinmi?`,
+      onOk: doSend,
+    });
+  }
+
   return (
+    <>
     <header className="topbar">
       <div className="topbar-left">
         <button className="mobile-menu-btn" onClick={onMenuClick} aria-label="Open menu">
@@ -58,19 +68,30 @@ export function Topbar({ activePage, date, setDate, selectedGroup, groups, setSe
             <input type="date" value={date} onChange={(event) => setDate(event.target.value)} />
           </label>
 
-          <label className="control control-select">
-            <Users size={17} />
-            <select value={selectedGroup} onChange={(event) => setSelectedGroup(event.target.value)}>
-              <option value="">{groups.length ? t.topbar_select_group : t.topbar_no_group}</option>
-              {groups.map((group) => (
-                <option key={group.id} value={group.name}>
-                  {group.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          {activePage === "dashboard" && (
+            <label className="control control-select">
+              <Users size={17} />
+              <select value={selectedGroup} onChange={(event) => setSelectedGroup(event.target.value)}>
+                <option value="">{groups.length ? t.topbar_select_group : t.topbar_no_group}</option>
+                {groups.map((group) => (
+                  <option key={group.id} value={group.name}>
+                    {group.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
         </div>
       </div>
     </header>
+
+    {confirmData && (
+      <ConfirmModal
+        message={confirmData.message}
+        onConfirm={confirmData.onOk}
+        onCancel={() => setConfirmData(null)}
+      />
+    )}
+  </>
   );
 }

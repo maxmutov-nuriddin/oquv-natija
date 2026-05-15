@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot, query, serverTimestamp, setDoc, updateDoc, where, writeBatch } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot, orderBy, query, serverTimestamp, setDoc, updateDoc, where, writeBatch } from "firebase/firestore";
 import { db, ensureAdminSession, hasFirebaseConfig } from "../firebase";
 import { defaultSettings } from "../data/demoData";
 import { calculateCoins } from "../lib/scoring";
+import dayjs from "dayjs";
 
 const initialData = {
   students: [],
@@ -87,7 +88,11 @@ export function useDashboardData() {
             (error) => handleSnapshotError("groups", error)
           ),
           onSnapshot(
-            collection(db, base, "records"),
+            query(
+              collection(db, base, "records"),
+              where("date", ">=", dayjs().subtract(90, "day").format("YYYY-MM-DD")),
+              orderBy("date", "desc")
+            ),
             (snapshot) => {
               setData((current) => ({ ...current, records: mapDocs(snapshot) }));
               markReady("records");

@@ -2,18 +2,9 @@ import dayjs from "dayjs";
 import { useMemo, useState } from "react";
 import { Skull, X } from "lucide-react";
 import { getCurrentWeekRange } from "../../lib/scoring";
+import { BATTLE_BOSS_PRESETS, BATTLE_HP_OPTIONS, BATTLE_REWARD_OPTIONS } from "../../constants";
+import { ConfirmModal } from "../ui/ConfirmModal";
 
-const BOSS_PRESETS = [
-  { name: "Dark Dragon",  emoji: "🐉" },
-  { name: "Shadow Ghost", emoji: "👻" },
-  { name: "Iron Titan",   emoji: "🤖" },
-  { name: "Storm Eagle",  emoji: "🦅" },
-  { name: "Fire Lord",    emoji: "🔥" },
-  { name: "Void King",    emoji: "💀" },
-];
-
-const HP_OPTIONS     = [300, 500, 700, 1000, 1500, 2000];
-const REWARD_OPTIONS = [50, 100, 150, 200, 300];
 
 const BOSS_INFO = `• "🎲 Random Boss" bosilganda tasodifiy boss, HP va mukofot tanlanadi
 • Har dars kuni guruh o'rtacha bali = bossga zarar
@@ -48,7 +39,8 @@ export function BossBattle({ group, groupStudents, records, settings, date, upda
   const rawBoss = group?.activeBoss;
   const weekKey = getCurrentWeekRange(date).start.format("YYYY-MM-DD");
   const boss    = rawBoss?.weekKey === weekKey ? rawBoss : null;
-  const [showInfo, setShowInfo] = useState(false);
+  const [showInfo,    setShowInfo]    = useState(false);
+  const [confirmData, setConfirmData] = useState(null);
 
   const damage    = useMemo(() => boss ? calcDamage(boss, groupStudents, records, settings) : 0, [boss, groupStudents, records, settings]);
   const currentHp = boss ? Math.max(0, boss.maxHp - damage) : 0;
@@ -58,21 +50,28 @@ export function BossBattle({ group, groupStudents, records, settings, date, upda
 
   function createRandomBoss() {
     if (!group) return;
-    const preset = BOSS_PRESETS[Math.floor(Math.random() * BOSS_PRESETS.length)];
-    const maxHp  = HP_OPTIONS[Math.floor(Math.random() * HP_OPTIONS.length)];
-    const reward = REWARD_OPTIONS[Math.floor(Math.random() * REWARD_OPTIONS.length)];
-    updateGroup(group.id, { activeBoss: { name: preset.name, emoji: preset.emoji, maxHp, reward, weekKey, createdAt: date } });
+    const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+    const preset = pick(BATTLE_BOSS_PRESETS);
+    updateGroup(group.id, { activeBoss: { name: preset.name, emoji: preset.emoji, maxHp: pick(BATTLE_HP_OPTIONS), reward: pick(BATTLE_REWARD_OPTIONS), weekKey, createdAt: date } });
   }
 
   function endBoss() {
-    if (!window.confirm("Bosni tugatib, coinlarni taqsimlash?")) return;
-    if (defeated) groupStudents.forEach(s => updateStudent(s.id, { duelCoins: (s.duelCoins || 0) + boss.reward }));
-    updateGroup(group.id, { activeBoss: null });
+    setConfirmData({
+      message: defeated ? `Tabriklaymiz! Har o'quvchiga +${boss.reward} coin beriladimi?` : "Bosni tugatmoqchimisiz? (Boss mag'lub bo'lmagan)",
+      onOk: () => {
+        if (defeated) groupStudents.forEach(s => updateStudent(s.id, { duelCoins: (s.duelCoins || 0) + boss.reward }));
+        updateGroup(group.id, { activeBoss: null });
+        setConfirmData(null);
+      },
+    });
   }
 
   function cancelBoss() {
-    if (!window.confirm("Bosni bekor qilish? Coinlar berilmaydi.")) return;
-    updateGroup(group.id, { activeBoss: null });
+    setConfirmData({
+      message: "Bosni bekor qilish? Coinlar berilmaydi.",
+      danger: true,
+      onOk: () => { updateGroup(group.id, { activeBoss: null }); setConfirmData(null); },
+    });
   }
 
   return (
@@ -152,6 +151,15 @@ export function BossBattle({ group, groupStudents, records, settings, date, upda
             </div>
           </div>
         </div>
+      )}
+
+      {confirmData && (
+        <ConfirmModal
+          message={confirmData.message}
+          danger={confirmData.danger}
+          onConfirm={confirmData.onOk}
+          onCancel={() => setConfirmData(null)}
+        />
       )}
     </section>
   );

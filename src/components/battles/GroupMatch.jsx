@@ -2,8 +2,9 @@ import dayjs from "dayjs";
 import { useMemo, useState } from "react";
 import { Swords, X } from "lucide-react";
 import { getCurrentWeekRange } from "../../lib/scoring";
+import { BATTLE_REWARD_OPTIONS } from "../../constants";
+import { ConfirmModal } from "../ui/ConfirmModal";
 
-const REWARD_OPTIONS = [50, 100, 150, 200, 300];
 
 const MATCH_INFO = `• Ikki guruh haftalik o'rtacha ball bo'yicha raqobatlashadi
 • Hafta oxirida yuqori ball olgan guruh g'olib
@@ -34,9 +35,10 @@ function groupWeeklyAvg(groupName, students, records, settings, weekKey) {
 export function GroupMatch({ group, groups, students, records, settings, date, updateGroup, updateStudent }) {
   const match   = group?.activeMatch;
   const weekKey = getCurrentWeekRange(date).start.format("YYYY-MM-DD");
-  const [showCreate, setShowCreate] = useState(false);
-  const [showInfo,   setShowInfo]   = useState(false);
-  const [mixTypes,   setMixTypes]   = useState(false);
+  const [showCreate,  setShowCreate]  = useState(false);
+  const [showInfo,    setShowInfo]    = useState(false);
+  const [mixTypes,    setMixTypes]    = useState(false);
+  const [confirmData, setConfirmData] = useState(null);
   const [form, setForm] = useState({ opponentName: "", reward: 100 });
 
   const myScore  = useMemo(() => match ? groupWeeklyAvg(group.name, students, records, settings, match.weekKey) : 0, [match, group, students, records, settings]);
@@ -69,23 +71,34 @@ export function GroupMatch({ group, groups, students, records, settings, date, u
   }
 
   function endMatch() {
-    if (!window.confirm("O'yinni tugatib, coinlarni taqsimlash?")) return;
-    const oppGroup = groups.find(g => g.name === match.opponentGroupName);
-    if (myWin || oppWin) {
-      const winnerName = myWin ? group.name : match.opponentGroupName;
-      students.filter(s => s.group === winnerName).forEach(s =>
-        updateStudent(s.id, { duelCoins: (s.duelCoins || 0) + match.reward })
-      );
-    }
-    updateGroup(group.id, { activeMatch: null });
-    if (oppGroup) updateGroup(oppGroup.id, { activeMatch: null });
+    setConfirmData({
+      message: (myWin || oppWin) ? `G'olib guruhga +${match.reward} coin beriladimi?` : "Matchni tugatmoqchimisiz? (Hozircha teng)",
+      onOk: () => {
+        const oppGroup = groups.find(g => g.name === match.opponentGroupName);
+        if (myWin || oppWin) {
+          const winnerName = myWin ? group.name : match.opponentGroupName;
+          students.filter(s => s.group === winnerName).forEach(s =>
+            updateStudent(s.id, { duelCoins: (s.duelCoins || 0) + match.reward })
+          );
+        }
+        updateGroup(group.id, { activeMatch: null });
+        if (oppGroup) updateGroup(oppGroup.id, { activeMatch: null });
+        setConfirmData(null);
+      },
+    });
   }
 
   function cancelMatch() {
-    if (!window.confirm("Matchni bekor qilish? Coinlar berilmaydi.")) return;
-    const oppGroup = groups.find(g => g.name === match.opponentGroupName);
-    updateGroup(group.id, { activeMatch: null });
-    if (oppGroup) updateGroup(oppGroup.id, { activeMatch: null });
+    setConfirmData({
+      message: "Matchni bekor qilish? Coinlar berilmaydi.",
+      danger: true,
+      onOk: () => {
+        const oppGroup = groups.find(g => g.name === match.opponentGroupName);
+        updateGroup(group.id, { activeMatch: null });
+        if (oppGroup) updateGroup(oppGroup.id, { activeMatch: null });
+        setConfirmData(null);
+      },
+    });
   }
 
   return (
@@ -228,7 +241,7 @@ export function GroupMatch({ group, groups, students, records, settings, date, u
               <div>
                 <span style={{ fontSize: "12px", fontWeight: 800, textTransform: "uppercase", color: "var(--muted)", display: "block", marginBottom: "8px" }}>Mukofot (coin / o'quvchi)</span>
                 <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                  {REWARD_OPTIONS.map(r => (
+                  {BATTLE_REWARD_OPTIONS.map(r => (
                     <button key={r} type="button" onClick={() => setForm(f => ({ ...f, reward: r }))}
                       style={{
                         padding: "8px 16px", borderRadius: "999px", cursor: "pointer", fontSize: "14px", fontWeight: 800,
@@ -249,6 +262,15 @@ export function GroupMatch({ group, groups, students, records, settings, date, u
             </div>
           </div>
         </div>
+      )}
+
+      {confirmData && (
+        <ConfirmModal
+          message={confirmData.message}
+          danger={confirmData.danger}
+          onConfirm={confirmData.onOk}
+          onCancel={() => setConfirmData(null)}
+        />
       )}
     </section>
   );

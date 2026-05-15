@@ -7,6 +7,7 @@ import { getPeriodLeader, getPreviousMonthRange, getPreviousWeekRange, groupAvgS
 import { sendIntroMessage } from "../lib/telegram";
 import { useT } from "../i18n/index.jsx";
 import { cx, getLevel, initials, medalLabel } from "../lib/utils";
+import { ConfirmModal } from "../components/ui/ConfirmModal";
 import { BlockFriendModal } from "../components/forms/BlockFriendModal";
 import { GiftCoinModal } from "../components/forms/GiftCoinModal";
 import { GroupForm } from "../components/forms/GroupForm";
@@ -51,6 +52,7 @@ export function GroupsPage({ groups, students, records, settings, date, addGroup
   }
   const [modal, setModal] = useState("");
   const [editingStudent, setEditingStudent] = useState(null);
+  const [groupDeleteConfirm, setGroupDeleteConfirm] = useState(null);
   const [expandedDate, setExpandedDate] = useState(null);
   const [activeMystery, setActiveMystery] = useState(null);
   const [activeGiftCoin, setActiveGiftCoin] = useState(null);
@@ -172,7 +174,7 @@ export function GroupsPage({ groups, students, records, settings, date, addGroup
                     <button className="secondary-button" style={{ padding: "6px 12px", fontSize: "13px" }} onClick={() => setModal("edit-group")}>
                       {t.groups_edit}
                     </button>
-                    <button className="danger-button" style={{ padding: "6px 12px", fontSize: "13px" }} onClick={() => { if (window.confirm(t.groups_delete_confirm())) deleteGroup(activeGroupObject.id); }}>
+                    <button className="danger-button" style={{ padding: "6px 12px", fontSize: "13px" }} onClick={() => setGroupDeleteConfirm({ message: t.groups_delete_confirm(), onOk: () => { deleteGroup(activeGroupObject.id); setGroupDeleteConfirm(null); } })}>
                       {t.groups_delete}
                     </button>
                   </div>
@@ -586,6 +588,14 @@ export function GroupsPage({ groups, students, records, settings, date, addGroup
             onClose={() => { setModal(""); setActiveBlockFriend(null); }}
           />
         </Modal>
+      )}
+      {groupDeleteConfirm && (
+        <ConfirmModal
+          message={groupDeleteConfirm.message}
+          danger
+          onConfirm={groupDeleteConfirm.onOk}
+          onCancel={() => setGroupDeleteConfirm(null)}
+        />
       )}
     </div>
   );

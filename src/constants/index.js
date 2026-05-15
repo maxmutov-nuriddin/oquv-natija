@@ -118,6 +118,18 @@ export const mysteryBoxData = {
   shop_junior: { pool: ["homework_75", "choose_question", "extend_time", "remove_bad_mark", "skip_task", "no_question", "gift_coin"] }
 };
 
+export const BATTLE_BOSS_PRESETS = [
+  { name: "Dark Dragon",  emoji: "🐉" },
+  { name: "Shadow Ghost", emoji: "👻" },
+  { name: "Iron Titan",   emoji: "🤖" },
+  { name: "Storm Eagle",  emoji: "🦅" },
+  { name: "Fire Lord",    emoji: "🔥" },
+  { name: "Void King",    emoji: "💀" },
+];
+export const BATTLE_HP_OPTIONS     = [300, 500, 700, 1000, 1500, 2000];
+export const BATTLE_REWARD_OPTIONS = [50, 100, 150, 200, 300];
+export const BATTLE_STAKE_OPTIONS  = [30, 50, 100, 150, 200];
+
 export const lessonStartOptions = Array.from({ length: 20 }, (_, index) => {
   const totalMinutes = 9 * 60 + index * 30;
   const hour = String(Math.floor(totalMinutes / 60)).padStart(2, "0");
