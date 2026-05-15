@@ -57,7 +57,7 @@ export function LessonEntryPanel({ group, students, records, date, currentTime, 
       if (key === "attendanceScore" || key === "homeworkScore") {
         const att = key === "attendanceScore" ? parsed : (entry.attendanceScore || 0);
         const hw  = key === "homeworkScore"   ? parsed : (entry.homeworkScore  || 0);
-        updated.activityScore = (att > 0 || hw > 0) ? Math.round((att + hw) / 2) : 0;
+        updated.activityScore = (att > 0 || hw > 0) ? Math.round(att * 0.7 + hw * 0.3) : 0;
       }
       return { ...current, [studentId]: updated };
     });

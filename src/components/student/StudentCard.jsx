@@ -22,7 +22,7 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
   async function handleQuickUpdate(key, value) {
     const newHw  = key === "homeworkScore"   ? value : hw;
     const newAtt = key === "attendanceScore" ? value : att;
-    const autoAct = (newHw > 0 || newAtt > 0) ? Math.round((newHw + newAtt) / 2) : 0;
+    const autoAct = (newHw > 0 || newAtt > 0) ? Math.round(newAtt * 0.7 + newHw * 0.3) : 0;
     const updatedStudent = {
       ...student,
       homeworkScore: newHw,
