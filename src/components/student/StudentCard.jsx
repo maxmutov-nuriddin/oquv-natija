@@ -7,7 +7,7 @@ import { getScoreSummaryForRange, getCurrentMonthRange, isDeclineTrend } from ".
 import { cx, getLevel, initials, numberInputValue, parsePercentInput } from "../../lib/utils";
 import { ProgressLine } from "../ui/ProgressLine";
 
-export function StudentCard({ student, onDelete, onEdit, onProfile, index, date, records, settings, saveLessonRecords, isLessonDay = true, isRecordSaved = false, onWarningReset, onUpdateStudent, weeklyWinner, monthlyWinner, hideGifts = false, isLowPerformer = false }) {
+export function StudentCard({ student, onDelete, onEdit, onProfile, index, date, records, settings, saveLessonRecords, isLessonDay = true, isRecordSaved = false, onWarningReset, onUpdateStudent, weeklyWinner, monthlyWinner, hideGifts = false, isLowPerformer = false, autoTitle = null }) {
   const { t } = useT();
   const todayRecord = records?.find((r) => r.studentId === student.id && r.date === date);
   const hw = todayRecord ? todayRecord.homework : 0;
@@ -120,6 +120,16 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
               <span style={{ fontSize: "11px", fontWeight: 600, padding: "2px 6px", borderRadius: "999px", background: level.bg, color: level.color, border: `1px solid ${level.color}30`, flexShrink: 0 }}>
                 {level.emoji} {t[`level_${level.key}`] || level.name}
               </span>
+{autoTitle && (
+                <span style={{
+                  fontSize: "10px", fontWeight: 900, padding: "2px 8px", borderRadius: "999px",
+                  background: autoTitle.bg, color: autoTitle.color,
+                  border: `1px solid ${autoTitle.border}`,
+                  letterSpacing: "0.5px", flexShrink: 0,
+                }}>
+                  {autoTitle.emoji} {autoTitle.label}
+                </span>
+              )}
 {declining && <span className="vip-text-badge" style={{ background: "#fef9c3", color: "#92400e", border: "1px solid #fde68a" }}>{t.card_decline}</span>}
               {gifts.filter(g => g.type === "vip").map((g, i) => (
                 <span key={i} className="vip-text-badge">{g.name}</span>

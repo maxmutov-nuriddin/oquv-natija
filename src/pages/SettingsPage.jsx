@@ -287,6 +287,125 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
         </button>
       </section>
 
+      {/* Titles */}
+      <section className="panel">
+        <PanelHeader icon={Settings} title="🏷️ Avto-unvonlar (Senior guruhlar)" subtitle="Har bir unvonni yoqish/o'chirish va shartini sozlash" />
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          {[
+            {
+              key: "lightning", emoji: "⚡", label: "LIGHTNING",
+              color: "#d97706", bg: "#fef9c3", border: "#fde68a",
+              enabledKey: "titleLightningEnabled",
+              desc: "Bu haftada #1 o'rinda",
+              fields: [],
+            },
+            {
+              key: "on_fire", emoji: "🔥", label: "ON FIRE",
+              color: "#dc2626", bg: "#fee2e2", border: "#fca5a5",
+              enabledKey: "titleOnFireEnabled",
+              desc: "3 dars ketma-ket natija o'sgan",
+              fields: [],
+            },
+            {
+              key: "eagle", emoji: "🦅", label: "EAGLE",
+              color: "#7c3aed", bg: "#ede9fe", border: "#c4b5fd",
+              enabledKey: "titleEagleEnabled",
+              desc: "Oxirgi darsda",
+              fields: [{ key: "titleEagleThreshold", label: "%+", min: 50, max: 100, step: 5, suffix: "% dan yuqori" }],
+            },
+            {
+              key: "machine", emoji: "💎", label: "MACHINE",
+              color: "#0891b2", bg: "#e0f2fe", border: "#7dd3fc",
+              enabledKey: "titleMachineEnabled",
+              desc: "Oylik o'rtacha",
+              fields: [
+                { key: "titleMachineThreshold",  label: "%+",        min: 50, max: 100, step: 5,  suffix: "%+ ball" },
+                { key: "titleMachineMinLessons", label: "Min dars:", min: 1,  max: 20,  step: 1,  suffix: "ta darsdan keyin" },
+              ],
+            },
+            {
+              key: "ghost", emoji: "💀", label: "GHOST",
+              color: "#64748b", bg: "#f1f5f9", border: "#cbd5e1",
+              enabledKey: "titleGhostEnabled",
+              desc: "Uy vazifa qilmagan",
+              fields: [{ key: "titleGhostThreshold", label: "Marta:", min: 1, max: 20, step: 1, suffix: "ta marta va undan ko'p" }],
+            },
+          ].map(title => {
+            const isOn = draft[title.enabledKey] !== false;
+            return (
+              <div key={title.key} style={{
+                border: `1.5px solid ${isOn ? title.border : "#e2e8f0"}`,
+                borderLeft: `4px solid ${isOn ? title.color : "#e2e8f0"}`,
+                borderRadius: "12px", padding: "12px 16px",
+                background: isOn ? title.bg + "55" : "#f8fafc",
+                transition: "all 0.2s",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: 0 }}>
+                    <span style={{ fontSize: "22px", flexShrink: 0 }}>{title.emoji}</span>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                        <span style={{
+                          fontSize: "11px", fontWeight: 900, padding: "2px 8px", borderRadius: "999px",
+                          background: isOn ? title.bg : "#e2e8f0",
+                          color: isOn ? title.color : "#94a3b8",
+                          border: `1px solid ${isOn ? title.border : "#e2e8f0"}`,
+                          letterSpacing: "0.5px",
+                        }}>
+                          {title.emoji} {title.label}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: "12px", color: "#64748b", fontWeight: 600, marginTop: "3px" }}>
+                        {title.desc}
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setDraft(d => ({ ...d, [title.enabledKey]: !isOn }))}
+                    style={{
+                      flexShrink: 0, width: "44px", height: "24px", borderRadius: "999px",
+                      border: "none", cursor: "pointer", position: "relative",
+                      background: isOn ? title.color : "#cbd5e1",
+                      transition: "background 0.2s",
+                    }}
+                  >
+                    <span style={{
+                      position: "absolute", top: "3px",
+                      left: isOn ? "22px" : "3px",
+                      width: "18px", height: "18px", borderRadius: "50%",
+                      background: "white", transition: "left 0.2s",
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                    }} />
+                  </button>
+                </div>
+                {isOn && title.fields.length > 0 && (
+                  <div style={{ display: "flex", gap: "10px", marginTop: "10px", flexWrap: "wrap" }}>
+                    {title.fields.map(field => (
+                      <div key={field.key} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span style={{ fontSize: "12px", fontWeight: 700, color: "#64748b", whiteSpace: "nowrap" }}>{field.label}</span>
+                        <input
+                          type="number"
+                          min={field.min} max={field.max} step={field.step}
+                          value={draft[field.key] ?? (field.key === "titleEagleThreshold" ? 95 : field.key === "titleMachineThreshold" ? 85 : field.key === "titleMachineMinLessons" ? 3 : 5)}
+                          onChange={e => setDraft(d => ({ ...d, [field.key]: Number(e.target.value) }))}
+                          style={{ width: "64px", padding: "5px 8px", borderRadius: "7px", border: `1.5px solid ${title.border}`, fontSize: "13px", fontWeight: 700, textAlign: "center" }}
+                        />
+                        <span style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 600 }}>{field.suffix}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <button className="primary-button" onClick={handleSaveSettings} disabled={busy} style={{ width: "100%", justifyContent: "center", marginTop: "14px" }}>
+          {busy ? <Loader2 size={16} className="spinner" /> : <Settings size={16} />}
+          Unvon sozlamalarini saqlash
+        </button>
+      </section>
+
       {/* Telegram */}
       <section className="panel">
         <PanelHeader icon={Send} title={t.tg_title} subtitle={t.tg_sub} />

@@ -4,5 +4,14 @@ export const defaultSettings = {
   activityCoin: 8,
   homeworkWeight: 0.4,
   attendanceWeight: 0.3,
-  activityWeight: 0.3
+  activityWeight: 0.3,
+  titleLightningEnabled: true,
+  titleOnFireEnabled: true,
+  titleEagleEnabled: true,
+  titleEagleThreshold: 95,
+  titleMachineEnabled: true,
+  titleMachineThreshold: 85,
+  titleMachineMinLessons: 3,
+  titleGhostEnabled: true,
+  titleGhostThreshold: 5,
 };

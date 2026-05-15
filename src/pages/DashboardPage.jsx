@@ -4,6 +4,7 @@ import { Award, BarChart3, Coins, Medal, Monitor, Pencil, Star, Trophy, Users } 
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { availableGifts, vipData, allPrivileges } from "../constants";
 import { calculateCoins, getPeriodLeader, getPreviousMonthRange, getPreviousWeekRange, isDeclineTrend, rankStudents } from "../lib/scoring";
+import { getAutoTitle } from "../lib/titles";
 import { initials } from "../lib/utils";
 import { useT } from "../i18n/index.jsx";
 import { BonusDrumModal } from "../components/games/BonusDrumModal";
@@ -76,6 +77,16 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
   const todayGroupRecords = useMemo(() => records.filter(r => r.date === date && groupStudents.some(s => s.id === r.studentId)), [records, date, groupStudents]);
   const alreadySpun = todayGroupRecords.some(r => r.dailyBonus !== undefined && r.dailyBonus !== null);
   const isSenior = selectedGroup.toLowerCase().includes("senior");
+
+  const autoTitles = useMemo(() => {
+    if (!isSenior) return {};
+    const result = {};
+    for (const s of ranked) {
+      const title = getAutoTitle(s, records, settings, s, date);
+      if (title) result[s.id] = title;
+    }
+    return result;
+  }, [isSenior, ranked, records, settings, date]);
   const { t } = useT();
   const [showProjector, setShowProjector] = useState(false);
   const [showBonusDrum, setShowBonusDrum] = useState(false);
@@ -369,6 +380,7 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
                 monthlyWinner={monthlyWinner}
                 hideGifts={true}
                 isLowPerformer={index >= Math.ceil(ranked.length / 2)}
+                autoTitle={autoTitles[student.id] || null}
               />
             ))}
           </div>
