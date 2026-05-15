@@ -195,7 +195,7 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
               title="Telefon raqamni o'zgartirib bo'lmaydi"
             >
               <b>+998</b>
-              <div style={{ flex: 1, fontSize: "14px", color: "#64748b", userSelect: "none" }}>
+              <div style={{ flex: 1, padding: "16px 20px", fontWeight: 900, fontSize: "18px", color: "#374151", userSelect: "none" }}>
                 {profilePhone}
               </div>
             </div>
