@@ -127,7 +127,14 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
     setFetchingChats(true);
     setTgChats(null);
     try {
-      const res = await fetch(`https://api.telegram.org/bot${token}/getUpdates?limit=100`);
+      const res = await fetch(`https://api.telegram.org/bot${token}/getUpdates`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          limit: 100,
+          allowed_updates: ["message", "channel_post", "my_chat_member"],
+        }),
+      });
       const data = await res.json();
       if (!data.ok) throw new Error(data.description || t.tg_fetch_error);
       const seen = new Map();
@@ -578,7 +585,12 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
           <div style={{ marginTop: "16px" }}>
             <p style={{ fontSize: "12px", color: "#64748b", marginBottom: "8px" }}>{t.tg_fetch_hint}</p>
             {tgChats.length === 0 ? (
-              <p style={{ fontSize: "13px", color: "#94a3b8", fontStyle: "italic" }}>{t.tg_fetch_empty}</p>
+              <div>
+                <p style={{ fontSize: "13px", color: "#94a3b8", fontStyle: "italic" }}>{t.tg_fetch_empty}</p>
+                <p style={{ fontSize: "12px", color: "#f59e0b", fontWeight: 600, marginTop: "8px", background: "#fef9c3", border: "1px solid #fde68a", borderRadius: "8px", padding: "10px 12px" }}>
+                  💡 Guruh ko'rinmasa: botni guruhga qo'shgandan so'ng o'sha guruhda biror xabar yozing yoki <code>/start</code> yuboring, keyin qayta tekshiring.
+                </p>
+              </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 <p style={{ fontSize: "12px", fontWeight: 700, color: "#0f172a", marginBottom: "2px" }}>{t.tg_chats_title}:</p>
