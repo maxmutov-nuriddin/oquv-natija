@@ -8,6 +8,7 @@ export const uz = {
   nav_groups:     "Guruhlar",
   nav_analytics:  "Tahlil",
   nav_privileges: "Privelegiya",
+  nav_game:       "Quiz O'yin",
   nav_settings:   "Sozlamalar",
 
   // Sidebar

@@ -8,6 +8,7 @@ export const ru = {
   nav_groups:     "Группы",
   nav_analytics:  "Аналитика",
   nav_privileges: "Привилегии",
+  nav_game:       "Квиз Игра",
   nav_settings:   "Настройки",
 
   // Sidebar

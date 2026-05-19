@@ -17,6 +17,7 @@ const GroupsPage     = lazy(() => import("./GroupsPage").then(m => ({ default: m
 const AnalyticsPage  = lazy(() => import("./AnalyticsPage").then(m => ({ default: m.AnalyticsPage })));
 const PrivilegesPage = lazy(() => import("./PrivilegesPage").then(m => ({ default: m.PrivilegesPage })));
 const SettingsPage   = lazy(() => import("./SettingsPage").then(m => ({ default: m.SettingsPage })));
+const QuizGamePage   = lazy(() => import("./QuizGamePage").then(m => ({ default: m.QuizGamePage })));
 
 export function DashboardApp({ teacher, logout, updateProfile, changePassword, register, restoreDataFromUid }) {
   const { t } = useT();
@@ -234,6 +235,7 @@ export function DashboardApp({ teacher, logout, updateProfile, changePassword, r
                 />
               )}
               {activePage === "privileges" && <PrivilegesPage />}
+              {activePage === "game" && <QuizGamePage />}
             </Suspense>
           )}
         </main>
