@@ -8,34 +8,34 @@ const TOPICS_DATA = [
     color: "#58cc02", colorDark: "#46a302",
     questions: {
       100: [
-        { q: "HTML ning to'liq nomi nima?", a: "HyperText Markup Language" },
-        { q: "Sarlavha uchun qaysi teglar ishlatiladi?", a: "<h1> dan <h6> gacha — 6 ta sarlavha tegi bor" },
-        { q: "HTML da ro'yxat elementi uchun qaysi teg?", a: "<li> — list item. <ul> tartibsiz, <ol> tartibli ro'yxat" },
-        { q: "HTML da izoh (comment) qanday yoziladi?", a: "<!-- bu izoh -->" },
+        { q: "HTML da sarlavha uchun qaysi teg ishlatiladi?", a: "<h1> dan <h6> gacha — eng katta <h1>, eng kichik <h6>" },
+        { q: "HTML da paragraf (abzats) uchun qaysi teg?", a: "<p> — paragraph tegi. Har bir matn bo'lagi uchun ishlatiladi" },
+        { q: "HTML da rasm qo'shish uchun qaysi teg?", a: "<img src='rasm.jpg' alt='tavsif'> — src manba, alt tavsif matni" },
+        { q: "HTML da havola (link) yaratish uchun qaysi teg?", a: "<a href='https://...'>Matn</a> — href da manzil ko'rsatiladi" },
       ],
       200: [
-        { q: "<strong> va <em> teglari qanday farqlanadi?", a: "<strong> qalin (bold), <em> kursiv (italic) matn ko'rsatadi" },
-        { q: "<a> tegining href va target='_blank' nima?", a: "href — havola manzili. target='_blank' — yangi tabda ochadi" },
-        { q: "id va class atributlarining asosiy farqi?", a: "id — yagona (bitta element), class — ko'p elementga berilishi mumkin" },
-        { q: "<div> va <span> qanday farqlanadi?", a: "<div> — block (qatorni egallaydi), <span> — inline (ichida joylashadi)" },
+        { q: "HTML da qalin (bold) matn uchun qaysi teg?", a: "<strong> yoki <b> — ikkalasi ham matnni qalin qiladi" },
+        { q: "HTML da tartibsiz ro'yxat qanday yaratiladi?", a: "<ul> ichida <li> teglar: <ul><li>1</li><li>2</li></ul>" },
+        { q: "<div> va <span> ning farqi nima?", a: "<div> — block element (qatorni egallaydi). <span> — inline element (ichida joylashadi)" },
+        { q: "HTML da tugma (button) yaratish uchun qaysi teg?", a: "<button>Bosing</button> — yoki <input type='button' value='Bosing'>" },
       ],
       300: [
-        { q: "HTML da rasm qo'shish uchun teg va atributlar?", a: "<img src='...' alt='...'> — src manba yo'li, alt tavsif matni" },
-        { q: "HTML forma elementlari qaysilar? (4 ta)", a: "<form>, <input>, <button>, <select>, <textarea>, <label>" },
-        { q: "Semantik HTML teglari nima? 4 misol bering.", a: "Sahifa ma'nosi uchun: <header>, <main>, <footer>, <article>, <section>, <nav>" },
-        { q: "<table> elementining asosiy teglari?", a: "<table>, <tr> — satr, <th> — sarlavha katak, <td> — ma'lumot katak" },
+        { q: "HTML da forma (form) yaratish uchun qaysi teglar?", a: "<form> ichida <input>, <button>, <label> teglar ishlatiladi" },
+        { q: "id va class atributlari qanday farqlanadi?", a: "id — sahifada yagona (bitta element). class — ko'p elementga bir xil nom berish mumkin" },
+        { q: "HTML da matn kiritish inputi qanday yaratiladi?", a: "<input type='text'> — matn uchun. <input type='password'> — parol uchun (yashirilgan)" },
+        { q: "<br> va <hr> teglari nima qiladi?", a: "<br> — yangi qatorga o'tkazadi. <hr> — gorizontal chiziq chizadi" },
       ],
       400: [
-        { q: "HTML formasida POST va GET metodlari qanday farqlanadi?", a: "GET — URL da ko'rinadi, qidiruv uchun. POST — body da yashirin, login/forma uchun" },
-        { q: "Viewport meta tegi nima uchun kerak?", a: "Mobil qurilmalarda to'g'ri ko'rinish uchun: <meta name='viewport' content='width=device-width'>" },
-        { q: "input type'larini nomlang — kamida 5 ta", a: "text, password, email, number, checkbox, radio, file, submit, date, tel, range" },
-        { q: "Accessibility uchun qanday atributlar ishlatiladi?", a: "alt (rasm), aria-label, role, tabindex, for+id (label bog'lash)" },
+        { q: "Semantik HTML teglari nima? 4 ta misol bering.", a: "<header>, <footer>, <main>, <nav>, <section>, <article> — sahifa tuzilishini ma'noli ifodalaydi" },
+        { q: "alt atributi nima uchun kerak?", a: "Rasm yuklanmasa ko'rinadigan matn. Ko'zi ojizlar uchun screen reader o'qiydi" },
+        { q: "HTML da <meta charset> nima uchun?", a: "<meta charset='UTF-8'> — O'zbek va boshqa harflar to'g'ri ko'rinishi uchun kodlashni belgilaydi" },
+        { q: "<input> ning eng ko'p ishlatiladigan type'lari?", a: "text, password, email, number, checkbox, radio, submit, file, date" },
       ],
       500: [
-        { q: "HTML5 da yangi semantic teglar va ularning farqi?", a: "<article> mustaqil kontent, <section> bo'lim, <aside> qo'shimcha, <figure> media — hep semantic ma'no beradi" },
-        { q: "data-* atributlari nima va qachon ishlatiladi?", a: "Custom ma'lumot saqlash: data-id='5'. JS da element.dataset.id bilan o'qiladi" },
-        { q: "localStorage, sessionStorage va cookie farqlari?", a: "localStorage — doimiy saqlanadi. sessionStorage — tab yopilganda o'chadi. Cookie — server bilan almashiladi, muddati bor" },
-        { q: "iframe nima va qanday xavfligi bor?", a: "Boshqa sahifani ichiga yuklaydi. XSS va clickjacking xavfi bor, sandbox atributi himoyalaydi" },
+        { q: "Viewport meta tegi nima va nima uchun kerak?", a: "<meta name='viewport' content='width=device-width, initial-scale=1'> — Mobilga moslashish uchun" },
+        { q: "<select> va <option> teglar nima qiladi?", a: "<select> — dropdown ro'yxat yaratadi. <option> — har bir tanlov elementi" },
+        { q: "HTML da required, placeholder, maxlength nima qiladi?", a: "required — majburiy maydon. placeholder — bo'sh bo'lganda ko'rinadigan matn. maxlength — maksimal belgilar soni" },
+        { q: "target='_blank' nima qiladi?", a: "Havolani yangi tabda ochadi. Xavfsizlik uchun rel='noopener noreferrer' ham qo'shiladi" },
       ],
     },
   },
@@ -44,34 +44,34 @@ const TOPICS_DATA = [
     color: "#1cb0f6", colorDark: "#1899d6",
     questions: {
       100: [
-        { q: "CSS da rang belgilashning 3 usuli?", a: "Nom (red), HEX (#ff0000), RGB (rgb(255,0,0))" },
-        { q: "Elementni ko'rinmas qilish uchun qaysi property?", a: "display: none — joyni ham olmaydi. visibility: hidden — joy qoladi" },
-        { q: "Font o'lchamini belgilovchi CSS property?", a: "font-size: 16px yoki font-size: 1rem" },
-        { q: "CSS selektor turlarini ayting — 3 ta", a: "Element (div), class (.box), id (#header), attribute ([type='text']), pseudo (:hover)" },
+        { q: "CSS da matn rangini beruvchi property?", a: "color: red; — matn rangi. background-color: blue; — fon rangi" },
+        { q: "CSS da shrift (font) o'lchamini belgilovchi property?", a: "font-size: 16px; — pikselda yoki font-size: 1rem;" },
+        { q: "CSS da elementga chegara (border) qanday qo'shiladi?", a: "border: 1px solid black; — qalinlik, tur, rang tartibida" },
+        { q: "CSS da elementni ko'rinmas qilish uchun qaysi property?", a: "display: none; — elementni to'liq yashiradi va joy olmaydi" },
       ],
       200: [
-        { q: "display: flex va display: block farqi?", a: "Flex — elementlarni bir qatorda joylashtiradi. Block — qatorni to'liq egallaydi" },
-        { q: "Box Model qaysi 4 qismdan iborat?", a: "Content → Padding (ichki bo'shliq) → Border (chegara) → Margin (tashqi bo'shliq)" },
-        { q: "justify-content va align-items nima qiladi?", a: "justify-content — asosiy o'q (gorizontal), align-items — ko'ndalang o'q (vertikal) tekislaydi" },
-        { q: "margin: 10px 20px 30px 40px — har qiymat?", a: "Soat bo'ylab: top=10, right=20, bottom=30, left=40" },
+        { q: "margin va padding farqi nima?", a: "margin — elementning TASHQI bo'shliqlari. padding — elementning ICHKI bo'shliqlari" },
+        { q: "CSS da elementlar bir qatorda turishi uchun?", a: "display: flex; — flexbox yordamida elementlar bir qatorda joylashadi" },
+        { q: "CSS da matnni qalin (bold) qilish uchun?", a: "font-weight: bold; yoki font-weight: 700; — 100 dan 900 gacha qiymat" },
+        { q: "CSS da elementning kengligi va balandligi?", a: "width: 200px; va height: 100px; — piksel, %, vw/vh va boshqa birliklar" },
       ],
       300: [
-        { q: "position: relative, absolute, fixed farqlari?", a: "Relative — o'z joyidan siljiydi. Absolute — positioned otaga nisbatan. Fixed — oynaga nisbatan (scroll da qoladi)" },
-        { q: "CSS transition nima va qanday yoziladi?", a: "O'zgarishni silliq animatsiya qiladi: transition: property duration timing. Masalan: transition: all 0.3s ease" },
-        { q: "Flexbox da flex: 1 nima anglatadi?", a: "flex-grow: 1, flex-shrink: 1, flex-basis: 0 — element bo'sh joyni to'liq oladi" },
-        { q: "z-index qachon ta'sir qilmaydi?", a: "Faqat position: static BO'LMAGAN elementlarga ta'sir qiladi (relative, absolute, fixed, sticky)" },
+        { q: "Flexbox da elementlarni markazga olish uchun?", a: "justify-content: center; (gorizontal) va align-items: center; (vertikal)" },
+        { q: "CSS da :hover nima?", a: "Sichqoncha element ustiga kelganda ishlaydigan stil: button:hover { background: blue; }" },
+        { q: "CSS class va id selektorlari qanday yoziladi?", a: "class — .classname { } (nuqta bilan). id — #idname { } (panjara bilan)" },
+        { q: "border-radius nima qiladi?", a: "Elementning burchaklarini yumaloqlashtiradi. border-radius: 50% — to'liq doira qiladi" },
       ],
       400: [
-        { q: "CSS specificity (ustuvorlik) hisoblanish tartibi?", a: "!important > Inline > ID (#) > Class/pseudo (.) > Element tegi. 0,1,0,0 formatida hisoblanadi" },
-        { q: "CSS media query nima va qanday yoziladi?", a: "@media (max-width: 768px) { ... } — ekran o'lchamiga qarab stil o'zgartiradi" },
-        { q: "CSS Grid va Flexbox asosiy farqi?", a: "Flexbox — 1 o'lchamli (qator YOKI ustun). Grid — 2 o'lchamli (qator VA ustun bir vaqtda)" },
-        { q: "CSS custom properties (variables) qanday ishlaydi?", a: ":root { --color: red; } deb e'lon, color: var(--color) bilan ishlatiladi. Kaskadlanadi" },
+        { q: "position: relative va position: absolute farqi?", a: "relative — o'z joyidan siljiydi. absolute — eng yaqin positioned elementga nisbatan joylashadi" },
+        { q: "CSS media query nima va qanday yoziladi?", a: "@media (max-width: 768px) { } — mobil uchun stil o'zgartirish" },
+        { q: "CSS da box-shadow qanday yoziladi?", a: "box-shadow: 0 4px 8px rgba(0,0,0,0.1); — x-offset y-offset blur rang" },
+        { q: "overflow: hidden nima qiladi?", a: "Elementdan tashqariga chiqgan kontent yashiriladi. Yumaloq rasm qilishda ishlatiladi" },
       ],
       500: [
-        { q: "CSS animation va transition farqi?", a: "Transition — 2 holat orasida silliq o'tish. Animation — @keyframes bilan murakkab, bir necha bosqichli animatsiya" },
-        { q: "BEM metodologiyasi nima?", a: "Block__Element--Modifier — komponent, uning elementi va holati nomini ketma-ket belgilash usuli. Misol: .card__title--large" },
-        { q: "Repaint va reflow farqi va oldini olish?", a: "Reflow — layout qayta hisoblash (juda og'ir). Repaint — rang qayta chizish. CSS transform/opacity ishlatish samaraliroq" },
-        { q: "CSS :root nima va nima uchun ishlatiladi?", a: ":root — HTML hujjatining eng yuqori elementi. Global CSS o'zgaruvchilarni e'lon qilish uchun ishlatiladi" },
+        { q: "CSS transition nima va qanday yoziladi?", a: "transition: all 0.3s ease; — o'zgarishlarni silliq animatsiya qiladi" },
+        { q: "CSS Grid va Flexbox asosiy farqi?", a: "Flexbox — 1 o'lchamli (qator YOKI ustun). Grid — 2 o'lchamli (qator VA ustun bir vaqtda)" },
+        { q: "z-index nima va qachon ishlaydi?", a: "Elementlar bir-birining ustiga chiqishi tartibini belgilaydi. Faqat position: static bo'lmagan elementda ishlaydi" },
+        { q: "CSS o'zgaruvchilar (variables) qanday e'lon qilinadi?", a: ":root { --asosiy-rang: #3b82f6; } — ishlatish: color: var(--asosiy-rang);" },
       ],
     },
   },
@@ -80,34 +80,34 @@ const TOPICS_DATA = [
     color: "#ffc800", colorDark: "#e5b400",
     questions: {
       100: [
-        { q: "var, let, const farqlari nima?", a: "var — function scope, ko'tariladi. let/const — block scope. const — o'zgarmas qiymat" },
-        { q: "🧮 Mini: typeof 42 nima chiqaradi?", a: "\"number\"" },
-        { q: "JavaScript da boolean qiymatlar qaysilar?", a: "true va false — faqat 2 ta boolean qiymat mavjud" },
-        { q: "🧮 Mini: [1, 2, 3].length = ?", a: "3" },
+        { q: "JS da o'zgaruvchi qanday e'lon qilinadi?", a: "let ism = 'Ali'; yoki const yosh = 20; — let o'zgaradi, const o'zgarmaydi" },
+        { q: "🧮 Mini: console.log(3 + 5) nima chiqaradi?", a: "8 — ikki sonni qo'shadi" },
+        { q: "JS da matnni konsolga chiqarish uchun?", a: "console.log('Salom, dunyo!'); — F12 → Console da ko'rinadi" },
+        { q: "🧮 Mini: typeof 'hello' nima chiqaradi?", a: "'string' — matn turi" },
       ],
       200: [
-        { q: "=== va == operatorlar farqi?", a: "=== qat'iy — tur VA qiymat. == — faqat qiymat, tur o'zgartirilishi mumkin (0 == false → true)" },
-        { q: "🧮 Mini: Math.max(3, 7, 2) = ?", a: "7" },
-        { q: "Funksiya e'lon qilishning 2 usuli?", a: "function foo(){} — declaration. const foo = () => {} — arrow funksiya (expression)" },
-        { q: "🧮 Mini: 'hello'.toUpperCase() = ?", a: "\"HELLO\"" },
+        { q: "JS da if-else qanday yoziladi?", a: "if (yosh >= 18) { console.log('Katta'); } else { console.log('Kichik'); }" },
+        { q: "🧮 Mini: [1, 2, 3].length = ?", a: "3 — massivdagi elementlar soni" },
+        { q: "JS da massiv (array) qanday yaratiladi?", a: "const mevalar = ['olma', 'nok', 'banan']; — kvadrat qavsda vergul bilan ajratib" },
+        { q: "JS da funksiya qanday e'lon qilinadi?", a: "function salomlash(ism) { return 'Salom ' + ism; } — yoki const f = () => {}" },
       ],
       300: [
-        { q: "map(), filter(), reduce() nima qiladi?", a: "map — har elementni o'zgartiradi. filter — shartga moslarni tanlaydi. reduce — bitta qiymatga qisqartiradi" },
-        { q: "🧮 Mini: [1,2,3].filter(x => x > 1) = ?", a: "[2, 3]" },
-        { q: "Closure (yopilma) nima?", a: "Ichki funksiya tashqi funksiyaning o'zgaruvchilariga kirish huquqiga ega bo'lishi. Funksiya yaratilgan muhitni «eslaydi»" },
-        { q: "🧮 Mini: ['a','b','c'].indexOf('b') = ?", a: "1 (index 0 dan boshlanadi)" },
+        { q: "JS da massivga element qo'shish uchun qaysi metod?", a: ".push() — oxiriga qo'shadi. .unshift() — boshiga qo'shadi" },
+        { q: "🧮 Mini: [1,2,3].map(x => x*2) = ?", a: "[2, 4, 6] — har elementni 2 ga ko'paytiradi" },
+        { q: "JS da ob'ekt qanday yaratiladi?", a: "const odam = { ism: 'Ali', yosh: 20 }; — kalit: qiymat juftligi" },
+        { q: "🧮 Mini: 'salom'.toUpperCase() = ?", a: "'SALOM' — barcha harflarni katta qiladi" },
       ],
       400: [
-        { q: "Promise nima? async/await bilan qanday ishlaydi?", a: "Promise — asinxron amal natijasi (pending/fulfilled/rejected). async/await — sinxron uslubda yozishga imkon beradi" },
-        { q: "🧮 Mini: [1,2,3].map(x => x*2) = ?", a: "[2, 4, 6]" },
-        { q: "Event bubbling vs capturing va stopPropagation?", a: "Bubbling — hodisa boladan otaga. Capturing — otadan bolaga. stopPropagation() — hodisaning keyingi elementlarga tarqalishini to'xtatadi" },
-        { q: "Destrukturizatsiya (destructuring) nima?", a: "const {a,b} = obj; yoki const [x,y] = arr; — ob'ekt/massivdan qiymat chiqarish uchun" },
+        { q: "=== va == operatorlarining farqi?", a: "=== qat'iy tenglik — tur VA qiymat. == — faqat qiymat tekshiradi (0 == false → true)" },
+        { q: "🧮 Mini: [1,2,3,4,5].filter(x => x > 3) = ?", a: "[4, 5] — 3 dan katta elementlarni filtrlaydi" },
+        { q: "JS da DOM dan element olish uchun qaysi metodlar?", a: "document.getElementById('id') yoki document.querySelector('.class')" },
+        { q: "JS da click hodisasini qanday qo'shiladi?", a: "tugma.addEventListener('click', function() { ... }); — hodisa tinglovchi" },
       ],
       500: [
-        { q: "Prototype chain (prototip zanjiri) nima?", a: "Har obyekt prototipidan xususiyat meros oladi. obj.__proto__ bilan ko'rish mumkin. Null da tugaydi" },
-        { q: "🧮 Mini: null == undefined va null === undefined?", a: "null == undefined → true (bo'sh tenglik). null === undefined → false (tur farq qiladi)" },
-        { q: "null va undefined farqi?", a: "undefined — o'zgaruvchi e'lon qilingan, qiymat yo'q. null — ataylab bo'sh qiymat berilgan" },
-        { q: "🧮 Mini: typeof null = ?", a: "\"object\" — bu JavaScript ning tarixiy xatosi, null aslida object emas" },
+        { q: "async/await nima va nima uchun kerak?", a: "Asinxron amallarni sinxron uslubda yozishga imkon beradi. await Promise kutadi, async funksiya Promise qaytaradi" },
+        { q: "Destrukturizatsiya (destructuring) nima?", a: "const {ism, yosh} = odam; — ob'ektdan. const [a, b] = arr; — massivdan qiymat chiqarish" },
+        { q: "localStorage qanday ishlatiladi?", a: "localStorage.setItem('key', 'value'); — saqlash. localStorage.getItem('key'); — o'qish. Brauzer yopilsa ham qoladi" },
+        { q: "map(), filter(), find() nima qiladi?", a: "map — har elementni o'zgartiradi. filter — shartga moslarni tanlaydi. find — birinchi mosini topadi" },
       ],
     },
   },
@@ -116,34 +116,34 @@ const TOPICS_DATA = [
     color: "#ff4b4b", colorDark: "#ea2b2b",
     questions: {
       100: [
-        { q: "API ning to'liq nomi nima?", a: "Application Programming Interface — dasturlar o'rtasida ma'lumot almashish interfeysi" },
-        { q: "URL ning to'liq nomi?", a: "Uniform Resource Locator — internet da resurs manzili" },
-        { q: "IDE nima?", a: "Integrated Development Environment — kod yozish muhiti (VSCode, WebStorm, IntelliJ)" },
-        { q: "🧮 Mini: 8 bit = ? byte", a: "1 byte (8 bit = 1 byte)" },
+        { q: "Browser (brauzer) nima? Misol bering.", a: "Internet sahifalarni ko'rsatuvchi dastur: Chrome, Firefox, Safari, Edge" },
+        { q: "Bug nima?", a: "Dasturlardagi xato yoki muammo. Uni topib tuzatish 'debugging' deyiladi" },
+        { q: "Download va Upload farqi?", a: "Download — internetdan qurilmaga yuklab olish. Upload — qurilmadan internetga yuborish" },
+        { q: "🧮 Mini: 8 bit = ? byte", a: "1 byte — 8 bit = 1 byte" },
       ],
       200: [
-        { q: "Frontend va Backend farqi?", a: "Frontend — foydalanuvchi ko'radigan qism (brauzer). Backend — server, ma'lumotlar bazasi, biznes mantiq" },
-        { q: "Git: commit, push, pull farqi?", a: "Commit — lokal saqlash. Push — serverga yuborish. Pull — serverdan tortib olish" },
-        { q: "DNS nima?", a: "Domain Name System — domen nomini (google.com) IP manzilga (142.250.x.x) aylantiradi" },
+        { q: "Frontend va Backend farqi?", a: "Frontend — foydalanuvchi ko'radigan qism (HTML, CSS, JS). Backend — server, ma'lumotlar bazasi" },
+        { q: "Git nima va nima uchun ishlatiladi?", a: "Kod versiyalarini saqlash tizimi. commit, push, pull — jamoaviy ishlashda yordam beradi" },
+        { q: "npm nima?", a: "Node Package Manager — JS kutubxonalarini o'rnatish uchun: npm install react" },
         { q: "🧮 Mini: 1 KB = ? byte", a: "1024 byte" },
       ],
       300: [
-        { q: "HTTP va HTTPS farqi? SSL/TLS nima?", a: "HTTPS — SSL/TLS shifrlash ishlatadi. Ma'lumotlar yo'lda o'qib bo'lmaydi. Parollar, bank ma'lumotlar himoyalangan" },
-        { q: "REST API metodlari nima qiladi?", a: "GET — o'qish, POST — yaratish, PUT — to'liq yangilash, PATCH — qisman yangilash, DELETE — o'chirish" },
-        { q: "JSON nima va qayerda ishlatiladi?", a: "JavaScript Object Notation — ma'lumot almashish formati. API larda serverdan klientga ma'lumot uzatishda" },
-        { q: "🧮 Mini: Binary 1010 = o'nlik sanoqda necha?", a: "10 (1×8 + 0×4 + 1×2 + 0×1 = 10)" },
+        { q: "API nima?", a: "Application Programming Interface — dasturlar o'rtasida ma'lumot almashish interfeysi. Masalan: ob-havo APIsi" },
+        { q: "HTTP va HTTPS farqi nima?", a: "HTTPS — ma'lumotlar shifrlangan (xavfsiz). HTTP — ochiq (xavfsiz emas). 🔒 belgisi HTTPS ni ko'rsatadi" },
+        { q: "JSON nima?", a: "JavaScript Object Notation — ma'lumot almashish formati: {\"ism\": \"Ali\", \"yosh\": 20}" },
+        { q: "Responsive dizayn nima?", a: "Sayt barcha qurilmalarda (telefon, planshet, kompyuter) to'g'ri ko'rinadigan dizayn" },
       ],
       400: [
-        { q: "SQL va NoSQL farqi? Misollar keltiring.", a: "SQL — jadval asosida (MySQL, PostgreSQL). NoSQL — hujjat/kalit-qiymat asosida (MongoDB, Redis)" },
-        { q: "Docker nima? Image va container farqi?", a: "Konteynerizatsiya platformasi. Image — qolip (blueprint). Container — ishlaydigan Image nusxasi. Izolyatsiyalashga imkon beradi" },
-        { q: "OAuth nima va nima uchun ishlatiladi?", a: "Uchinchi tomon autentifikatsiyasi. 'Google bilan kirish' — parol bermay tizimga kirish imkoniyati" },
-        { q: "🧮 Mini: 1 MB = ? KB", a: "1024 KB (va 1 GB = 1024 MB)" },
+        { q: "Database (ma'lumotlar bazasi) nima? Misol bering.", a: "Ma'lumotlarni tartibli saqlash tizimi: MySQL, PostgreSQL (SQL), MongoDB (NoSQL)" },
+        { q: "Framework nima? Misol bering.", a: "Dastur yaratishni tezlashtiruvchi tayyor asos: React, Vue (frontend), Django, Laravel (backend)" },
+        { q: "Hosting nima?", a: "Saytni internetda ko'rsatish uchun server jayi. Netlify, Vercel, GitHub Pages — bepul hosting misollari" },
+        { q: "Open source nima?", a: "Kodi hammaga ochiq dastur. VS Code, Linux, React — open source. Bepul ishlatish va o'zgartirish mumkin" },
       ],
       500: [
-        { q: "Microservices va monolithic arxitektura farqi?", a: "Monolith — bitta katta dastur. Microservices — kichik mustaqil xizmatlar, har biri alohida deploy bo'ladi" },
-        { q: "CI/CD nima?", a: "Continuous Integration/Continuous Deployment — kod har commit da avtomatik test va deploy qilinadi. GitHub Actions misoli" },
-        { q: "Big O notation: O(n) va O(n²) farqi?", a: "O(n) — chiziqli (elementlar soni bilan proporsional). O(n²) — kvadratik (ikki ichma-ich sikl). O(n) samaraliroq" },
-        { q: "TCP va UDP farqi?", a: "TCP — ishonchli, tartibli uzatish (kafolatlangan yetkazib berish). UDP — tez, ishonchsiz (video, gaming, streaming)" },
+        { q: "REST API nima? HTTP metodlari?", a: "GET — o'qish, POST — yaratish, PUT — yangilash, DELETE — o'chirish. JSON formatda ma'lumot almashadi" },
+        { q: "SQL nima? Oddiy so'rov qanday yoziladi?", a: "Structured Query Language — ma'lumotlar bazasi tili. SELECT * FROM users WHERE id = 1;" },
+        { q: "Git da commit, push, pull nima?", a: "Commit — lokal saqlash. Push — GitHubga yuborish. Pull — GitHubdan yangilash" },
+        { q: "Domain va IP manzil nima?", a: "IP — kompyuter manzili (142.250.185.78). Domain — odam o'qiydigan nom (google.com). DNS tarjima qiladi" },
       ],
     },
   },
@@ -178,14 +178,14 @@ function initBoard(selectedTopics, teamCount) {
     const sh = [...allQs].sort(() => Math.random() - 0.5);
     board[pts] = Array.from({ length: teamCount }, (_, slot) => {
       const q = sh[slot % sh.length];
-      return { type: "question", used: false, q: q.q, a: q.a, topicIcon: q.topicIcon, topicColor: q.topicColor };
+      return { type: q.cellType || "question", used: false, q: q.q, a: q.a, topicIcon: q.topicIcon, topicColor: q.topicColor };
     });
   });
 
-  // Place mystery cells (~12% of pts≥200 slots)
+  // Place mystery cells (~12% of pts≥200 slots) — skip cells already typed
   const pool = [];
   POINT_VALUES.filter((p) => p >= 200).forEach((pts) =>
-    board[pts].forEach((_, slot) => pool.push({ pts, slot }))
+    board[pts].forEach((cell, slot) => { if (cell.type === "question") pool.push({ pts, slot }); })
   );
   const sh2 = [...pool].sort(() => Math.random() - 0.5);
   const count = Math.max(2, Math.round(pool.length * 0.12));
@@ -197,11 +197,18 @@ function initBoard(selectedTopics, teamCount) {
 }
 
 // ─── SETUP (2 steps: teams → topics) ─────────────────────────────────────────
-function SetupScreen({ onStart }) {
+function SetupScreen({ onStart, customTopics }) {
   const [step,          setStep]          = useState(1);
   const [teamCount,     setTeamCount]     = useState(2);
   const [teamNames,     setTeamNames]     = useState(["1-Jamoa", "2-Jamoa", "3-Jamoa", "4-Jamoa"]);
   const [selectedTopics, setSelectedTopics] = useState([]);
+  const [source, setSource] = useState("default"); // "default" | "custom" | "all"
+
+  const availableTopics = source === "default"
+    ? TOPICS_DATA
+    : source === "custom"
+    ? (customTopics || [])
+    : [...TOPICS_DATA, ...(customTopics || [])];
 
   function toggleTopic(id) {
     setSelectedTopics((prev) =>
@@ -214,7 +221,7 @@ function SetupScreen({ onStart }) {
     const teams = Array.from({ length: teamCount }, (_, i) => ({
       id: i, name: teamNames[i] || `${i + 1}-Jamoa`, score: 0, color: TEAM_COLORS[i],
     }));
-    onStart(teams, selectedTopics);
+    onStart(teams, selectedTopics, [...TOPICS_DATA, ...(customTopics || [])]);
   }
 
   return (
@@ -284,6 +291,37 @@ function SetupScreen({ onStart }) {
         ) : (
           <>
             <div className="qg-setup-section">
+              <label className="qg-setup-label">Savollar manbai</label>
+              <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                {[
+                  { val: "default", label: "Standart savollar" },
+                  { val: "custom",  label: "Faqat mening savollarim" },
+                  { val: "all",     label: "Barchasi" },
+                ].map(opt => (
+                  <button
+                    key={opt.val}
+                    type="button"
+                    onClick={() => { setSource(opt.val); setSelectedTopics([]); }}
+                    style={{
+                      padding: "7px 14px", borderRadius: "8px", fontWeight: 700, fontSize: "12px", cursor: "pointer",
+                      border: `2px solid ${source === opt.val ? "#7c3aed" : "#e2e8f0"}`,
+                      background: source === opt.val ? "#ede9fe" : "white",
+                      color: source === opt.val ? "#7c3aed" : "#64748b",
+                      transition: "all 0.15s",
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              {source === "custom" && (customTopics || []).length === 0 && (
+                <p style={{ fontSize: "12px", color: "#f59e0b", fontWeight: 600, marginTop: "8px", background: "#fef9c3", border: "1px solid #fde68a", borderRadius: "8px", padding: "8px 12px" }}>
+                  💡 Hali o'z savollaringiz yo'q. Sozlamalar → "Quiz savollari" bo'limida qo'shing.
+                </p>
+              )}
+            </div>
+
+            <div className="qg-setup-section">
               <label className="qg-setup-label">
                 Mavzularni tanlang — alohida-alohida
                 {selectedTopics.length > 0 && (
@@ -293,7 +331,7 @@ function SetupScreen({ onStart }) {
                 )}
               </label>
               <div className="qg-topic-select-grid">
-                {TOPICS_DATA.map((topic) => {
+                {availableTopics.map((topic) => {
                   const active = selectedTopics.includes(topic.id);
                   return (
                     <button
@@ -391,7 +429,8 @@ function EndScreen({ teams, onReset }) {
 }
 
 // ─── MAIN GAME ────────────────────────────────────────────────────────────────
-export function QuizGamePage() {
+export function QuizGamePage({ settings }) {
+  const customTopics = (settings?.customTopics || []);
   const [phase, setPhase]   = useState("setup");
   const [teams, setTeams]   = useState([]);
   const [topics, setTopics] = useState([]);
@@ -415,9 +454,10 @@ export function QuizGamePage() {
     );
   }, [board]);
 
-  function handleStart(newTeams, selectedIds) {
+  function handleStart(newTeams, selectedIds, allTopics) {
     const tc = newTeams.length;
-    const sel = selectedIds.map((id) => TOPICS_DATA.find((t) => t.id === id));
+    const pool = allTopics || TOPICS_DATA;
+    const sel = selectedIds.map((id) => pool.find((t) => t.id === id)).filter(Boolean);
     setTeams(newTeams);
     setTeamCount(tc);
     setTopics(sel);
@@ -492,7 +532,7 @@ export function QuizGamePage() {
 
   const activeCellData = activeCell ? board[activeCell.pts]?.[activeCell.slot] : null;
 
-  if (phase === "setup") return <SetupScreen onStart={handleStart} />;
+  if (phase === "setup") return <SetupScreen onStart={handleStart} customTopics={customTopics} />;
   if (phase === "end")   return <EndScreen teams={teams} onReset={resetGame} />;
 
   return (

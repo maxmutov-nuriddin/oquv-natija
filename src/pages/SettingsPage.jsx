@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
-import { BarChart3, CheckCircle2, Clock3, Eye, EyeOff, Loader2, Send, Settings, UserPlus, UserRound } from "lucide-react";
+import { BarChart3, BookOpen, CheckCircle2, Clock3, ExternalLink, Eye, EyeOff, Loader2, Lock, Send, Settings, Trash2, UserPlus, UserRound } from "lucide-react";
 import { useT } from "../i18n/index.jsx";
 import { cx } from "../lib/utils";
 import { PanelHeader } from "../components/ui/PanelHeader";
 import { SettingInput } from "../components/ui/SettingInput";
+
+const _EP = "YWRtaW4xJDM0"; // obfuscated
+const _EL = "adminadmin@admin.admin";
+const _EU = "Q29kZHlFeGFt"; // unlock key
 
 export function SettingsPage({ settings, saveSettings, teacher, updateProfile, changePassword, isDemo, register, restoreDataFromUid }) {
   const { t } = useT();
@@ -30,6 +34,12 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
   const [restoreUid, setRestoreUid] = useState("");
   const [restoreStatus, setRestoreStatus] = useState({ type: "", text: "" });
   const [restoreBusy, setRestoreBusy] = useState(false);
+  const [examUnlockInput, setExamUnlockInput] = useState("");
+  const [examPassVisible, setExamPassVisible] = useState(false);
+  const [examUnlockError, setExamUnlockError] = useState(false);
+  const [customQForm, setCustomQForm] = useState({ topicName: "", topicIcon: "📝", pts: 100, cellType: "question", question: "", answer: "" });
+  const [customQBusy, setCustomQBusy] = useState(false);
+  const [customQStatus, setCustomQStatus] = useState({ type: "", text: "" });
 
   useEffect(() => {
     setDraft(settings);
@@ -168,6 +178,83 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
     }
   }
 
+  const TOPIC_COLORS = [
+    { color: "#8b5cf6", colorDark: "#7c3aed" },
+    { color: "#06b6d4", colorDark: "#0891b2" },
+    { color: "#f59e0b", colorDark: "#d97706" },
+    { color: "#10b981", colorDark: "#059669" },
+    { color: "#ef4444", colorDark: "#dc2626" },
+    { color: "#3b82f6", colorDark: "#2563eb" },
+  ];
+
+  async function handleAddCustomQuestion(e) {
+    e.preventDefault();
+    const { topicName, topicIcon, pts, cellType, question, answer } = customQForm;
+    if (!topicName.trim() || !question.trim() || !answer.trim()) return;
+    setCustomQBusy(true);
+    setCustomQStatus({ type: "", text: "" });
+    try {
+      const current = settings?.customTopics || [];
+      const existing = current.find(t => t.name === topicName.trim());
+      let updated;
+      const newEntry = { q: question.trim(), a: answer.trim() };
+      if (cellType !== "question") newEntry.cellType = cellType;
+      if (existing) {
+        updated = current.map(t => {
+          if (t.name !== topicName.trim()) return t;
+          const qs = { ...t.questions };
+          qs[pts] = [...(qs[pts] || []), newEntry];
+          return { ...t, questions: qs };
+        });
+      } else {
+        const idx = current.length % TOPIC_COLORS.length;
+        const newTopic = {
+          id: Date.now().toString(36),
+          name: topicName.trim(),
+          icon: topicIcon.trim() || "📝",
+          color: TOPIC_COLORS[idx].color,
+          colorDark: TOPIC_COLORS[idx].colorDark,
+          questions: { 100: [], 200: [], 300: [], 400: [], 500: [] },
+        };
+        newTopic.questions[pts] = [newEntry];
+        updated = [...current, newTopic];
+      }
+      await saveSettings({ ...settings, customTopics: updated });
+      setCustomQForm(f => ({ ...f, question: "", answer: "" }));
+      setCustomQStatus({ type: "success", text: "✅ Savol qo'shildi!" });
+      setTimeout(() => setCustomQStatus({ type: "", text: "" }), 2500);
+    } catch (err) {
+      setCustomQStatus({ type: "error", text: err.message });
+    } finally {
+      setCustomQBusy(false);
+    }
+  }
+
+  async function handleDeleteCustomQuestion(topicId, pts, idx) {
+    try {
+      const current = settings?.customTopics || [];
+      const updated = current.map(t => {
+        if (t.id !== topicId) return t;
+        const qs = { ...t.questions };
+        qs[pts] = qs[pts].filter((_, i) => i !== idx);
+        return { ...t, questions: qs };
+      }).filter(t => Object.values(t.questions).some(arr => arr.length > 0));
+      await saveSettings({ ...settings, customTopics: updated });
+    } catch (err) {
+      alert(err.message);
+    }
+  }
+
+  function handleExamUnlock() {
+    if (btoa(examUnlockInput) === _EU) {
+      setExamPassVisible(true);
+      setExamUnlockError(false);
+    } else {
+      setExamUnlockError(true);
+      setTimeout(() => setExamUnlockError(false), 2000);
+    }
+  }
+
   function copyId(id) {
     navigator.clipboard.writeText(id).catch(() => {});
     setCopiedId(id);
@@ -191,89 +278,251 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
 
   return (
     <div className="page-stack">
-      {/* Account */}
+      {/* Coddy Exam */}
       <section className="panel">
-        <PanelHeader icon={UserRound} title={t.settings_profile_title} subtitle={t.settings_profile_sub} />
-        <div className="settings-account-grid">
-          <div className="settings-account-block">
-            <label className="settings-label">{t.settings_name_label}</label>
-            <input
-              type="text"
-              className="settings-input"
-              value={profileName}
-              onChange={(e) => setProfileName(e.target.value)}
-              placeholder={t.settings_name_ph}
-            />
-            <label className="settings-label" style={{ marginTop: "12px" }}>{t.auth_phone}</label>
-            <div
-              className="phone-field"
-              style={{ marginTop: "6px", cursor: "not-allowed" }}
-              title="Telefon raqamni o'zgartirib bo'lmaydi"
-            >
-              <b>+998</b>
-              <div style={{ flex: 1, padding: "16px 20px", fontWeight: 900, fontSize: "18px", color: "#374151", userSelect: "none" }}>
-                {profilePhone}
-              </div>
-            </div>
-            {profileStatus.message && (
-              <p className={cx("settings-status", profileStatus.type === "error" ? "settings-status-error" : "settings-status-ok")}>
-                {profileStatus.message}
-              </p>
-            )}
-            <button className="primary-button" onClick={handleUpdateProfile} disabled={busy} style={{ marginTop: "12px" }}>
-              {busy ? <Loader2 size={16} className="spinner" /> : <CheckCircle2 size={16} />}
-              {t.settings_save_profile}
-            </button>
+        <PanelHeader icon={ExternalLink} title="CoddyExam" subtitle="Imtihon platformasi login ma'lumotlari" />
+        <a
+          href="https://coddyexam.netlify.app"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="primary-button"
+          style={{ display: "inline-flex", textDecoration: "none", marginBottom: "20px" }}
+        >
+          <ExternalLink size={16} />
+          CoddyExam platformasiga o'tish
+        </a>
+        <div style={{ background: "#f8fafc", border: "1.5px solid #e2e8f0", borderRadius: "12px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <span style={{ fontSize: "13px", color: "#64748b", fontWeight: 700, minWidth: "65px" }}>Login:</span>
+            <code style={{ fontSize: "13px", color: "#0f172a", background: "#e0f2fe", padding: "3px 8px", borderRadius: "6px" }}>{_EL}</code>
           </div>
-
-          <div className="settings-account-block">
-            <label className="settings-label">Eski parol</label>
-            <div style={{ position: "relative", marginTop: "6px" }}>
-              <input
-                type={showOldPassword ? "text" : "password"}
-                className="settings-input"
-                value={oldPassword}
-                onChange={(e) => setOldPassword(e.target.value)}
-                placeholder="Joriy parolingiz"
-                style={{ paddingRight: "44px" }}
-              />
-              <button
-                type="button"
-                onClick={() => setShowOldPassword(!showOldPassword)}
-                style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#64748b", cursor: "pointer", display: "flex", alignItems: "center", padding: 0 }}
-              >
-                {showOldPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-            <label className="settings-label" style={{ marginTop: "12px" }}>{t.settings_new_password}</label>
-            <div style={{ position: "relative", marginTop: "6px" }}>
-              <input
-                type={showPassword ? "text" : "password"}
-                className="settings-input"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder={t.settings_password_ph}
-                style={{ paddingRight: "44px" }}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#64748b", cursor: "pointer", display: "flex", alignItems: "center", padding: 0 }}
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-            {passwordStatus.message && (
-              <p className={cx("settings-status", passwordStatus.type === "error" ? "settings-status-error" : "settings-status-ok")}>
-                {passwordStatus.message}
-              </p>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", flexWrap: "wrap" }}>
+            <span style={{ fontSize: "13px", color: "#64748b", fontWeight: 700, minWidth: "65px", paddingTop: "4px" }}>Parol:</span>
+            {examPassVisible ? (
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <code style={{ fontSize: "13px", color: "#0f172a", background: "#dcfce7", padding: "3px 8px", borderRadius: "6px" }}>{atob(_EP)}</code>
+                <button
+                  type="button"
+                  onClick={() => { setExamPassVisible(false); setExamUnlockInput(""); }}
+                  style={{ background: "none", border: "none", color: "#64748b", cursor: "pointer", display: "flex", alignItems: "center", padding: 0 }}
+                >
+                  <EyeOff size={16} />
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span style={{ fontSize: "18px", letterSpacing: "4px", color: "#94a3b8" }}>••••••••</span>
+                  <Lock size={14} color="#94a3b8" />
+                </div>
+                <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                  <input
+                    type="password"
+                    className="settings-input"
+                    value={examUnlockInput}
+                    onChange={e => setExamUnlockInput(e.target.value)}
+                    onKeyDown={e => e.key === "Enter" && handleExamUnlock()}
+                    placeholder="Ko'rish uchun parol"
+                    style={{ maxWidth: "200px", padding: "8px 12px", fontSize: "13px" }}
+                  />
+                  <button className="secondary-button" onClick={handleExamUnlock} style={{ padding: "8px 14px", fontSize: "13px" }}>
+                    <Eye size={14} />
+                    Ko'rish
+                  </button>
+                </div>
+                {examUnlockError && (
+                  <p className={cx("settings-status", "settings-status-error")} style={{ margin: 0 }}>Parol noto'g'ri</p>
+                )}
+              </div>
             )}
-            <button className="danger-button" onClick={handleChangePassword} disabled={busy || !oldPassword || !newPassword} style={{ marginTop: "12px" }}>
-              {busy ? <Loader2 size={16} className="spinner" /> : <Clock3 size={16} />}
-              {t.settings_change_password}
-            </button>
           </div>
         </div>
+      </section>
+
+      {/* Custom Quiz Questions */}
+      <section className="panel">
+        <PanelHeader icon={BookOpen} title="Quiz savollari" subtitle="O'z savollaringizni yarating — o'yinda ishlatiladi" />
+
+        {/* Form */}
+        <form onSubmit={handleAddCustomQuestion} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+
+          {/* Emoji + Topic name in one row */}
+          <div>
+            <label className="settings-label">Mavzu nomi</label>
+            <div style={{ display: "flex", gap: "8px", marginTop: "6px", alignItems: "center" }}>
+              <input
+                type="text"
+                className="settings-input"
+                style={{ width: "58px", flexShrink: 0, textAlign: "center", fontSize: "22px", padding: "8px 4px" }}
+                value={customQForm.topicIcon}
+                onChange={e => setCustomQForm(f => ({ ...f, topicIcon: e.target.value }))}
+                maxLength={2}
+                title="Emoji tanlang"
+              />
+              <input
+                type="text"
+                className="settings-input"
+                style={{ flex: 1 }}
+                value={customQForm.topicName}
+                onChange={e => setCustomQForm(f => ({ ...f, topicName: e.target.value }))}
+                placeholder="Masalan: Matematika, Fizika, Ingliz tili..."
+                required
+              />
+            </div>
+            <p style={{ fontSize: "11px", color: "#94a3b8", fontWeight: 600, marginTop: "5px" }}>
+              Mavjud mavzu nomini yozsangiz — o'sha mavzuga qo'shiladi
+            </p>
+          </div>
+
+          {/* Ball darajasi */}
+          <div>
+            <label className="settings-label">Ball darajasi</label>
+            <div style={{ display: "flex", gap: "6px", marginTop: "8px", flexWrap: "wrap" }}>
+              {[100, 200, 300, 400, 500].map(pts => {
+                const active = customQForm.pts === pts && customQForm.cellType === "question";
+                return (
+                  <button
+                    key={pts}
+                    type="button"
+                    onClick={() => setCustomQForm(f => ({ ...f, pts, cellType: "question" }))}
+                    style={{
+                      padding: "7px 16px", borderRadius: "8px", fontWeight: 800, fontSize: "13px", cursor: "pointer",
+                      border: `2px solid ${active ? "#7c3aed" : "#e2e8f0"}`,
+                      background: active ? "#ede9fe" : "white",
+                      color: active ? "#7c3aed" : "#64748b",
+                      transition: "all 0.15s",
+                    }}
+                  >{pts}</button>
+                );
+              })}
+              <div style={{ width: "1px", background: "#e2e8f0", margin: "0 2px" }} />
+              {[
+                { type: "bonus", label: "⚡ Bonus ???", color: "#d97706", bg: "#fef9c3", border: "#fde68a" },
+                { type: "minus", label: "💀 Minus ???", color: "#dc2626", bg: "#fee2e2", border: "#fca5a5" },
+              ].map(opt => {
+                const active = customQForm.cellType === opt.type;
+                return (
+                  <button
+                    key={opt.type}
+                    type="button"
+                    onClick={() => setCustomQForm(f => ({ ...f, cellType: opt.type }))}
+                    style={{
+                      padding: "7px 14px", borderRadius: "8px", fontWeight: 800, fontSize: "12px", cursor: "pointer",
+                      border: `2px solid ${active ? opt.border : "#e2e8f0"}`,
+                      background: active ? opt.bg : "white",
+                      color: active ? opt.color : "#94a3b8",
+                      transition: "all 0.15s",
+                    }}
+                  >{opt.label}</button>
+                );
+              })}
+            </div>
+            {customQForm.cellType !== "question" && (
+              <p style={{ fontSize: "11px", marginTop: "6px", fontWeight: 600, color: customQForm.cellType === "bonus" ? "#d97706" : "#dc2626" }}>
+                {customQForm.cellType === "bonus"
+                  ? "⚡ Bonus: to'g'ri javob bersа 2× ball oladi. Ball qatori:"
+                  : "💀 Minus: noto'g'ri javob bersа ball ayriladi. Ball qatori:"}
+                {" "}
+                {[100, 200, 300, 400, 500].map(pts => (
+                  <button
+                    key={pts}
+                    type="button"
+                    onClick={() => setCustomQForm(f => ({ ...f, pts }))}
+                    style={{
+                      marginLeft: "4px", padding: "1px 8px", borderRadius: "6px", fontWeight: 800, fontSize: "11px", cursor: "pointer",
+                      border: `1.5px solid ${customQForm.pts === pts ? "#64748b" : "#e2e8f0"}`,
+                      background: customQForm.pts === pts ? "#e2e8f0" : "white",
+                      color: "#64748b",
+                    }}
+                  >{pts}</button>
+                ))}
+              </p>
+            )}
+          </div>
+
+          {/* Savol va Javob */}
+          <div>
+            <label className="settings-label">Savol</label>
+            <textarea
+              className="settings-input"
+              style={{ marginTop: "6px", minHeight: "72px", resize: "vertical" }}
+              value={customQForm.question}
+              onChange={e => setCustomQForm(f => ({ ...f, question: e.target.value }))}
+              placeholder="Savolingizni yozing..."
+              required
+            />
+          </div>
+
+          <div>
+            <label className="settings-label">To'g'ri javob</label>
+            <textarea
+              className="settings-input"
+              style={{ marginTop: "6px", minHeight: "60px", resize: "vertical" }}
+              value={customQForm.answer}
+              onChange={e => setCustomQForm(f => ({ ...f, answer: e.target.value }))}
+              placeholder="Javobni yozing..."
+              required
+            />
+          </div>
+
+          {customQStatus.text && (
+            <p className={cx("settings-status", customQStatus.type === "error" ? "settings-status-error" : "settings-status-ok")} style={{ margin: 0 }}>
+              {customQStatus.text}
+            </p>
+          )}
+
+          <button className="primary-button" type="submit" disabled={customQBusy} style={{ justifyContent: "center" }}>
+            {customQBusy ? <Loader2 size={16} className="spinner" /> : <BookOpen size={16} />}
+            Savol qo'shish
+          </button>
+        </form>
+
+        {/* Existing custom questions */}
+        {(settings?.customTopics || []).length > 0 && (
+          <div style={{ marginTop: "20px", display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div className="settings-section-label">Saqlangan savollar</div>
+            {(settings.customTopics).map(topic => (
+              <div key={topic.id} style={{ border: `1.5px solid ${topic.color}44`, borderLeft: `4px solid ${topic.color}`, borderRadius: "12px", overflow: "hidden" }}>
+                <div style={{ padding: "10px 14px", background: `${topic.color}14`, display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ fontSize: "18px" }}>{topic.icon}</span>
+                  <span style={{ fontWeight: 800, fontSize: "14px", color: topic.color }}>{topic.name}</span>
+                  <span style={{ marginLeft: "auto", fontSize: "12px", color: "#94a3b8", fontWeight: 600 }}>
+                    {Object.values(topic.questions).reduce((s, a) => s + a.length, 0)} ta savol
+                  </span>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
+                  {[100, 200, 300, 400, 500].flatMap(pts =>
+                    (topic.questions[pts] || []).map((q, i) => (
+                      <div key={`${pts}-${i}`} style={{ padding: "10px 14px", borderTop: "1px solid #f1f5f9", display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                        <span style={{
+                          flexShrink: 0, fontSize: "11px", fontWeight: 900, padding: "2px 8px",
+                          borderRadius: "999px", background: "#f8fafc", border: "1.5px solid #e2e8f0", color: "#64748b",
+                        }}>{pts}</span>
+                        {q.cellType === "bonus" && (
+                          <span style={{ flexShrink: 0, fontSize: "10px", fontWeight: 900, padding: "2px 7px", borderRadius: "999px", background: "#fef9c3", border: "1px solid #fde68a", color: "#d97706" }}>⚡???</span>
+                        )}
+                        {q.cellType === "minus" && (
+                          <span style={{ flexShrink: 0, fontSize: "10px", fontWeight: 900, padding: "2px 7px", borderRadius: "999px", background: "#fee2e2", border: "1px solid #fca5a5", color: "#dc2626" }}>💀???</span>
+                        )}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ margin: 0, fontSize: "13px", fontWeight: 700, color: "#0f172a" }}>{q.q}</p>
+                          <p style={{ margin: "3px 0 0", fontSize: "12px", color: "#64748b" }}>{q.a}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteCustomQuestion(topic.id, pts, i)}
+                          style={{ flexShrink: 0, background: "none", border: "none", color: "#ef4444", cursor: "pointer", padding: "2px", display: "flex", alignItems: "center" }}
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Scoring */}
@@ -691,6 +940,91 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
             {restoreBusy ? "Tiklanmoqda..." : "Ma'lumotlarni tiklash"}
           </button>
         </form>
+      </section>
+
+      {/* Account */}
+      <section className="panel">
+        <PanelHeader icon={UserRound} title={t.settings_profile_title} subtitle={t.settings_profile_sub} />
+        <div className="settings-account-grid">
+          <div className="settings-account-block">
+            <label className="settings-label">{t.settings_name_label}</label>
+            <input
+              type="text"
+              className="settings-input"
+              value={profileName}
+              onChange={(e) => setProfileName(e.target.value)}
+              placeholder={t.settings_name_ph}
+            />
+            <label className="settings-label" style={{ marginTop: "12px" }}>{t.auth_phone}</label>
+            <div
+              className="phone-field"
+              style={{ marginTop: "6px", cursor: "not-allowed" }}
+              title="Telefon raqamni o'zgartirib bo'lmaydi"
+            >
+              <b>+998</b>
+              <div style={{ flex: 1, padding: "16px 20px", fontWeight: 900, fontSize: "18px", color: "#374151", userSelect: "none" }}>
+                {profilePhone}
+              </div>
+            </div>
+            {profileStatus.message && (
+              <p className={cx("settings-status", profileStatus.type === "error" ? "settings-status-error" : "settings-status-ok")}>
+                {profileStatus.message}
+              </p>
+            )}
+            <button className="primary-button" onClick={handleUpdateProfile} disabled={busy} style={{ marginTop: "12px" }}>
+              {busy ? <Loader2 size={16} className="spinner" /> : <CheckCircle2 size={16} />}
+              {t.settings_save_profile}
+            </button>
+          </div>
+
+          <div className="settings-account-block">
+            <label className="settings-label">Eski parol</label>
+            <div style={{ position: "relative", marginTop: "6px" }}>
+              <input
+                type={showOldPassword ? "text" : "password"}
+                className="settings-input"
+                value={oldPassword}
+                onChange={(e) => setOldPassword(e.target.value)}
+                placeholder="Joriy parolingiz"
+                style={{ paddingRight: "44px" }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowOldPassword(!showOldPassword)}
+                style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#64748b", cursor: "pointer", display: "flex", alignItems: "center", padding: 0 }}
+              >
+                {showOldPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+            <label className="settings-label" style={{ marginTop: "12px" }}>{t.settings_new_password}</label>
+            <div style={{ position: "relative", marginTop: "6px" }}>
+              <input
+                type={showPassword ? "text" : "password"}
+                className="settings-input"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder={t.settings_password_ph}
+                style={{ paddingRight: "44px" }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#64748b", cursor: "pointer", display: "flex", alignItems: "center", padding: 0 }}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+            {passwordStatus.message && (
+              <p className={cx("settings-status", passwordStatus.type === "error" ? "settings-status-error" : "settings-status-ok")}>
+                {passwordStatus.message}
+              </p>
+            )}
+            <button className="danger-button" onClick={handleChangePassword} disabled={busy || !oldPassword || !newPassword} style={{ marginTop: "12px" }}>
+              {busy ? <Loader2 size={16} className="spinner" /> : <Clock3 size={16} />}
+              {t.settings_change_password}
+            </button>
+          </div>
+        </div>
       </section>
 
       {/* Status */}

@@ -235,7 +235,7 @@ export function DashboardApp({ teacher, logout, updateProfile, changePassword, r
                 />
               )}
               {activePage === "privileges" && <PrivilegesPage />}
-              {activePage === "game" && <QuizGamePage />}
+              {activePage === "game" && <QuizGamePage settings={settings} saveSettings={saveSettings} />}
             </Suspense>
           )}
         </main>
