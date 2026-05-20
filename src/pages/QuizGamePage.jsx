@@ -149,6 +149,154 @@ const TOPICS_DATA = [
   },
 ];
 
+// ─── Russian questions ────────────────────────────────────────────────────────
+const TOPICS_DATA_RU = [
+  {
+    id: "html", name: "Основы HTML", icon: "🌐",
+    color: "#58cc02", colorDark: "#46a302",
+    questions: {
+      100: [
+        { q: "Какой тег используется для заголовка в HTML?", a: "От <h1> до <h6> — самый большой <h1>, самый маленький <h6>" },
+        { q: "Какой тег используется для абзаца в HTML?", a: "<p> — тег параграфа. Используется для каждого блока текста" },
+        { q: "Какой тег добавляет изображение в HTML?", a: "<img src='фото.jpg' alt='описание'> — src источник, alt текстовое описание" },
+        { q: "Какой тег создаёт ссылку в HTML?", a: "<a href='https://...'>Текст</a> — в атрибуте href указывается адрес" },
+      ],
+      200: [
+        { q: "Какой тег делает текст жирным (bold) в HTML?", a: "<strong> или <b> — оба делают текст жирным" },
+        { q: "Как создать неупорядоченный список в HTML?", a: "<ul> с тегами <li>: <ul><li>1</li><li>2</li></ul>" },
+        { q: "В чём разница между <div> и <span>?", a: "<div> — блочный элемент (занимает всю строку). <span> — строчный (размещается внутри)" },
+        { q: "Какой тег создаёт кнопку в HTML?", a: "<button>Нажмите</button> или <input type='button' value='Нажмите'>" },
+      ],
+      300: [
+        { q: "Какие теги используются для создания формы в HTML?", a: "<form> внутри которой <input>, <button>, <label>" },
+        { q: "В чём разница между атрибутами id и class?", a: "id — уникален (один элемент). class — можно назначить многим элементам" },
+        { q: "Как создать поле ввода текста в HTML?", a: "<input type='text'> — для текста. <input type='password'> — для пароля (скрытый)" },
+        { q: "Что делают теги <br> и <hr>?", a: "<br> — перенос строки. <hr> — горизонтальная разделительная линия" },
+      ],
+      400: [
+        { q: "Что такое семантические теги HTML? Назовите 4 примера.", a: "<header>, <footer>, <main>, <nav>, <section>, <article> — описывают смысл содержимого страницы" },
+        { q: "Зачем нужен атрибут alt?", a: "Текст при незагруженном изображении. Читается screen reader для слабовидящих пользователей" },
+        { q: "Зачем нужен мета тег charset?", a: "<meta charset='UTF-8'> — задаёт кодировку для правильного отображения символов" },
+        { q: "Самые используемые значения type у <input>?", a: "text, password, email, number, checkbox, radio, submit, file, date" },
+      ],
+      500: [
+        { q: "Что такое мета тег viewport и зачем он нужен?", a: "<meta name='viewport' content='width=device-width, initial-scale=1'> — адаптация под мобильные устройства" },
+        { q: "Что делают теги <select> и <option>?", a: "<select> — создаёт выпадающий список. <option> — каждый пункт выбора" },
+        { q: "Что делают атрибуты required, placeholder, maxlength?", a: "required — обязательное поле. placeholder — текст при пустом поле. maxlength — максимум символов" },
+        { q: "Что делает target='_blank'?", a: "Открывает ссылку в новой вкладке. Для безопасности добавляют rel='noopener noreferrer'" },
+      ],
+    },
+  },
+  {
+    id: "css", name: "Основы CSS", icon: "🎨",
+    color: "#1cb0f6", colorDark: "#1899d6",
+    questions: {
+      100: [
+        { q: "Какое свойство CSS задаёт цвет текста?", a: "color: red; — цвет текста. background-color: blue; — цвет фона" },
+        { q: "Какое свойство CSS задаёт размер шрифта?", a: "font-size: 16px; — в пикселях или font-size: 1rem;" },
+        { q: "Как добавить рамку (border) к элементу в CSS?", a: "border: 1px solid black; — толщина, стиль, цвет" },
+        { q: "Какое свойство CSS скрывает элемент?", a: "display: none; — полностью скрывает и убирает из потока документа" },
+      ],
+      200: [
+        { q: "В чём разница между margin и padding?", a: "margin — внешние отступы элемента. padding — внутренние отступы" },
+        { q: "Как расположить элементы в одну строку в CSS?", a: "display: flex; — элементы выстраиваются в ряд с помощью flexbox" },
+        { q: "Как сделать текст жирным в CSS?", a: "font-weight: bold; или font-weight: 700; — значения от 100 до 900" },
+        { q: "Какие свойства задают размеры элемента?", a: "width: 200px; и height: 100px; — пиксели, %, vw/vh и другие единицы" },
+      ],
+      300: [
+        { q: "Как выровнять элементы по центру во Flexbox?", a: "justify-content: center; (горизонталь) и align-items: center; (вертикаль)" },
+        { q: "Что такое :hover в CSS?", a: "Стиль при наведении мыши: button:hover { background: blue; }" },
+        { q: "Как записываются селекторы class и id в CSS?", a: "class — .classname { } (с точкой). id — #idname { } (с решёткой)" },
+        { q: "Что делает border-radius?", a: "Скругляет углы элемента. border-radius: 50% — делает полный круг" },
+      ],
+      400: [
+        { q: "В чём разница между position: relative и position: absolute?", a: "relative — смещается от своего места. absolute — позиционируется относительно positioned родителя" },
+        { q: "Что такое media query в CSS и как записывается?", a: "@media (max-width: 768px) { } — изменение стилей для мобильных устройств" },
+        { q: "Как записывается box-shadow в CSS?", a: "box-shadow: 0 4px 8px rgba(0,0,0,0.1); — x-offset y-offset blur цвет" },
+        { q: "Что делает overflow: hidden?", a: "Скрывает контент, выходящий за пределы элемента. Используют для круглых изображений" },
+      ],
+      500: [
+        { q: "Что такое transition в CSS и как записывается?", a: "transition: all 0.3s ease; — плавная анимация изменений свойств" },
+        { q: "В чём главное отличие CSS Grid от Flexbox?", a: "Flexbox — одномерный (строка ИЛИ столбец). Grid — двумерный (строки И столбцы вместе)" },
+        { q: "Что такое z-index и когда работает?", a: "Задаёт порядок наложения. Работает только на элементах без position: static" },
+        { q: "Как объявляются CSS переменные?", a: ":root { --main-color: #3b82f6; } — использование: color: var(--main-color);" },
+      ],
+    },
+  },
+  {
+    id: "js", name: "JavaScript", icon: "⚡",
+    color: "#ffc800", colorDark: "#e5b400",
+    questions: {
+      100: [
+        { q: "Как объявляется переменная в JS?", a: "let name = 'Али'; или const age = 20; — let можно изменить, const нельзя" },
+        { q: "🧮 Мини: console.log(3 + 5) что выведет?", a: "8 — складывает два числа" },
+        { q: "Как вывести текст в консоль в JS?", a: "console.log('Привет, мир!'); — виден в F12 → Console" },
+        { q: "🧮 Мини: typeof 'hello' что выведет?", a: "'string' — тип данных строка" },
+      ],
+      200: [
+        { q: "Как записывается if-else в JS?", a: "if (age >= 18) { console.log('Взрослый'); } else { console.log('Ребёнок'); }" },
+        { q: "🧮 Мини: [1, 2, 3].length = ?", a: "3 — количество элементов в массиве" },
+        { q: "Как создаётся массив (array) в JS?", a: "const fruits = ['яблоко', 'груша', 'банан']; — в квадратных скобках через запятую" },
+        { q: "Как объявляется функция в JS?", a: "function greet(name) { return 'Привет ' + name; } — или const f = () => {}" },
+      ],
+      300: [
+        { q: "Какой метод добавляет элемент в массив в JS?", a: ".push() — добавляет в конец. .unshift() — добавляет в начало" },
+        { q: "🧮 Мини: [1,2,3].map(x => x*2) = ?", a: "[2, 4, 6] — умножает каждый элемент на 2" },
+        { q: "Как создаётся объект в JS?", a: "const person = { name: 'Али', age: 20 }; — пары ключ: значение" },
+        { q: "🧮 Мини: 'привет'.toUpperCase() = ?", a: "'ПРИВЕТ' — делает все буквы заглавными" },
+      ],
+      400: [
+        { q: "В чём разница между === и ==?", a: "=== строгое равенство — тип И значение. == — только значение (0 == false → true)" },
+        { q: "🧮 Мини: [1,2,3,4,5].filter(x => x > 3) = ?", a: "[4, 5] — фильтрует элементы больше 3" },
+        { q: "Как получить элемент из DOM в JS?", a: "document.getElementById('id') или document.querySelector('.class')" },
+        { q: "Как добавить обработчик события click в JS?", a: "button.addEventListener('click', function() { ... });" },
+      ],
+      500: [
+        { q: "Что такое async/await и зачем нужно?", a: "Позволяет писать асинхронный код в синхронном стиле. await ждёт Promise, async возвращает Promise" },
+        { q: "Что такое деструктуризация (destructuring)?", a: "const {name, age} = person; — из объекта. const [a, b] = arr; — из массива" },
+        { q: "Как используется localStorage?", a: "localStorage.setItem('key', 'value'); — сохранить. localStorage.getItem('key'); — прочитать" },
+        { q: "Что делают map(), filter(), find()?", a: "map — изменяет каждый элемент. filter — выбирает подходящие. find — находит первый совпадающий" },
+      ],
+    },
+  },
+  {
+    id: "it", name: "IT Термины", icon: "💻",
+    color: "#ff4b4b", colorDark: "#ea2b2b",
+    questions: {
+      100: [
+        { q: "Что такое браузер? Приведите примеры.", a: "Программа для просмотра веб-страниц: Chrome, Firefox, Safari, Edge" },
+        { q: "Что такое баг (bug)?", a: "Ошибка или неисправность в программе. Её поиск называется 'debugging'" },
+        { q: "В чём разница между Download и Upload?", a: "Download — скачать из интернета на устройство. Upload — загрузить на сервер" },
+        { q: "🧮 Мини: 8 бит = ? байт", a: "1 байт — 8 бит = 1 байт" },
+      ],
+      200: [
+        { q: "В чём разница между Frontend и Backend?", a: "Frontend — часть, которую видит пользователь (HTML, CSS, JS). Backend — сервер, база данных" },
+        { q: "Что такое Git и для чего используется?", a: "Система контроля версий кода. commit, push, pull — помогает в командной работе" },
+        { q: "Что такое npm?", a: "Node Package Manager — для установки JS библиотек: npm install react" },
+        { q: "🧮 Мини: 1 КБ = ? байт", a: "1024 байт" },
+      ],
+      300: [
+        { q: "Что такое API?", a: "Application Programming Interface — интерфейс обмена данными между программами. Пример: API погоды" },
+        { q: "В чём разница между HTTP и HTTPS?", a: "HTTPS — данные зашифрованы (безопасно). HTTP — открытые данные. 🔒 означает HTTPS" },
+        { q: "Что такое JSON?", a: "JavaScript Object Notation — формат обмена данными: {\"name\": \"Али\", \"age\": 20}" },
+        { q: "Что такое адаптивный дизайн (responsive design)?", a: "Сайт корректно отображается на всех устройствах: телефон, планшет, ПК" },
+      ],
+      400: [
+        { q: "Что такое база данных? Приведите примеры.", a: "Система хранения данных: MySQL, PostgreSQL (SQL), MongoDB (NoSQL)" },
+        { q: "Что такое фреймворк? Приведите примеры.", a: "Готовая основа для ускорения разработки: React, Vue (frontend), Django, Laravel (backend)" },
+        { q: "Что такое хостинг?", a: "Место на сервере для сайта в интернете. Netlify, Vercel, GitHub Pages — бесплатный хостинг" },
+        { q: "Что такое open source?", a: "Программа с открытым кодом. VS Code, Linux, React — open source. Бесплатно использовать и изменять" },
+      ],
+      500: [
+        { q: "Что такое REST API? HTTP методы?", a: "GET — чтение, POST — создание, PUT — обновление, DELETE — удаление. Данные в формате JSON" },
+        { q: "Что такое SQL? Запишите простой запрос.", a: "Structured Query Language — язык для баз данных. SELECT * FROM users WHERE id = 1;" },
+        { q: "Что такое commit, push, pull в Git?", a: "Commit — локальное сохранение. Push — отправка на GitHub. Pull — получение обновлений" },
+        { q: "Что такое домен и IP адрес?", a: "IP — адрес компьютера (142.250.185.78). Domain — понятное имя (google.com). DNS переводит одно в другое" },
+      ],
+    },
+  },
+];
+
 const POINT_VALUES = [100, 200, 300, 400, 500];
 const TEAM_COLORS  = ["#ff4b4b", "#1cb0f6", "#58cc02", "#ffc800"];
 
@@ -197,18 +345,45 @@ function initBoard(selectedTopics, teamCount) {
 }
 
 // ─── SETUP (2 steps: teams → topics) ─────────────────────────────────────────
+const LANG_LABELS = { uz: "O'zbek 🇺🇿", ru: "Русский 🇷🇺" };
+const DEFAULT_TEAM_NAMES = {
+  uz: ["1-Jamoa", "2-Jamoa", "3-Jamoa", "4-Jamoa"],
+  ru: ["Команда 1", "Команда 2", "Команда 3", "Команда 4"],
+};
+const SOURCE_LABELS = {
+  uz: { default: "Standart savollar", custom: "Faqat mening savollarim", all: "Barchasi" },
+  ru: { default: "Стандартные вопросы", custom: "Только мои вопросы",     all: "Все вопросы" },
+};
+
 function SetupScreen({ onStart, customTopics }) {
-  const [step,          setStep]          = useState(1);
-  const [teamCount,     setTeamCount]     = useState(2);
-  const [teamNames,     setTeamNames]     = useState(["1-Jamoa", "2-Jamoa", "3-Jamoa", "4-Jamoa"]);
+  const [step,           setStep]          = useState(1);
+  const [gameLang,       setGameLang]      = useState("uz"); // "uz" | "ru"
+  const [teamCount,      setTeamCount]     = useState(2);
+  const [teamNames,      setTeamNames]     = useState(["1-Jamoa", "2-Jamoa", "3-Jamoa", "4-Jamoa"]);
   const [selectedTopics, setSelectedTopics] = useState([]);
   const [source, setSource] = useState("default"); // "default" | "custom" | "all"
 
+  const defaultTopics = gameLang === "ru" ? TOPICS_DATA_RU : TOPICS_DATA;
+  const customTopicsForLang = (customTopics || []).map(topic => ({
+    ...topic,
+    questions: Object.fromEntries(
+      Object.entries(topic.questions).map(([pts, qs]) => [
+        pts, qs.filter(q => (q.lang || "uz") === gameLang)
+      ])
+    ),
+  })).filter(t => Object.values(t.questions).some(a => a.length > 0));
+
   const availableTopics = source === "default"
-    ? TOPICS_DATA
+    ? defaultTopics
     : source === "custom"
-    ? (customTopics || [])
-    : [...TOPICS_DATA, ...(customTopics || [])];
+    ? customTopicsForLang
+    : [...defaultTopics, ...customTopicsForLang];
+
+  function switchLang(l) {
+    setGameLang(l);
+    setTeamNames(DEFAULT_TEAM_NAMES[l]);
+    setSelectedTopics([]);
+  }
 
   function toggleTopic(id) {
     setSelectedTopics((prev) =>
@@ -232,18 +407,35 @@ function SetupScreen({ onStart, customTopics }) {
           <span style={{ background: "var(--gold)", borderRadius: "var(--radius-sm)", padding: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Trophy size={22} color="#fff" />
           </span>
-          <div>
-            <h3 style={{ margin: 0 }}>Quiz O'yini</h3>
+          <div style={{ flex: 1 }}>
+            <h3 style={{ margin: 0 }}>Quiz {gameLang === "ru" ? "Игра" : "O'yini"}</h3>
             <p style={{ margin: "4px 0 0", fontSize: 14, fontWeight: 700, color: "var(--muted)" }}>
-              {step === 1 ? "1-qadam: Jamoalar" : "2-qadam: Mavzular"}
+              {gameLang === "ru"
+                ? (step === 1 ? "Шаг 1: Команды" : "Шаг 2: Темы")
+                : (step === 1 ? "1-qadam: Jamoalar" : "2-qadam: Mavzular")}
             </p>
+          </div>
+          <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
+            {["uz", "ru"].map(l => (
+              <button
+                key={l}
+                type="button"
+                onClick={() => switchLang(l)}
+                style={{
+                  padding: "5px 10px", borderRadius: "8px", fontWeight: 800, fontSize: "12px", cursor: "pointer",
+                  border: `2px solid ${gameLang === l ? "#7c3aed" : "#e2e8f0"}`,
+                  background: gameLang === l ? "#ede9fe" : "white",
+                  color: gameLang === l ? "#7c3aed" : "#94a3b8",
+                }}
+              >{l === "uz" ? "🇺🇿 UZ" : "🇷🇺 RU"}</button>
+            ))}
           </div>
         </div>
 
         {step === 1 ? (
           <>
             <div className="qg-setup-section">
-              <label className="qg-setup-label">Jamoalar soni</label>
+              <label className="qg-setup-label">{gameLang === "ru" ? "Количество команд" : "Jamoalar soni"}</label>
               <div className="qg-count-row">
                 {[2, 3, 4].map((n) => (
                   <button
@@ -251,17 +443,19 @@ function SetupScreen({ onStart, customTopics }) {
                     className={`qg-count-btn ${teamCount === n ? "primary-button" : "secondary-button"}`}
                     onClick={() => setTeamCount(n)}
                   >
-                    <Users size={15} /> {n} jamoa
+                    <Users size={15} /> {n} {gameLang === "ru" ? "команды" : "jamoa"}
                   </button>
                 ))}
               </div>
               <p style={{ margin: "2px 0 0", fontSize: 13, color: "var(--muted)", fontWeight: 600 }}>
-                Har ball darajasida <strong style={{ color: "var(--text)" }}>{teamCount} ta savol</strong> bo'ladi
+                {gameLang === "ru"
+                  ? <>На каждом уровне будет <strong style={{ color: "var(--text)" }}>{teamCount} вопроса</strong></>
+                  : <>Har ball darajasida <strong style={{ color: "var(--text)" }}>{teamCount} ta savol</strong> bo'ladi</>}
               </p>
             </div>
 
             <div className="qg-setup-section">
-              <label className="qg-setup-label">Jamoa nomlari</label>
+              <label className="qg-setup-label">{gameLang === "ru" ? "Названия команд" : "Jamoa nomlari"}</label>
               <div className="qg-names-list">
                 {Array.from({ length: teamCount }, (_, i) => (
                   <div key={i} className="qg-name-row">
@@ -285,18 +479,18 @@ function SetupScreen({ onStart, customTopics }) {
               style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
               onClick={() => setStep(2)}
             >
-              Mavzularni tanlash <ChevronRight size={18} />
+              {gameLang === "ru" ? "Выбрать темы" : "Mavzularni tanlash"} <ChevronRight size={18} />
             </button>
           </>
         ) : (
           <>
             <div className="qg-setup-section">
-              <label className="qg-setup-label">Savollar manbai</label>
+              <label className="qg-setup-label">{gameLang === "ru" ? "Источник вопросов" : "Savollar manbai"}</label>
               <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
                 {[
-                  { val: "default", label: "Standart savollar" },
-                  { val: "custom",  label: "Faqat mening savollarim" },
-                  { val: "all",     label: "Barchasi" },
+                  { val: "default", label: SOURCE_LABELS[gameLang].default },
+                  { val: "custom",  label: SOURCE_LABELS[gameLang].custom },
+                  { val: "all",     label: SOURCE_LABELS[gameLang].all },
                 ].map(opt => (
                   <button
                     key={opt.val}
@@ -314,19 +508,21 @@ function SetupScreen({ onStart, customTopics }) {
                   </button>
                 ))}
               </div>
-              {source === "custom" && (customTopics || []).length === 0 && (
+              {source === "custom" && customTopicsForLang.length === 0 && (
                 <p style={{ fontSize: "12px", color: "#f59e0b", fontWeight: 600, marginTop: "8px", background: "#fef9c3", border: "1px solid #fde68a", borderRadius: "8px", padding: "8px 12px" }}>
-                  💡 Hali o'z savollaringiz yo'q. Sozlamalar → "Quiz savollari" bo'limida qo'shing.
+                  {gameLang === "ru"
+                    ? "💡 Нет ваших вопросов на русском. Добавьте в Настройки → «Quiz savollari»."
+                    : "💡 Hali o'z savollaringiz yo'q. Sozlamalar → \"Quiz savollari\" bo'limida qo'shing."}
                 </p>
               )}
             </div>
 
             <div className="qg-setup-section">
               <label className="qg-setup-label">
-                Mavzularni tanlang — alohida-alohida
+                {gameLang === "ru" ? "Выберите темы" : "Mavzularni tanlang — alohida-alohida"}
                 {selectedTopics.length > 0 && (
                   <span style={{ marginLeft: 8, color: "var(--blue)", fontWeight: 800 }}>
-                    {selectedTopics.length} ta tanlandi
+                    {selectedTopics.length} {gameLang === "ru" ? "выбрано" : "ta tanlandi"}
                   </span>
                 )}
               </label>
@@ -366,7 +562,7 @@ function SetupScreen({ onStart, customTopics }) {
                 style={{ display: "flex", alignItems: "center", gap: 6 }}
                 onClick={() => setStep(1)}
               >
-                <ArrowLeft size={16} /> Orqaga
+                <ArrowLeft size={16} /> {gameLang === "ru" ? "Назад" : "Orqaga"}
               </button>
               <button
                 className="primary-button"
@@ -374,7 +570,7 @@ function SetupScreen({ onStart, customTopics }) {
                 disabled={selectedTopics.length < 1}
                 onClick={handleStart}
               >
-                <Play size={18} /> O'yinni boshlash
+                <Play size={18} /> {gameLang === "ru" ? "Начать игру" : "O'yinni boshlash"}
               </button>
             </div>
           </>

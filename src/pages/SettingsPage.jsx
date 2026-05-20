@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BarChart3, BookOpen, CheckCircle2, Clock3, ExternalLink, Eye, EyeOff, Loader2, Lock, Send, Settings, Trash2, UserPlus, UserRound } from "lucide-react";
+import { BarChart3, BookOpen, CheckCircle2, Clock3, Copy, ExternalLink, Eye, EyeOff, Loader2, Lock, Send, Settings, Trash2, UserPlus, UserRound } from "lucide-react";
 import { useT } from "../i18n/index.jsx";
 import { cx } from "../lib/utils";
 import { PanelHeader } from "../components/ui/PanelHeader";
@@ -7,9 +7,8 @@ import { SettingInput } from "../components/ui/SettingInput";
 
 const _EP = "YWRtaW4xJDM0"; // obfuscated
 const _EL = "adminadmin@admin.admin";
-const _EU = "Q29kZHlFeGFt"; // unlock key
 
-export function SettingsPage({ settings, saveSettings, teacher, updateProfile, changePassword, isDemo, register, restoreDataFromUid }) {
+export function SettingsPage({ settings, saveSettings, teacher, updateProfile, changePassword, verifyPassword, isDemo, register, restoreDataFromUid }) {
   const { t } = useT();
   const [draft, setDraft] = useState(settings);
   const [profileName, setProfileName] = useState(teacher?.name || "");
@@ -37,7 +36,8 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
   const [examUnlockInput, setExamUnlockInput] = useState("");
   const [examPassVisible, setExamPassVisible] = useState(false);
   const [examUnlockError, setExamUnlockError] = useState(false);
-  const [customQForm, setCustomQForm] = useState({ topicName: "", topicIcon: "📝", pts: 100, cellType: "question", question: "", answer: "" });
+  const [examUnlockBusy, setExamUnlockBusy] = useState(false);
+  const [customQForm, setCustomQForm] = useState({ topicName: "", topicIcon: "📝", pts: 100, cellType: "question", lang: "uz", question: "", answer: "" });
   const [customQBusy, setCustomQBusy] = useState(false);
   const [customQStatus, setCustomQStatus] = useState({ type: "", text: "" });
 
@@ -189,7 +189,7 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
 
   async function handleAddCustomQuestion(e) {
     e.preventDefault();
-    const { topicName, topicIcon, pts, cellType, question, answer } = customQForm;
+    const { topicName, topicIcon, pts, cellType, lang, question, answer } = customQForm;
     if (!topicName.trim() || !question.trim() || !answer.trim()) return;
     setCustomQBusy(true);
     setCustomQStatus({ type: "", text: "" });
@@ -197,7 +197,7 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
       const current = settings?.customTopics || [];
       const existing = current.find(t => t.name === topicName.trim());
       let updated;
-      const newEntry = { q: question.trim(), a: answer.trim() };
+      const newEntry = { q: question.trim(), a: answer.trim(), lang };
       if (cellType !== "question") newEntry.cellType = cellType;
       if (existing) {
         updated = current.map(t => {
@@ -245,13 +245,18 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
     }
   }
 
-  function handleExamUnlock() {
-    if (btoa(examUnlockInput) === _EU) {
+  async function handleExamUnlock() {
+    if (!examUnlockInput || examUnlockBusy) return;
+    setExamUnlockBusy(true);
+    try {
+      await verifyPassword(examUnlockInput);
       setExamPassVisible(true);
       setExamUnlockError(false);
-    } else {
+    } catch {
       setExamUnlockError(true);
       setTimeout(() => setExamUnlockError(false), 2000);
+    } finally {
+      setExamUnlockBusy(false);
     }
   }
 
@@ -292,50 +297,81 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
           CoddyExam platformasiga o'tish
         </a>
         <div style={{ background: "#f8fafc", border: "1.5px solid #e2e8f0", borderRadius: "12px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+          {/* Login row */}
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <span style={{ fontSize: "13px", color: "#64748b", fontWeight: 700, minWidth: "65px" }}>Login:</span>
-            <code style={{ fontSize: "13px", color: "#0f172a", background: "#e0f2fe", padding: "3px 8px", borderRadius: "6px" }}>{_EL}</code>
+            {examPassVisible
+              ? <>
+                  <code style={{ fontSize: "13px", color: "#0f172a", background: "#e0f2fe", padding: "3px 8px", borderRadius: "6px" }}>{_EL}</code>
+                  <button
+                    type="button"
+                    onClick={() => { navigator.clipboard.writeText(_EL).catch(() => {}); setCopiedId("login"); setTimeout(() => setCopiedId(""), 2000); }}
+                    style={{ background: "none", border: "none", cursor: "pointer", padding: "2px 4px", color: copiedId === "login" ? "#10b981" : "#94a3b8", display: "flex", alignItems: "center" }}
+                    title="Nusxalash"
+                  >
+                    {copiedId === "login" ? <CheckCircle2 size={15} /> : <Copy size={15} />}
+                  </button>
+                </>
+              : <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span style={{ fontSize: "16px", letterSpacing: "3px", color: "#94a3b8" }}>••••••••••••••••</span>
+                  <Lock size={13} color="#94a3b8" />
+                </span>
+            }
           </div>
-          <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", flexWrap: "wrap" }}>
-            <span style={{ fontSize: "13px", color: "#64748b", fontWeight: 700, minWidth: "65px", paddingTop: "4px" }}>Parol:</span>
-            {examPassVisible ? (
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <code style={{ fontSize: "13px", color: "#0f172a", background: "#dcfce7", padding: "3px 8px", borderRadius: "6px" }}>{atob(_EP)}</code>
-                <button
-                  type="button"
-                  onClick={() => { setExamPassVisible(false); setExamUnlockInput(""); }}
-                  style={{ background: "none", border: "none", color: "#64748b", cursor: "pointer", display: "flex", alignItems: "center", padding: 0 }}
-                >
-                  <EyeOff size={16} />
+
+          {/* Password row */}
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <span style={{ fontSize: "13px", color: "#64748b", fontWeight: 700, minWidth: "65px" }}>Parol:</span>
+            {examPassVisible
+              ? <>
+                  <code style={{ fontSize: "13px", color: "#0f172a", background: "#dcfce7", padding: "3px 8px", borderRadius: "6px" }}>{atob(_EP)}</code>
+                  <button
+                    type="button"
+                    onClick={() => { navigator.clipboard.writeText(atob(_EP)).catch(() => {}); setCopiedId("pass"); setTimeout(() => setCopiedId(""), 2000); }}
+                    style={{ background: "none", border: "none", cursor: "pointer", padding: "2px 4px", color: copiedId === "pass" ? "#10b981" : "#94a3b8", display: "flex", alignItems: "center" }}
+                    title="Nusxalash"
+                  >
+                    {copiedId === "pass" ? <CheckCircle2 size={15} /> : <Copy size={15} />}
+                  </button>
+                </>
+              : <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span style={{ fontSize: "16px", letterSpacing: "3px", color: "#94a3b8" }}>••••••••</span>
+                  <Lock size={13} color="#94a3b8" />
+                </span>
+            }
+          </div>
+
+          {/* Unlock / hide controls */}
+          {examPassVisible ? (
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => { setExamPassVisible(false); setExamUnlockInput(""); }}
+              style={{ alignSelf: "flex-start", fontSize: "13px" }}
+            >
+              <EyeOff size={14} /> Yashirish
+            </button>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                <input
+                  type="password"
+                  className="settings-input"
+                  value={examUnlockInput}
+                  onChange={e => setExamUnlockInput(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && handleExamUnlock()}
+                  placeholder="Ko'rish uchun parol"
+                  style={{ maxWidth: "220px", padding: "8px 12px", fontSize: "13px" }}
+                />
+                <button className="secondary-button" onClick={handleExamUnlock} disabled={examUnlockBusy} style={{ padding: "8px 14px", fontSize: "13px" }}>
+                  {examUnlockBusy ? <Loader2 size={14} className="spin" /> : <Eye size={14} />} Ko'rish
                 </button>
               </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <span style={{ fontSize: "18px", letterSpacing: "4px", color: "#94a3b8" }}>••••••••</span>
-                  <Lock size={14} color="#94a3b8" />
-                </div>
-                <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                  <input
-                    type="password"
-                    className="settings-input"
-                    value={examUnlockInput}
-                    onChange={e => setExamUnlockInput(e.target.value)}
-                    onKeyDown={e => e.key === "Enter" && handleExamUnlock()}
-                    placeholder="Ko'rish uchun parol"
-                    style={{ maxWidth: "200px", padding: "8px 12px", fontSize: "13px" }}
-                  />
-                  <button className="secondary-button" onClick={handleExamUnlock} style={{ padding: "8px 14px", fontSize: "13px" }}>
-                    <Eye size={14} />
-                    Ko'rish
-                  </button>
-                </div>
-                {examUnlockError && (
-                  <p className={cx("settings-status", "settings-status-error")} style={{ margin: 0 }}>Parol noto'g'ri</p>
-                )}
-              </div>
-            )}
-          </div>
+              {examUnlockError && (
+                <p className={cx("settings-status", "settings-status-error")} style={{ margin: 0 }}>Parol noto'g'ri</p>
+              )}
+            </div>
+          )}
         </div>
       </section>
 
@@ -345,6 +381,31 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
 
         {/* Form */}
         <form onSubmit={handleAddCustomQuestion} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+
+          {/* Language selector */}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span className="settings-label" style={{ margin: 0 }}>Savol tili:</span>
+            {[
+              { val: "uz", label: "🇺🇿 O'zbek" },
+              { val: "ru", label: "🇷🇺 Русский" },
+            ].map(opt => {
+              const active = customQForm.lang === opt.val;
+              return (
+                <button
+                  key={opt.val}
+                  type="button"
+                  onClick={() => setCustomQForm(f => ({ ...f, lang: opt.val }))}
+                  style={{
+                    padding: "6px 14px", borderRadius: "8px", fontWeight: 700, fontSize: "13px", cursor: "pointer",
+                    border: `2px solid ${active ? "#7c3aed" : "#e2e8f0"}`,
+                    background: active ? "#ede9fe" : "white",
+                    color: active ? "#7c3aed" : "#64748b",
+                    transition: "all 0.15s",
+                  }}
+                >{opt.label}</button>
+              );
+            })}
+          </div>
 
           {/* Emoji + Topic name in one row */}
           <div>
@@ -504,6 +565,9 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
                         {q.cellType === "minus" && (
                           <span style={{ flexShrink: 0, fontSize: "10px", fontWeight: 900, padding: "2px 7px", borderRadius: "999px", background: "#fee2e2", border: "1px solid #fca5a5", color: "#dc2626" }}>💀???</span>
                         )}
+                        <span style={{ flexShrink: 0, fontSize: "10px", fontWeight: 700, padding: "2px 6px", borderRadius: "999px", background: "#f1f5f9", color: "#64748b" }}>
+                          {(q.lang || "uz") === "ru" ? "🇷🇺" : "🇺🇿"}
+                        </span>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <p style={{ margin: 0, fontSize: "13px", fontWeight: 700, color: "#0f172a" }}>{q.q}</p>
                           <p style={{ margin: "3px 0 0", fontSize: "12px", color: "#64748b" }}>{q.a}</p>

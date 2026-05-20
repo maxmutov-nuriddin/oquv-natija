@@ -157,6 +157,11 @@ export function useTeacherAuth() {
 
         return totalDocs;
       },
+      async verifyPassword(password) {
+        if (!hasFirebaseConfig || !auth?.currentUser) throw new Error("Tizimga kirmagansiz.");
+        const credential = EmailAuthProvider.credential(auth.currentUser.email, password);
+        await reauthenticateWithCredential(auth.currentUser, credential);
+      },
       async changePassword({ oldPassword, newPassword }) {
         if (!hasFirebaseConfig || !auth) throw new Error("Demo rejimida parolni o'zgartirib bo'lmaydi.");
         if (!auth.currentUser) throw new Error("Tizimga kirmagansiz.");
