@@ -1,4 +1,4 @@
-import { Activity, Award, BookOpenCheck, BarChart2, CheckCircle2, LayoutDashboard, Settings, ShieldX, Star, Trophy, Users, Gamepad2 } from "lucide-react";
+import { Activity, Award, BookOpenCheck, BarChart2, CheckCircle2, Dices, LayoutDashboard, Settings, ShieldX, Star, Trophy, Users, Gamepad2 } from "lucide-react";
 
 export const navItems = [
   { id: "dashboard",  label: "Bosh sahifa", icon: LayoutDashboard },
@@ -6,6 +6,7 @@ export const navItems = [
   { id: "analytics",  label: "Tahlil",      icon: BarChart2 },
   { id: "privileges", label: "Privelegiya", icon: Star },
   { id: "game",       label: "Quiz O'yin",  icon: Gamepad2 },
+  { id: "ludo",       label: "Ludo O'yin",  icon: Dices },
   { id: "settings",   label: "Sozlamalar",  icon: Settings }
 ];
 
