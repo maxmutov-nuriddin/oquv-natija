@@ -1,10 +1,101 @@
 import dayjs from "dayjs";
 import { useMemo, useState } from "react";
 import { AlertTriangle, ChevronDown, ChevronUp, TrendingDown, TrendingUp, Users } from "lucide-react";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import { groupAvgScore, isDeclineTrend, isRiseTrend, rankStudents } from "../lib/scoring";
 import { PanelHeader } from "../components/ui/PanelHeader";
 import { useT } from "../i18n/index.jsx";
 import { initials } from "../lib/utils";
+
+const MN_UZ = ["Yan","Fev","Mar","Apr","May","Iyn","Iyl","Avg","Sen","Okt","Noy","Dek"];
+const MN_RU = ["Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"];
+
+function buildMonthlyData(studentIds, records, settings) {
+  const hwW  = Number(settings.homeworkWeight  || 0.4);
+  const attW = Number(settings.attendanceWeight || 0.3);
+  const actW = Number(settings.activityWeight   || 0.3);
+  const idSet = new Set(studentIds);
+  const byMonth = {};
+  records.forEach(r => {
+    if (!idSet.has(r.studentId) || !r.date) return;
+    if (!r.homework && !r.attendance && !r.activity) return;
+    const m = r.date.slice(0, 7);
+    (byMonth[m] = byMonth[m] || []).push(r);
+  });
+  return Object.keys(byMonth).sort().map(m => {
+    const recs = byMonth[m];
+    const n = recs.length;
+    const hw  = recs.reduce((s,r) => s + Number(r.homework   || 0), 0) / n;
+    const att = recs.reduce((s,r) => s + Number(r.attendance || 0), 0) / n;
+    const act = recs.reduce((s,r) => s + Number(r.activity   || 0), 0) / n;
+    const score = Math.min(100, Math.round(hw*hwW + att*attW + act*actW));
+    const [y, mo] = m.split("-");
+    return { month: m, y, mo: Number(mo), score, hw: Math.round(hw), att: Math.round(att), act: Math.round(act), count: n };
+  });
+}
+
+function ChartTooltip({ active, payload, lang }) {
+  if (!active || !payload?.length) return null;
+  const d = payload[0]?.payload;
+  const mn = lang === "ru" ? MN_RU : MN_UZ;
+  const isRu = lang === "ru";
+  return (
+    <div style={{ background: "white", border: "2px solid #e2e8f0", borderRadius: 12, padding: "10px 14px", boxShadow: "0 4px 20px rgba(0,0,0,0.12)", fontSize: 12, minWidth: 150 }}>
+      <div style={{ fontWeight: 900, marginBottom: 7, color: "#1e293b", fontSize: 13 }}>
+        {mn[d.mo - 1]} {d.y} · <span style={{ color: "#64748b", fontWeight: 600 }}>{d.count} {isRu ? "уроков" : "dars"}</span>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <div style={{ fontWeight: 900, color: payload[0].color, fontSize: 14 }}>{isRu ? "Итог" : "Umumiy"}: {d.score}%</div>
+        <div style={{ color: "#64748b", fontWeight: 700 }}>📚 {isRu ? "Дз" : "Uy ishi"}: {d.hw}%</div>
+        <div style={{ color: "#64748b", fontWeight: 700 }}>✅ {isRu ? "Посещ" : "Davomat"}: {d.att}%</div>
+        <div style={{ color: "#64748b", fontWeight: 700 }}>⚡ {isRu ? "Актив" : "Faollik"}: {d.act}%</div>
+      </div>
+    </div>
+  );
+}
+
+function GroupHistoryChart({ studentIds, records, settings, tone, groupId }) {
+  const { lang } = useT();
+  const mn = lang === "ru" ? MN_RU : MN_UZ;
+  const LINE_COLOR = { mint: "#58cc02", gold: "#e5b400", rose: "#ff4b4b" }[tone] || "#1cb0f6";
+  const data = useMemo(() => buildMonthlyData(studentIds, records, settings), [studentIds, records, settings]);
+  if (data.length < 2) return null;
+
+  const gradId = `ag-${groupId}`;
+  const labeledData = data.map(d => ({ ...d, label: `${mn[d.mo - 1]} ${d.y.slice(2)}` }));
+  const minScore = Math.max(0, Math.min(...data.map(d => d.score)) - 10);
+
+  return (
+    <div style={{ marginTop: 16, paddingTop: 16, borderTop: "2px solid var(--line)" }}>
+      <div style={{ fontSize: 11, fontWeight: 800, color: "var(--muted)", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 10 }}>
+        📈 {lang === "ru" ? "История по месяцам" : "Oylik natijalar tarixi"}
+      </div>
+      <ResponsiveContainer width="100%" height={160}>
+        <AreaChart data={labeledData} margin={{ top: 6, right: 8, left: -28, bottom: 0 }}>
+          <defs>
+            <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="10%"  stopColor={LINE_COLOR} stopOpacity={0.25} />
+              <stop offset="95%" stopColor={LINE_COLOR} stopOpacity={0.03} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+          <XAxis dataKey="label" tick={{ fontSize: 11, fontWeight: 700, fill: "#94a3b8" }} axisLine={false} tickLine={false} interval={0} />
+          <YAxis domain={[minScore, 100]} tick={{ fontSize: 11, fontWeight: 700, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
+          <ReferenceLine y={70} stroke="#86efac" strokeDasharray="5 3" strokeWidth={1.5} label={{ value: "70", position: "right", fontSize: 10, fill: "#86efac" }} />
+          <ReferenceLine y={50} stroke="#fca5a5" strokeDasharray="5 3" strokeWidth={1.5} label={{ value: "50", position: "right", fontSize: 10, fill: "#fca5a5" }} />
+          <Tooltip content={<ChartTooltip lang={lang} />} />
+          <Area
+            type="monotone" dataKey="score"
+            stroke={LINE_COLOR} strokeWidth={3}
+            fill={`url(#${gradId})`}
+            dot={{ fill: LINE_COLOR, r: 5, strokeWidth: 2.5, stroke: "white" }}
+            activeDot={{ r: 7, strokeWidth: 2, stroke: "white" }}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
 
 function avgScores(studentId, records, days = 30, date) {
   const cutoff = dayjs(date).subtract(days, "day").format("YYYY-MM-DD");
@@ -242,7 +333,8 @@ export function AnalyticsPage({ groups, students, records, settings, date }) {
         if (val < 75) groupBottleneck = { key, val, hw: grpHw, att: grpAtt, act: grpAct };
       }
 
-      return { group: g, students: ranked, avgScore, avgCoins, dangerCount, declineCount, riseCount, groupBottleneck };
+      const studentIds = gStudents.map(s => s.id);
+      return { group: g, students: ranked, studentIds, avgScore, avgCoins, dangerCount, declineCount, riseCount, groupBottleneck };
     });
   }, [groups, students, records, settings, date]);
 
@@ -338,6 +430,13 @@ export function AnalyticsPage({ groups, students, records, settings, date }) {
             {/* Detail */}
             {isOpen && (
               <div style={{ marginTop: "24px", paddingTop: "24px", borderTop: "2px solid var(--line)" }}>
+                <GroupHistoryChart
+                  studentIds={gs.studentIds}
+                  records={records}
+                  settings={settings}
+                  tone={tone}
+                  groupId={gs.group.id}
+                />
                 <GroupDetail gs={gs} records={records} settings={settings} date={date} />
               </div>
             )}

@@ -83,11 +83,19 @@ body {
   margin: 0;
   min-width: 320px;
   background: var(--bg);
-  background-image: radial-gradient(#d1d5db 2px, transparent 2px);
-  background-size: 32px 32px;
   color: var(--text);
   font-family: 'Outfit', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-color: var(--bg);
+  background-image: radial-gradient(#d1d5db 2px, transparent 2px);
+  background-size: 32px 32px;
 }
 
 button, input, select {
@@ -118,6 +126,7 @@ button {
   padding: 24px;
   color: #ffffff;
   border-right: 4px solid var(--blue-dark);
+  will-change: transform;
 }
 
 .brand {
@@ -412,6 +421,7 @@ button {
   box-shadow: 0 3px 6px rgba(0,0,0,0.25);
   z-index: 2;
   animation: vip-pulse 2s infinite;
+  will-change: transform;
 }
 
 .vip-text-badge {

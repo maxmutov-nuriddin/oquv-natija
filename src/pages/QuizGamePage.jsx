@@ -825,7 +825,7 @@ export function QuizGamePage({ settings }) {
     setShowAnswer(false); setResultEffect(null); setSpecialPhase(false);
   }
 
-  useMemo(() => {
+  useEffect(() => {
     if (phase === "game" && totalCells > 0 && usedCells === totalCells) {
       const tmr = setTimeout(() => setPhase("end"), 500);
       return () => clearTimeout(tmr);
