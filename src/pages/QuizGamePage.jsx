@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Check, Play, RefreshCw, Trophy, Users, X, Eye, ChevronRight } from "lucide-react";
+import { useT } from "../i18n/index.jsx";
 
-// ─── Questions: 4 per level per topic (for up to 4 teams) ────────────────────
+// ─── Questions ────────────────────────────────────────────────────────────────
 const TOPICS_DATA = [
   {
     id: "html", name: "HTML asoslari", icon: "🌐",
@@ -149,7 +150,6 @@ const TOPICS_DATA = [
   },
 ];
 
-// ─── Russian questions ────────────────────────────────────────────────────────
 const TOPICS_DATA_RU = [
   {
     id: "html", name: "Основы HTML", icon: "🌐",
@@ -300,37 +300,73 @@ const TOPICS_DATA_RU = [
 const POINT_VALUES = [100, 200, 300, 400, 500];
 const TEAM_COLORS  = ["#ff4b4b", "#1cb0f6", "#58cc02", "#ffc800"];
 
-// Point level colors (matches site palette)
-const PT = {
-  100: { color: "#58cc02", colorDark: "#46a302", light_bg: "#f0fdf4", light_bd: "#86efac", light_bdb: "#4ade80", light_c: "#166534" },
-  200: { color: "#1cb0f6", colorDark: "#1899d6", light_bg: "#eff6ff", light_bd: "#93c5fd", light_bdb: "#60a5fa", light_c: "#1e40af" },
-  300: { color: "#ffc800", colorDark: "#e5b400", light_bg: "#fefce8", light_bd: "#fde047", light_bdb: "#facc15", light_c: "#854d0e" },
-  400: { color: "#ff9600", colorDark: "#e07800", light_bg: "#fff7ed", light_bd: "#fdba74", light_bdb: "#fb923c", light_c: "#9a3412" },
-  500: { color: "#ff4b4b", colorDark: "#ea2b2b", light_bg: "#fff1f2", light_bd: "#fda4af", light_bdb: "#f43f5e", light_c: "#9f1239" },
+const QG_TEXTS = {
+  uz: {
+    jamoa:       (n) => `${n}-Jamoa`,
+    score_unit:  "ball",
+    ball_label:  "BALL",
+    finish:      "Yakunlash",
+    turn:        (name) => `${name} navbati`,
+    show_answer: "Javobni ko'rish",
+    correct:     "To'g'ri",
+    incorrect:   "Noto'g'ri",
+    skip:        "O'tkazib yuborish",
+    see_q:       "Savolni ko'rish",
+    bonus_title: "BONUS SAVOL!",
+    minus_title: "MINUS SAVOL!",
+    bonus_desc:  (pts) => `To'g'ri javob bersangiz ${pts} BALL olasiz!`,
+    minus_desc:  (pts) => `Noto'g'ri javob bersangiz −${pts} ball ayriladi!`,
+    no_score:    "Ball qo'shilmadi",
+  },
+  ru: {
+    jamoa:       (n) => `Команда ${n}`,
+    score_unit:  "очков",
+    ball_label:  "ОЧК",
+    finish:      "Завершить",
+    turn:        (name) => `Ходит ${name}`,
+    show_answer: "Показать ответ",
+    correct:     "Верно",
+    incorrect:   "Неверно",
+    skip:        "Пропустить",
+    see_q:       "Показать вопрос",
+    bonus_title: "БОНУСНЫЙ ВОПРОС!",
+    minus_title: "ШТРАФНОЙ ВОПРОС!",
+    bonus_desc:  (pts) => `Правильный ответ даёт ${pts} ОЧКОВ!`,
+    minus_desc:  (pts) => `Неверный ответ снимет −${pts} очков!`,
+    no_score:    "Очки не добавлены",
+  },
 };
 
-// Board: board[pts] = [ { type, used, q, a, topicIcon, topicColor }, ... ] — length = teamCount
-// Questions are randomly drawn from all selected topics and placed per price level
-function initBoard(selectedTopics, teamCount) {
-  const board = {};
+const PT = {
+  100: { color: "#58cc02", colorDark: "#46a302", light_bg: "#f0fdf4", light_bd: "#86efac", light_c: "#166534" },
+  200: { color: "#1cb0f6", colorDark: "#1899d6", light_bg: "#eff6ff", light_bd: "#93c5fd", light_c: "#1e40af" },
+  300: { color: "#ffc800", colorDark: "#e5b400", light_bg: "#fefce8", light_bd: "#fde047", light_c: "#854d0e" },
+  400: { color: "#ff9600", colorDark: "#e07800", light_bg: "#fff7ed", light_bd: "#fdba74", light_c: "#9a3412" },
+  500: { color: "#ff4b4b", colorDark: "#ea2b2b", light_bg: "#fff1f2", light_bd: "#fda4af", light_c: "#9f1239" },
+};
 
+const DEFAULT_TEAM_NAMES = {
+  uz: ["1-Jamoa", "2-Jamoa", "3-Jamoa", "4-Jamoa"],
+  ru: ["Команда 1", "Команда 2", "Команда 3", "Команда 4"],
+};
+
+function initBoard(selectedTopics, ruTopics, teamCount) {
+  const board = {};
   POINT_VALUES.forEach((pts) => {
-    // Gather all questions at this price from every selected topic
     const allQs = [];
     selectedTopics.forEach((topic) => {
-      (topic.questions[pts] || []).forEach((q) =>
-        allQs.push({ ...q, topicIcon: topic.icon, topicColor: topic.color })
-      );
+      const ruTopic = (ruTopics || []).find(rt => rt.id === topic.id);
+      (topic.questions[pts] || []).forEach((q, qi) => {
+        const ruQ = ruTopic?.questions[pts]?.[qi];
+        allQs.push({ ...q, q_ru: ruQ?.q || q.q, a_ru: ruQ?.a || q.a, topicIcon: topic.icon, topicColor: topic.color });
+      });
     });
-    // Shuffle then assign one question per team slot (wrap if fewer questions than teams)
     const sh = [...allQs].sort(() => Math.random() - 0.5);
     board[pts] = Array.from({ length: teamCount }, (_, slot) => {
       const q = sh[slot % sh.length];
-      return { type: q.cellType || "question", used: false, q: q.q, a: q.a, topicIcon: q.topicIcon, topicColor: q.topicColor };
+      return { type: q.cellType || "question", used: false, q: q.q, a: q.a, q_ru: q.q_ru, a_ru: q.a_ru, topicIcon: q.topicIcon, topicColor: q.topicColor };
     });
   });
-
-  // Place mystery cells (~12% of pts≥200 slots) — skip cells already typed
   const pool = [];
   POINT_VALUES.filter((p) => p >= 200).forEach((pts) =>
     board[pts].forEach((cell, slot) => { if (cell.type === "question") pool.push({ pts, slot }); })
@@ -340,38 +376,33 @@ function initBoard(selectedTopics, teamCount) {
   sh2.slice(0, count).forEach(({ pts, slot }, i) => {
     board[pts][slot].type = i < Math.ceil(count * 0.6) ? "bonus" : "minus";
   });
-
   return board;
 }
 
-// ─── SETUP (2 steps: teams → topics) ─────────────────────────────────────────
-const LANG_LABELS = { uz: "O'zbek 🇺🇿", ru: "Русский 🇷🇺" };
-const DEFAULT_TEAM_NAMES = {
-  uz: ["1-Jamoa", "2-Jamoa", "3-Jamoa", "4-Jamoa"],
-  ru: ["Команда 1", "Команда 2", "Команда 3", "Команда 4"],
-};
-const SOURCE_LABELS = {
-  uz: { default: "Standart savollar", custom: "Faqat mening savollarim", all: "Barchasi" },
-  ru: { default: "Стандартные вопросы", custom: "Только мои вопросы",     all: "Все вопросы" },
-};
-
-function SetupScreen({ onStart, customTopics }) {
-  const [step,           setStep]          = useState(1);
-  const [gameLang,       setGameLang]      = useState("uz"); // "uz" | "ru"
-  const [teamCount,      setTeamCount]     = useState(2);
-  const [teamNames,      setTeamNames]     = useState(["1-Jamoa", "2-Jamoa", "3-Jamoa", "4-Jamoa"]);
+// ─── SETUP ────────────────────────────────────────────────────────────────────
+function SetupScreen({ onStart, customTopics, siteLang }) {
+  const { t } = useT();
+  const lang = siteLang || "uz";
+  const [step, setStep]                 = useState(1);
+  const [teamCount, setTeamCount]       = useState(2);
+  const [teamNames, setTeamNames]       = useState(DEFAULT_TEAM_NAMES[lang]);
   const [selectedTopics, setSelectedTopics] = useState([]);
-  const [source, setSource] = useState("default"); // "default" | "custom" | "all"
+  const [source, setSource]             = useState("default");
 
-  const defaultTopics = gameLang === "ru" ? TOPICS_DATA_RU : TOPICS_DATA;
+  useEffect(() => {
+    setTeamNames(DEFAULT_TEAM_NAMES[lang]);
+    setSelectedTopics([]);
+  }, [lang]);
+
+  const defaultTopics = lang === "ru" ? TOPICS_DATA_RU : TOPICS_DATA;
   const customTopicsForLang = (customTopics || []).map(topic => ({
     ...topic,
     questions: Object.fromEntries(
       Object.entries(topic.questions).map(([pts, qs]) => [
-        pts, qs.filter(q => (q.lang || "uz") === gameLang)
+        pts, qs.filter(q => (q.lang || "uz") === lang)
       ])
     ),
-  })).filter(t => Object.values(t.questions).some(a => a.length > 0));
+  })).filter(tpc => Object.values(tpc.questions).some(a => a.length > 0));
 
   const availableTopics = source === "default"
     ? defaultTopics
@@ -379,15 +410,9 @@ function SetupScreen({ onStart, customTopics }) {
     ? customTopicsForLang
     : [...defaultTopics, ...customTopicsForLang];
 
-  function switchLang(l) {
-    setGameLang(l);
-    setTeamNames(DEFAULT_TEAM_NAMES[l]);
-    setSelectedTopics([]);
-  }
-
   function toggleTopic(id) {
     setSelectedTopics((prev) =>
-      prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
   }
 
@@ -396,7 +421,7 @@ function SetupScreen({ onStart, customTopics }) {
     const teams = Array.from({ length: teamCount }, (_, i) => ({
       id: i, name: teamNames[i] || `${i + 1}-Jamoa`, score: 0, color: TEAM_COLORS[i],
     }));
-    onStart(teams, selectedTopics, [...TOPICS_DATA, ...(customTopics || [])]);
+    onStart(teams, selectedTopics, [...TOPICS_DATA, ...(customTopics || [])], lang);
   }
 
   return (
@@ -408,93 +433,62 @@ function SetupScreen({ onStart, customTopics }) {
             <Trophy size={22} color="#fff" />
           </span>
           <div style={{ flex: 1 }}>
-            <h3 style={{ margin: 0 }}>Quiz {gameLang === "ru" ? "Игра" : "O'yini"}</h3>
+            <h3 style={{ margin: 0 }}>{t.qg_title}</h3>
             <p style={{ margin: "4px 0 0", fontSize: 14, fontWeight: 700, color: "var(--muted)" }}>
-              {gameLang === "ru"
-                ? (step === 1 ? "Шаг 1: Команды" : "Шаг 2: Темы")
-                : (step === 1 ? "1-qadam: Jamoalar" : "2-qadam: Mavzular")}
+              {step === 1 ? t.qg_step1 : t.qg_step2}
             </p>
-          </div>
-          <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
-            {["uz", "ru"].map(l => (
-              <button
-                key={l}
-                type="button"
-                onClick={() => switchLang(l)}
-                style={{
-                  padding: "5px 10px", borderRadius: "8px", fontWeight: 800, fontSize: "12px", cursor: "pointer",
-                  border: `2px solid ${gameLang === l ? "#7c3aed" : "#e2e8f0"}`,
-                  background: gameLang === l ? "#ede9fe" : "white",
-                  color: gameLang === l ? "#7c3aed" : "#94a3b8",
-                }}
-              >{l === "uz" ? "🇺🇿 UZ" : "🇷🇺 RU"}</button>
-            ))}
           </div>
         </div>
 
         {step === 1 ? (
           <>
             <div className="qg-setup-section">
-              <label className="qg-setup-label">{gameLang === "ru" ? "Количество команд" : "Jamoalar soni"}</label>
+              <label className="qg-setup-label">{t.qg_teams_label}</label>
               <div className="qg-count-row">
                 {[2, 3, 4].map((n) => (
-                  <button
-                    key={n}
+                  <button key={n}
                     className={`qg-count-btn ${teamCount === n ? "primary-button" : "secondary-button"}`}
-                    onClick={() => setTeamCount(n)}
-                  >
-                    <Users size={15} /> {n} {gameLang === "ru" ? "команды" : "jamoa"}
+                    onClick={() => setTeamCount(n)}>
+                    <Users size={15} /> {n} {lang === "ru" ? "команды" : "jamoa"}
                   </button>
                 ))}
               </div>
               <p style={{ margin: "2px 0 0", fontSize: 13, color: "var(--muted)", fontWeight: 600 }}>
-                {gameLang === "ru"
-                  ? <>На каждом уровне будет <strong style={{ color: "var(--text)" }}>{teamCount} вопроса</strong></>
-                  : <>Har ball darajasida <strong style={{ color: "var(--text)" }}>{teamCount} ta savol</strong> bo'ladi</>}
+                {t.qg_per_level(teamCount)}
               </p>
             </div>
 
             <div className="qg-setup-section">
-              <label className="qg-setup-label">{gameLang === "ru" ? "Названия команд" : "Jamoa nomlari"}</label>
+              <label className="qg-setup-label">{t.qg_names_label}</label>
               <div className="qg-names-list">
                 {Array.from({ length: teamCount }, (_, i) => (
                   <div key={i} className="qg-name-row">
                     <span className="qg-color-dot" style={{ background: TEAM_COLORS[i] }} />
-                    <input
-                      className="control"
-                      style={{ flex: 1 }}
+                    <input className="control" style={{ flex: 1 }}
                       value={teamNames[i]}
-                      onChange={(e) => {
-                        const u = [...teamNames]; u[i] = e.target.value; setTeamNames(u);
-                      }}
-                      placeholder={`${i + 1}-Jamoa`}
+                      onChange={(e) => { const u = [...teamNames]; u[i] = e.target.value; setTeamNames(u); }}
+                      placeholder={DEFAULT_TEAM_NAMES[lang][i]}
                     />
                   </div>
                 ))}
               </div>
             </div>
 
-            <button
-              className="primary-button"
-              style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
-              onClick={() => setStep(2)}
-            >
-              {gameLang === "ru" ? "Выбрать темы" : "Mavzularni tanlash"} <ChevronRight size={18} />
+            <button className="primary-button" style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }} onClick={() => setStep(2)}>
+              {t.qg_next_topics} <ChevronRight size={18} />
             </button>
           </>
         ) : (
           <>
             <div className="qg-setup-section">
-              <label className="qg-setup-label">{gameLang === "ru" ? "Источник вопросов" : "Savollar manbai"}</label>
+              <label className="qg-setup-label">{t.qg_source_label}</label>
               <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
                 {[
-                  { val: "default", label: SOURCE_LABELS[gameLang].default },
-                  { val: "custom",  label: SOURCE_LABELS[gameLang].custom },
-                  { val: "all",     label: SOURCE_LABELS[gameLang].all },
+                  { val: "default", label: t.qg_source_default },
+                  { val: "custom",  label: t.qg_source_custom },
+                  { val: "all",     label: t.qg_source_all },
                 ].map(opt => (
-                  <button
-                    key={opt.val}
-                    type="button"
+                  <button key={opt.val} type="button"
                     onClick={() => { setSource(opt.val); setSelectedTopics([]); }}
                     style={{
                       padding: "7px 14px", borderRadius: "8px", fontWeight: 700, fontSize: "12px", cursor: "pointer",
@@ -502,27 +496,22 @@ function SetupScreen({ onStart, customTopics }) {
                       background: source === opt.val ? "#ede9fe" : "white",
                       color: source === opt.val ? "#7c3aed" : "#64748b",
                       transition: "all 0.15s",
-                    }}
-                  >
-                    {opt.label}
-                  </button>
+                    }}>{opt.label}</button>
                 ))}
               </div>
               {source === "custom" && customTopicsForLang.length === 0 && (
                 <p style={{ fontSize: "12px", color: "#f59e0b", fontWeight: 600, marginTop: "8px", background: "#fef9c3", border: "1px solid #fde68a", borderRadius: "8px", padding: "8px 12px" }}>
-                  {gameLang === "ru"
-                    ? "💡 Нет ваших вопросов на русском. Добавьте в Настройки → «Quiz savollari»."
-                    : "💡 Hali o'z savollaringiz yo'q. Sozlamalar → \"Quiz savollari\" bo'limida qo'shing."}
+                  {t.qg_no_custom}
                 </p>
               )}
             </div>
 
             <div className="qg-setup-section">
               <label className="qg-setup-label">
-                {gameLang === "ru" ? "Выберите темы" : "Mavzularni tanlang — alohida-alohida"}
+                {t.qg_topics_label}
                 {selectedTopics.length > 0 && (
                   <span style={{ marginLeft: 8, color: "var(--blue)", fontWeight: 800 }}>
-                    {selectedTopics.length} {gameLang === "ru" ? "выбрано" : "ta tanlandi"}
+                    {t.qg_selected(selectedTopics.length)}
                   </span>
                 )}
               </label>
@@ -530,12 +519,10 @@ function SetupScreen({ onStart, customTopics }) {
                 {availableTopics.map((topic) => {
                   const active = selectedTopics.includes(topic.id);
                   return (
-                    <button
-                      key={topic.id}
+                    <button key={topic.id}
                       className={`qg-topic-select-btn${active ? " selected" : ""}`}
                       style={active ? { borderColor: topic.color, borderBottomColor: topic.colorDark } : {}}
-                      onClick={() => toggleTopic(topic.id)}
-                    >
+                      onClick={() => toggleTopic(topic.id)}>
                       <span className="qgts-icon">{topic.icon}</span>
                       <span className="qgts-name">{topic.name}</span>
                       <span className="qgts-check" style={active ? { background: topic.color, borderColor: topic.colorDark } : {}}>
@@ -549,28 +536,22 @@ function SetupScreen({ onStart, customTopics }) {
 
             <div className="qg-legend">
               <span className="qg-legend-item" style={{ background: "#fefce8", border: "1px solid #fde047", color: "#854d0e" }}>
-                🧮 Mini masalalar bor
+                {t.qg_mini_hint}
               </span>
               <span className="qg-legend-item" style={{ background: "#fff1f2", border: "1px solid #fda4af", color: "#991b1b" }}>
-                ??? — maxfiy katakchalar
+                {t.qg_mystery_hint}
               </span>
             </div>
 
             <div style={{ display: "flex", gap: 10 }}>
-              <button
-                className="secondary-button"
-                style={{ display: "flex", alignItems: "center", gap: 6 }}
-                onClick={() => setStep(1)}
-              >
-                <ArrowLeft size={16} /> {gameLang === "ru" ? "Назад" : "Orqaga"}
+              <button className="secondary-button" style={{ display: "flex", alignItems: "center", gap: 6 }} onClick={() => setStep(1)}>
+                <ArrowLeft size={16} /> {t.qg_back}
               </button>
-              <button
-                className="primary-button"
+              <button className="primary-button"
                 style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
                 disabled={selectedTopics.length < 1}
-                onClick={handleStart}
-              >
-                <Play size={18} /> {gameLang === "ru" ? "Начать игру" : "O'yinni boshlash"}
+                onClick={handleStart}>
+                <Play size={18} /> {t.qg_start}
               </button>
             </div>
           </>
@@ -582,6 +563,7 @@ function SetupScreen({ onStart, customTopics }) {
 
 // ─── END SCREEN ───────────────────────────────────────────────────────────────
 function EndScreen({ teams, onReset }) {
+  const { t } = useT();
   const sorted = [...teams].sort((a, b) => b.score - a.score);
   return (
     <div className="qg-setup-wrap">
@@ -591,14 +573,14 @@ function EndScreen({ teams, onReset }) {
             <Trophy size={22} color="#fff" />
           </span>
           <div>
-            <h3 style={{ margin: 0 }}>O'yin Tugadi!</h3>
-            <p style={{ margin: "4px 0 0", fontSize: 14, fontWeight: 700, color: "var(--muted)" }}>Yakuniy natijalar</p>
+            <h3 style={{ margin: 0 }}>{t.qg_end_title}</h3>
+            <p style={{ margin: "4px 0 0", fontSize: 14, fontWeight: 700, color: "var(--muted)" }}>{t.qg_end_sub}</p>
           </div>
         </div>
 
         {sorted[0] && (
           <div className="qg-winner-card" style={{ borderColor: sorted[0].color, borderBottomColor: sorted[0].color, background: `${sorted[0].color}14` }}>
-            🏆 G'olib: <strong style={{ color: sorted[0].color }}>{sorted[0].name}</strong> — {sorted[0].score} ball!
+            {t.qg_winner(sorted[0].name, sorted[0].score)}
           </div>
         )}
 
@@ -607,17 +589,13 @@ function EndScreen({ teams, onReset }) {
             <div key={team.id} className="qg-final-row" style={{ borderColor: team.color, borderBottomColor: team.color }}>
               <span className="qgfr-rank">{idx === 0 ? "🏆" : `${idx + 1}.`}</span>
               <span className="qgfr-name" style={{ color: team.color }}>{team.name}</span>
-              <span className="qgfr-score">{team.score} ball</span>
+              <span className="qgfr-score">{team.score} {t.qg_score_unit}</span>
             </div>
           ))}
         </div>
 
-        <button
-          className="primary-button"
-          style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
-          onClick={onReset}
-        >
-          <RefreshCw size={16} /> Qayta boshlash
+        <button className="primary-button" style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }} onClick={onReset}>
+          <RefreshCw size={16} /> {t.qg_restart}
         </button>
       </div>
     </div>
@@ -626,38 +604,36 @@ function EndScreen({ teams, onReset }) {
 
 // ─── MAIN GAME ────────────────────────────────────────────────────────────────
 export function QuizGamePage({ settings }) {
+  const { t, lang: siteLang } = useT();
   const customTopics = (settings?.customTopics || []);
   const [phase, setPhase]   = useState("setup");
   const [teams, setTeams]   = useState([]);
-  const [topics, setTopics] = useState([]);
+  const [gameLang, setGameLang] = useState("uz");
   const [board, setBoard]   = useState({});
   const [teamCount, setTeamCount] = useState(2);
-  const [currentTurn, setCurrentTurn] = useState(0); // index into teams[]
-
-  // active cell: { pts, slot }
-  const [activeCell,    setActiveCell]    = useState(null);
-  const [showAnswer,    setShowAnswer]    = useState(false);
-  const [resultEffect,  setResultEffect]  = useState(null);
-  const [specialPhase,  setSpecialPhase]  = useState(false); // bonus/minus announce
+  const [currentTurn, setCurrentTurn] = useState(0);
+  const [activeCell, setActiveCell]   = useState(null);
+  const [showAnswer, setShowAnswer]   = useState(false);
+  const [resultEffect, setResultEffect] = useState(null);
+  const [specialPhase, setSpecialPhase] = useState(false);
 
   const totalCells = POINT_VALUES.length * teamCount;
-
   const usedCells = useMemo(() => {
     if (!Object.keys(board).length) return 0;
-    return Object.values(board).reduce(
-      (acc, slots) => acc + slots.filter((s) => s.used).length,
-      0
-    );
+    return Object.values(board).reduce((acc, slots) => acc + slots.filter((s) => s.used).length, 0);
   }, [board]);
 
-  function handleStart(newTeams, selectedIds, allTopics) {
+  function handleStart(newTeams, selectedIds, allTopics, lang) {
     const tc = newTeams.length;
-    const pool = allTopics || TOPICS_DATA;
-    const sel = selectedIds.map((id) => pool.find((t) => t.id === id)).filter(Boolean);
+    const customPool = (allTopics || []).filter(t => !TOPICS_DATA.find(d => d.id === t.id));
+    const uzPool = [...TOPICS_DATA, ...customPool];
+    const ruPool = [...TOPICS_DATA_RU, ...customPool];
+    const sel = selectedIds.map((id) => uzPool.find((tp) => tp.id === id)).filter(Boolean);
+    const selRu = selectedIds.map((id) => ruPool.find((tp) => tp.id === id)).filter(Boolean);
     setTeams(newTeams);
     setTeamCount(tc);
-    setTopics(sel);
-    setBoard(initBoard(sel, tc));
+    setGameLang(lang || "uz");
+    setBoard(initBoard(sel, selRu, tc));
     setCurrentTurn(0);
     setPhase("game");
   }
@@ -676,60 +652,56 @@ export function QuizGamePage({ settings }) {
     const pts  = activeCell.pts;
     const mult = cell.type === "bonus" ? 2 : 1;
     const earn = correct ? pts * mult : 0;
-    // minus penalty applies even if score goes negative
     const pen  = !correct && cell.type === "minus" ? -(Math.floor(pts / 2)) : 0;
     const delta = earn + pen;
-
     const currentTeamId = teams[currentTurn]?.id;
-    setTeams((prev) =>
-      prev.map((t) => t.id === currentTeamId ? { ...t, score: t.score + delta } : t)
-    );
+    setTeams((prev) => prev.map((tm) => tm.id === currentTeamId ? { ...tm, score: tm.score + delta } : tm));
     setResultEffect({ type: correct ? "correct" : "incorrect", delta });
-
     setTimeout(() => {
       setBoard((prev) => {
-        const updated = prev[activeCell.pts].map((c, i) =>
-          i === activeCell.slot ? { ...c, used: true } : c
-        );
+        const updated = prev[activeCell.pts].map((c, i) => i === activeCell.slot ? { ...c, used: true } : c);
         return { ...prev, [activeCell.pts]: updated };
       });
-      setCurrentTurn((t) => (t + 1) % teams.length);
+      setCurrentTurn((tm) => (tm + 1) % teams.length);
       setActiveCell(null);
       setResultEffect(null);
+      setGameLang(siteLang);
     }, 1400);
   }
 
   function skipCell() {
     if (!activeCell) return;
     setBoard((prev) => {
-      const updated = prev[activeCell.pts].map((c, i) =>
-        i === activeCell.slot ? { ...c, used: true } : c
-      );
+      const updated = prev[activeCell.pts].map((c, i) => i === activeCell.slot ? { ...c, used: true } : c);
       return { ...prev, [activeCell.pts]: updated };
     });
-    setCurrentTurn((t) => (t + 1) % teams.length);
+    setCurrentTurn((tm) => (tm + 1) % teams.length);
     setActiveCell(null);
     setSpecialPhase(false);
+    setGameLang(siteLang);
   }
 
   function resetGame() {
     setPhase("setup");
-    setTeams([]); setTopics([]); setBoard({});
-    setCurrentTurn(0); setActiveCell(null); setShowAnswer(false);
-    setResultEffect(null); setSpecialPhase(false);
+    setTeams([]); setBoard({});
+    setCurrentTurn(0); setActiveCell(null);
+    setShowAnswer(false); setResultEffect(null); setSpecialPhase(false);
   }
 
   useMemo(() => {
     if (phase === "game" && totalCells > 0 && usedCells === totalCells) {
-      const t = setTimeout(() => setPhase("end"), 500);
-      return () => clearTimeout(t);
+      const tmr = setTimeout(() => setPhase("end"), 500);
+      return () => clearTimeout(tmr);
     }
   }, [usedCells, totalCells, phase]);
 
   const activeCellData = activeCell ? board[activeCell.pts]?.[activeCell.slot] : null;
 
-  if (phase === "setup") return <SetupScreen onStart={handleStart} customTopics={customTopics} />;
+  if (phase === "setup") return <SetupScreen onStart={handleStart} customTopics={customTopics} siteLang={siteLang} />;
   if (phase === "end")   return <EndScreen teams={teams} onReset={resetGame} />;
+
+  const currentTeam = teams[currentTurn];
+  const gt = QG_TEXTS[gameLang] || QG_TEXTS.uz;
 
   return (
     <div className="qg-wrap">
@@ -738,18 +710,26 @@ export function QuizGamePage({ settings }) {
       <div className="qg-scoreboard">
         <div className="qg-scores">
           {teams.map((team, idx) => {
-            const isCurrentTurn = idx === currentTurn;
+            const isCurrent = idx === currentTurn;
             return (
-              <div
-                key={team.id}
-                className={`qg-team-card${isCurrentTurn ? " active-turn" : ""}`}
-                style={{ borderColor: team.color, borderBottomColor: team.color }}
-              >
+              <div key={team.id}
+                className={`qg-team-card${isCurrent ? " active-turn" : ""}`}
+                style={{
+                  borderColor: team.color,
+                  borderBottomColor: team.color,
+                  background: isCurrent ? `${team.color}10` : undefined,
+                  transform: isCurrent ? "scale(1.02)" : undefined,
+                  transition: "all 0.2s",
+                }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: 1, overflow: "hidden" }}>
-                  <span className="qg-turn-badge">{idx + 1}-Jamoa {isCurrentTurn ? "▶" : ""}</span>
+                  <span className="qg-turn-badge" style={{ color: isCurrent ? team.color : undefined }}>
+                    {gt.jamoa(idx + 1)} {isCurrent ? "▶" : ""}
+                  </span>
                   <div className="qg-team-name" style={{ color: team.color }}>{team.name}</div>
                 </div>
-                <div className="qg-team-score">{team.score} <span>ball</span></div>
+                <div className="qg-team-score" style={{ color: isCurrent ? team.color : undefined }}>
+                  {team.score} <span>{gt.score_unit}</span>
+                </div>
               </div>
             );
           })}
@@ -762,151 +742,169 @@ export function QuizGamePage({ settings }) {
             <span className="qg-prog-label">{usedCells}/{totalCells}</span>
           </div>
           <button className="secondary-button qg-finish-btn" onClick={() => setPhase("end")}>
-            <Trophy size={14} /> Yakunlash
+            <Trophy size={14} /> {gt.finish}
           </button>
         </div>
       </div>
 
-      {/* ── Board: teams as columns, point values as rows ── */}
+      {/* ── Board ── */}
       <div className="qg-board-panel">
-        <div
-          className="qg-board"
-          style={{ gridTemplateColumns: `repeat(${teamCount}, 1fr)` }}
-        >
-          {/* Team column headers */}
+        <div className="qg-board" style={{ gridTemplateColumns: `60px repeat(${teamCount}, 1fr)` }}>
+
+          {/* Empty corner + team headers */}
+          <div />
           {teams.map((team, idx) => (
             <div key={team.id} className="qg-col-header" style={{ borderColor: team.color }}>
-              <span className="qg-col-order">{idx + 1}-Jamoa</span>
+              <span className="qg-col-order">{gt.jamoa(idx + 1)}</span>
               <span className="qg-col-name" style={{ color: team.color }}>{team.name}</span>
             </div>
           ))}
 
-          {/* Cells: for each point level × each team column */}
-          {POINT_VALUES.flatMap((pts) =>
-            teams.map((_, slot) => {
-              const cell = board[pts]?.[slot];
-              if (!cell) return null;
-              const isMystery = cell.type !== "question";
-              const ptColor = PT[pts].color;
-              const ptDark  = PT[pts].colorDark;
-              return (
-                <button
-                  key={`${pts}_${slot}`}
-                  className={`qg-cell${cell.used ? " used" : ""}${isMystery ? " mystery" : ""}`}
-                  style={!cell.used && !isMystery ? { "--qc": ptColor, "--qcb": ptDark } : {}}
-                  onClick={() => openCell(pts, slot)}
-                  disabled={cell.used}
-                >
-                  {cell.used ? (
-                    <span className="qg-cell-used">✓</span>
-                  ) : isMystery ? (
-                    <span className="qg-cell-mystery">???</span>
-                  ) : (
-                    <>
-                      <span className="qg-cell-pts" style={{ color: ptColor }}>{pts}</span>
-                      <span className="qg-cell-unit" style={{ color: ptColor }}>BALL</span>
-                    </>
-                  )}
-                </button>
-              );
-            })
-          )}
+          {/* Rows: point label + cells */}
+          {POINT_VALUES.flatMap((pts) => {
+            const ptMeta = PT[pts];
+            return [
+              // Point label cell
+              <div key={`label_${pts}`} style={{
+                display: "flex", alignItems: "center", justifyContent: "center",
+                borderRadius: 8, background: ptMeta.light_bg,
+                border: `2px solid ${ptMeta.light_bd}`,
+                padding: "4px 2px",
+              }}>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: "clamp(13px,2vw,18px)", fontWeight: 900, color: ptMeta.color, lineHeight: 1 }}>{pts}</div>
+                  <div style={{ fontSize: 9, fontWeight: 800, color: ptMeta.color, opacity: 0.75, letterSpacing: 1 }}>{gt.ball_label}</div>
+                </div>
+              </div>,
+              // Question cells
+              ...teams.map((_, slot) => {
+                const cell = board[pts]?.[slot];
+                if (!cell) return null;
+                const isMystery = cell.type !== "question";
+                return (
+                  <button
+                    key={`${pts}_${slot}`}
+                    className={`qg-cell${cell.used ? " used" : ""}${isMystery ? " mystery" : ""}`}
+                    style={!cell.used && !isMystery ? { "--qc": ptMeta.color, "--qcb": ptMeta.colorDark } : {}}
+                    onClick={() => openCell(pts, slot)}
+                    disabled={cell.used}
+                  >
+                    {cell.used ? (
+                      <span className="qg-cell-used">✓</span>
+                    ) : isMystery ? (
+                      <span className="qg-cell-mystery">???</span>
+                    ) : (
+                      <>
+                        <span className="qg-cell-pts" style={{ color: ptMeta.color }}>{pts}</span>
+                        <span className="qg-cell-unit" style={{ color: ptMeta.color }}>{gt.ball_label}</span>
+                      </>
+                    )}
+                  </button>
+                );
+              }),
+            ];
+          })}
         </div>
       </div>
 
       {/* ── Question Modal ── */}
       {activeCell && (() => {
-        const currentTeam = teams[currentTurn];
         const ptMeta = PT[activeCell.pts];
         return (
           <div className="qg-overlay">
             <div className="qg-modal">
 
-              {/* Header: topic icon + pts badge */}
               <div className="qg-modal-head" style={{ borderColor: activeCellData?.topicColor, background: `${activeCellData?.topicColor}18` }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ fontSize: 20 }}>{activeCellData?.topicIcon}</span>
                   <span className="qg-modal-cat" style={{ color: activeCellData?.topicColor }}>
-                    {currentTurn + 1}-Jamoa navbati
+                    {gt.turn(currentTeam?.name)}
                   </span>
+                  <button
+                    type="button"
+                    onClick={() => setGameLang(l => l === "ru" ? "uz" : "ru")}
+                    style={{
+                      fontSize: "10px", fontWeight: 800, padding: "3px 8px", borderRadius: "999px",
+                      background: gameLang === "ru" ? "#e0f2fe" : "#f0fdf4",
+                      color: gameLang === "ru" ? "#0369a1" : "#166534",
+                      border: `1.5px solid ${gameLang === "ru" ? "#7dd3fc" : "#86efac"}`,
+                      cursor: "pointer",
+                    }}
+                  >
+                    {gameLang === "ru" ? "🇷🇺 RU" : "🇺🇿 UZ"}
+                  </button>
                 </div>
-                <span
-                  className="qg-modal-pts"
-                  style={{ background: ptMeta?.light_bg, color: ptMeta?.light_c, borderColor: ptMeta?.light_bd }}
-                >
+                <span className="qg-modal-pts" style={{ background: ptMeta?.light_bg, color: ptMeta?.light_c, borderColor: ptMeta?.light_bd }}>
                   {activeCellData?.type === "bonus"
-                    ? `⚡ ${activeCell.pts * 2} BALL`
+                    ? `⚡ ${activeCell.pts * 2} ${gt.ball_label}`
                     : activeCellData?.type === "minus"
                     ? `💀 MINUS`
-                    : `${activeCell.pts} BALL`}
+                    : `${activeCell.pts} ${gt.ball_label}`}
                 </span>
               </div>
 
-              {/* Current team indicator */}
               <div className="qg-current-team" style={{ borderColor: currentTeam?.color, background: `${currentTeam?.color}12` }}>
-                <span style={{ fontSize: 13, fontWeight: 800, color: "var(--muted)" }}>{currentTurn + 1}-Jamoa:</span>
+                <span style={{ fontSize: 13, fontWeight: 800, color: "var(--muted)" }}>{gt.jamoa(currentTurn + 1)}:</span>
                 <span style={{ fontSize: 15, fontWeight: 900, color: currentTeam?.color }}>{currentTeam?.name}</span>
-                <span style={{ fontSize: 14, fontWeight: 800, color: "var(--text)" }}>{currentTeam?.score} ball</span>
+                <span style={{ fontSize: 14, fontWeight: 800, color: "var(--text)" }}>{currentTeam?.score} {gt.score_unit}</span>
               </div>
 
-              {/* Special announce screen */}
               {specialPhase ? (
                 <div className="qg-special">
                   <div className="qg-special-icon">
                     {activeCellData?.type === "bonus" ? "⚡" : "💀"}
                   </div>
                   <div className="qg-special-title" style={{ color: activeCellData?.type === "bonus" ? "#a16207" : "#be123c" }}>
-                    {activeCellData?.type === "bonus" ? "BONUS SAVOL!" : "MINUS SAVOL!"}
+                    {activeCellData?.type === "bonus" ? gt.bonus_title : gt.minus_title}
                   </div>
                   <p className="qg-special-desc">
                     {activeCellData?.type === "bonus"
-                      ? `To'g'ri javob bersangiz ${activeCell.pts * 2} BALL olasiz!`
-                      : `Noto'g'ri javob bersangiz −${Math.floor(activeCell.pts / 2)} ball ayriladi!`}
+                      ? gt.bonus_desc(activeCell.pts * 2)
+                      : gt.minus_desc(Math.floor(activeCell.pts / 2))}
                   </p>
                   <button
                     className={activeCellData?.type === "bonus" ? "primary-button" : "danger-button"}
                     style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
-                    onClick={() => setSpecialPhase(false)}
-                  >
-                    <Eye size={16} /> Savolni ko'rish
+                    onClick={() => setSpecialPhase(false)}>
+                    <Eye size={16} /> {gt.see_q}
                   </button>
                 </div>
               ) : (
                 <>
-                  {/* Question */}
-                  <div className="qg-question">{activeCellData?.q}</div>
+                  <div className="qg-question">
+                    {gameLang === "ru" ? (activeCellData?.q_ru || activeCellData?.q) : activeCellData?.q}
+                  </div>
 
                   {!showAnswer ? (
-                    <button
-                      className="primary-button"
+                    <button className="primary-button"
                       style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
-                      onClick={() => setShowAnswer(true)}
-                    >
-                      <Eye size={16} /> Javobni ko'rish
+                      onClick={() => setShowAnswer(true)}>
+                      <Eye size={16} /> {gt.show_answer}
                     </button>
                   ) : (
                     <>
-                      <div className="qg-answer">{activeCellData?.a}</div>
-
+                      <div className="qg-answer">
+                        {gameLang === "ru" ? (activeCellData?.a_ru || activeCellData?.a) : activeCellData?.a}
+                      </div>
                       {resultEffect === null ? (
                         <>
                           <div className="qg-verdict-row">
                             <button className="primary-button qg-correct-btn" onClick={() => handleResult(true)}>
-                              <Check size={18} /> To'g'ri
+                              <Check size={18} /> {gt.correct}
                             </button>
                             <button className="danger-button qg-incorrect-btn" onClick={() => handleResult(false)}>
-                              <X size={18} /> Noto'g'ri
+                              <X size={18} /> {gt.incorrect}
                             </button>
                           </div>
                           <button className="secondary-button qg-skip-btn" onClick={skipCell}>
-                            O'tkazib yuborish
+                            {gt.skip}
                           </button>
                         </>
                       ) : (
                         <div className={`qg-result-effect ${resultEffect.type}`}>
                           {resultEffect.type === "correct"
-                            ? <><Check size={30} /> +{resultEffect.delta} BALL</>
-                            : <><X size={30} /> {resultEffect.delta !== 0 ? `${resultEffect.delta} BALL` : "Ball qo'shilmadi"}</>}
+                            ? <><Check size={30} /> +{resultEffect.delta} {gt.ball_label}</>
+                            : <><X size={30} /> {resultEffect.delta !== 0 ? `${resultEffect.delta} ${gt.ball_label}` : gt.no_score}</>}
                         </div>
                       )}
                     </>

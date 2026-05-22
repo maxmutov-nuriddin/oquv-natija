@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BarChart3, BookOpen, CheckCircle2, Clock3, Copy, ExternalLink, Eye, EyeOff, Loader2, Lock, Send, Settings, Trash2, UserPlus, UserRound } from "lucide-react";
+import { BarChart3, BookOpen, CheckCircle2, Clock3, Copy, ExternalLink, Eye, EyeOff, Loader2, Lock, Pencil, Send, Settings, Trash2, UserPlus, UserRound, X } from "lucide-react";
 import { useT } from "../i18n/index.jsx";
 import { cx } from "../lib/utils";
 import { PanelHeader } from "../components/ui/PanelHeader";
@@ -40,6 +40,7 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
   const [customQForm, setCustomQForm] = useState({ topicName: "", topicIcon: "📝", pts: 100, cellType: "question", lang: "uz", question: "", answer: "" });
   const [customQBusy, setCustomQBusy] = useState(false);
   const [customQStatus, setCustomQStatus] = useState({ type: "", text: "" });
+  const [editingQ, setEditingQ] = useState(null); // { topicId, pts, idx }
 
   useEffect(() => {
     setDraft(settings);
@@ -195,39 +196,76 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
     setCustomQStatus({ type: "", text: "" });
     try {
       const current = settings?.customTopics || [];
-      const existing = current.find(t => t.name === topicName.trim());
-      let updated;
       const newEntry = { q: question.trim(), a: answer.trim(), lang };
       if (cellType !== "question") newEntry.cellType = cellType;
-      if (existing) {
-        updated = current.map(t => {
-          if (t.name !== topicName.trim()) return t;
-          const qs = { ...t.questions };
-          qs[pts] = [...(qs[pts] || []), newEntry];
-          return { ...t, questions: qs };
+
+      let updated;
+      if (editingQ) {
+        // Edit mode: replace existing question
+        updated = current.map(tpc => {
+          if (tpc.id !== editingQ.topicId) return tpc;
+          const qs = { ...tpc.questions };
+          qs[editingQ.pts] = (qs[editingQ.pts] || []).map((q, i) => i === editingQ.idx ? newEntry : q);
+          return { ...tpc, questions: qs };
         });
+        setEditingQ(null);
+        setCustomQStatus({ type: "success", text: "✅ Savol yangilandi!" });
       } else {
-        const idx = current.length % TOPIC_COLORS.length;
-        const newTopic = {
-          id: Date.now().toString(36),
-          name: topicName.trim(),
-          icon: topicIcon.trim() || "📝",
-          color: TOPIC_COLORS[idx].color,
-          colorDark: TOPIC_COLORS[idx].colorDark,
-          questions: { 100: [], 200: [], 300: [], 400: [], 500: [] },
-        };
-        newTopic.questions[pts] = [newEntry];
-        updated = [...current, newTopic];
+        // Add mode
+        const existing = current.find(tpc => tpc.name === topicName.trim());
+        if (existing) {
+          updated = current.map(tpc => {
+            if (tpc.name !== topicName.trim()) return tpc;
+            const qs = { ...tpc.questions };
+            qs[pts] = [...(qs[pts] || []), newEntry];
+            return { ...tpc, questions: qs };
+          });
+        } else {
+          const idx = current.length % TOPIC_COLORS.length;
+          const newTopic = {
+            id: Date.now().toString(36),
+            name: topicName.trim(),
+            icon: topicIcon.trim() || "📝",
+            color: TOPIC_COLORS[idx].color,
+            colorDark: TOPIC_COLORS[idx].colorDark,
+            questions: { 100: [], 200: [], 300: [], 400: [], 500: [] },
+          };
+          newTopic.questions[pts] = [newEntry];
+          updated = [...current, newTopic];
+        }
+        setCustomQStatus({ type: "success", text: "✅ Savol qo'shildi!" });
       }
+
       await saveSettings({ ...settings, customTopics: updated });
       setCustomQForm(f => ({ ...f, question: "", answer: "" }));
-      setCustomQStatus({ type: "success", text: "✅ Savol qo'shildi!" });
       setTimeout(() => setCustomQStatus({ type: "", text: "" }), 2500);
     } catch (err) {
       setCustomQStatus({ type: "error", text: err.message });
     } finally {
       setCustomQBusy(false);
     }
+  }
+
+  function handleEditQuestion(topic, pts, idx) {
+    const q = topic.questions[pts][idx];
+    setCustomQForm({
+      topicName: topic.name,
+      topicIcon: topic.icon,
+      pts: Number(pts),
+      cellType: q.cellType || "question",
+      lang: q.lang || "uz",
+      question: q.q,
+      answer: q.a,
+    });
+    setEditingQ({ topicId: topic.id, pts: Number(pts), idx });
+    // Scroll to form
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function cancelEdit() {
+    setEditingQ(null);
+    setCustomQForm({ topicName: "", topicIcon: "📝", pts: 100, cellType: "question", lang: "uz", question: "", answer: "" });
+    setCustomQStatus({ type: "", text: "" });
   }
 
   async function handleDeleteCustomQuestion(topicId, pts, idx) {
@@ -378,6 +416,16 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
       {/* Custom Quiz Questions */}
       <section className="panel">
         <PanelHeader icon={BookOpen} title="Quiz savollari" subtitle="O'z savollaringizni yarating — o'yinda ishlatiladi" />
+
+        {editingQ && (
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 14px", background: "#ede9fe", border: "2px solid #c4b5fd", borderRadius: "10px", marginBottom: "4px" }}>
+            <Pencil size={15} color="#7c3aed" />
+            <span style={{ flex: 1, fontSize: "13px", fontWeight: 700, color: "#4c1d95" }}>Savol tahrirlanmoqda</span>
+            <button type="button" onClick={cancelEdit} style={{ background: "none", border: "none", cursor: "pointer", color: "#7c3aed", display: "flex", alignItems: "center" }}>
+              <X size={16} />
+            </button>
+          </div>
+        )}
 
         {/* Form */}
         <form onSubmit={handleAddCustomQuestion} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
@@ -533,8 +581,8 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
           )}
 
           <button className="primary-button" type="submit" disabled={customQBusy} style={{ justifyContent: "center" }}>
-            {customQBusy ? <Loader2 size={16} className="spinner" /> : <BookOpen size={16} />}
-            Savol qo'shish
+            {customQBusy ? <Loader2 size={16} className="spinner" /> : editingQ ? <Pencil size={16} /> : <BookOpen size={16} />}
+            {editingQ ? "Saqlash" : "Savol qo'shish"}
           </button>
         </form>
 
@@ -565,20 +613,37 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
                         {q.cellType === "minus" && (
                           <span style={{ flexShrink: 0, fontSize: "10px", fontWeight: 900, padding: "2px 7px", borderRadius: "999px", background: "#fee2e2", border: "1px solid #fca5a5", color: "#dc2626" }}>💀???</span>
                         )}
-                        <span style={{ flexShrink: 0, fontSize: "10px", fontWeight: 700, padding: "2px 6px", borderRadius: "999px", background: "#f1f5f9", color: "#64748b" }}>
-                          {(q.lang || "uz") === "ru" ? "🇷🇺" : "🇺🇿"}
+                        <span style={{
+                          flexShrink: 0, fontSize: "10px", fontWeight: 800, padding: "2px 8px",
+                          borderRadius: "999px",
+                          background: (q.lang || "uz") === "ru" ? "#e0f2fe" : "#f0fdf4",
+                          color: (q.lang || "uz") === "ru" ? "#0369a1" : "#166534",
+                          border: `1px solid ${(q.lang || "uz") === "ru" ? "#7dd3fc" : "#86efac"}`,
+                        }}>
+                          {(q.lang || "uz") === "ru" ? "🇷🇺 RU" : "🇺🇿 UZ"}
                         </span>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <p style={{ margin: 0, fontSize: "13px", fontWeight: 700, color: "#0f172a" }}>{q.q}</p>
                           <p style={{ margin: "3px 0 0", fontSize: "12px", color: "#64748b" }}>{q.a}</p>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteCustomQuestion(topic.id, pts, i)}
-                          style={{ flexShrink: 0, background: "none", border: "none", color: "#ef4444", cursor: "pointer", padding: "2px", display: "flex", alignItems: "center" }}
-                        >
-                          <Trash2 size={15} />
-                        </button>
+                        <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
+                          <button
+                            type="button"
+                            onClick={() => handleEditQuestion(topic, pts, i)}
+                            style={{ background: "none", border: "none", color: "#7c3aed", cursor: "pointer", padding: "2px", display: "flex", alignItems: "center" }}
+                            title="Tahrirlash"
+                          >
+                            <Pencil size={14} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteCustomQuestion(topic.id, pts, i)}
+                            style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer", padding: "2px", display: "flex", alignItems: "center" }}
+                            title="O'chirish"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
                       </div>
                     ))
                   )}

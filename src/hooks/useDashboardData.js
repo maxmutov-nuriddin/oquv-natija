@@ -293,9 +293,17 @@ export function useDashboardData() {
             } else {
               coinsEarned = baseCoins;
             }
+            const boost = (student.gifts || []).find(g => g.id === "coin_boost_2x" && (g.count || 0) > 0);
+            if (boost) {
+              coinsEarned = coinsEarned * 2;
+            }
+            const nextGifts = boost
+              ? (student.gifts || []).map(g => g.id === "coin_boost_2x" ? { ...g, count: (g.count || 0) - 1 } : g).filter(g => (g.count || 0) > 0)
+              : null;
             rows.push({
               student,
-              record: { ...record, coinsEarned, ...(hasBonus ? { dailyBonus } : {}) }
+              record: { ...record, coinsEarned, ...(hasBonus ? { dailyBonus } : {}) },
+              ...(nextGifts !== null ? { nextGifts } : {})
             });
           }
         });
@@ -327,6 +335,7 @@ export function useDashboardData() {
                   homeworkScore: rowToSave.record.homework,
                   attendanceScore: rowToSave.record.attendance,
                   activityScore: rowToSave.record.activity,
+                  ...(rowToSave.nextGifts !== undefined ? { gifts: rowToSave.nextGifts } : {})
                 };
               }
               return student;
@@ -338,12 +347,13 @@ export function useDashboardData() {
           await ensureAdminSession();
 
           const batch = writeBatch(db);
-          rows.forEach(({ student, record }) => {
+          rows.forEach(({ student, record, nextGifts }) => {
             batch.set(userDoc("records", `${student.id}-${date}`), record, { merge: true });
             batch.update(userDoc("students", student.id), {
               homeworkScore: record.homework,
               attendanceScore: record.attendance,
-              activityScore: record.activity
+              activityScore: record.activity,
+              ...(nextGifts !== undefined ? { gifts: nextGifts } : {})
             });
           });
           recordsToDelete.forEach(({ studentId, date: d }) => {

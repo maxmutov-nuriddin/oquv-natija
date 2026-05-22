@@ -52,21 +52,15 @@ export function Sidebar({ activePage, setActivePage, teacher, logout, isOpen, on
       <nav className="nav-list" aria-label="Dashboard navigation">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isDisabled = item.id === "ludo";
           return (
             <div key={item.id} style={{ position: "relative" }} className="nav-item-wrapper">
               <button
-                className={cx("nav-button", activePage === item.id && "nav-button-active", isDisabled && "nav-button-disabled")}
-                onClick={() => !isDisabled && setActivePage(item.id)}
-                disabled={isDisabled}
-                style={isDisabled ? { opacity: 0.45, cursor: "not-allowed" } : {}}
+                className={cx("nav-button", activePage === item.id && "nav-button-active")}
+                onClick={() => setActivePage(item.id)}
               >
                 <Icon size={18} />
                 <span>{t[`nav_${item.id}`] || item.label}</span>
               </button>
-              {isDisabled && (
-                <div className="coming-soon-tooltip">Tez kunda...</div>
-              )}
             </div>
           );
         })}
