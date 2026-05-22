@@ -5,6 +5,7 @@ import { useT } from "../../i18n/index.jsx";
 import { cx, initials, numberInputValue, parsePercentInput } from "../../lib/utils";
 import { EmptyState } from "../ui/EmptyState";
 import { PanelHeader } from "../ui/PanelHeader";
+import { NumPad } from "../ui/NumPad";
 
 export function LessonEntryPanel({ group, students, records, date, currentTime, settings, saveLessonRecords }) {
   const { t } = useT();
@@ -12,6 +13,12 @@ export function LessonEntryPanel({ group, students, records, date, currentTime, 
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
   const [isUnlocked, setIsUnlocked] = useState(false);
+  const [numpad, setNumpad] = useState(null);
+
+  function openNumpad(studentId, fieldKey, label, studentName) {
+    if (window.innerWidth > 768) return;
+    setNumpad({ studentId, fieldKey, label, studentName, value: entries[studentId]?.[fieldKey] ?? 0 });
+  }
   const selectedWeekday = new Date(date + "T00:00:00").getDay();
   const dayLabel = t.weekday_short[selectedWeekday] || "";
   const isLessonDay = Boolean(group?.weekdays?.includes(selectedWeekday));
@@ -193,6 +200,12 @@ export function LessonEntryPanel({ group, students, records, date, currentTime, 
                         event.target.value = String(rounded);
                         update(student.id, field.key, rounded);
                       }}
+                      onPointerDown={(e) => {
+                        if (window.innerWidth <= 768 && !locked && isLessonDay && !isLessonOver) {
+                          e.preventDefault();
+                          openNumpad(student.id, field.key, field.label, student.name);
+                        }
+                      }}
                       aria-label={`${student.name} ${field.label}`}
                     />
                   ))}
@@ -209,6 +222,17 @@ export function LessonEntryPanel({ group, students, records, date, currentTime, 
             </button>
           </div>
         </form>
+      )}
+
+      {numpad && (
+        <NumPad
+          studentName={numpad.studentName}
+          label={numpad.label}
+          initialValue={numpad.value}
+          max={100}
+          onConfirm={(val) => update(numpad.studentId, numpad.fieldKey, val)}
+          onClose={() => setNumpad(null)}
+        />
       )}
     </section>
   );

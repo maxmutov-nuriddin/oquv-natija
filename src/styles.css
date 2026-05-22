@@ -1448,6 +1448,131 @@ input, select, textarea {
 
 
 /* ═══════════════════════════════════════════════════════════
+   NUMPAD  (numpad-*)
+═══════════════════════════════════════════════════════════ */
+.numpad-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 500;
+  display: flex; align-items: flex-end;
+}
+
+.numpad-sheet {
+  width: 100%;
+  background: var(--surface);
+  border-radius: 24px 24px 0 0;
+  padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 -8px 40px rgba(0,0,0,0.18);
+  animation: modal-slide-up 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.numpad-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 2px solid var(--line);
+}
+
+.numpad-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.numpad-student {
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--text);
+}
+
+.numpad-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.numpad-display {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  background: var(--bg);
+  border: 2px solid var(--line);
+  border-bottom: 4px solid var(--line-dark);
+  border-radius: var(--radius-xs);
+  padding: 8px 16px;
+  min-width: 90px;
+  justify-content: center;
+}
+
+.numpad-value {
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--blue);
+  line-height: 1;
+}
+
+.numpad-max {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.numpad-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.numpad-key {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 58px;
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--text);
+  background: white;
+  border: 2px solid var(--line);
+  border-bottom: 4px solid var(--line-dark);
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.numpad-key:active {
+  transform: translateY(3px);
+  border-bottom-width: 1px;
+}
+
+.numpad-back {
+  background: #f8fafc;
+  color: var(--muted);
+}
+
+.numpad-confirm {
+  background: var(--blue);
+  color: white;
+  border-color: var(--blue-dark);
+  border-bottom-color: var(--blue-dark);
+}
+
+.numpad-confirm:active {
+  background: var(--blue-dark);
+}
+
+/* Desktop da numpad ko'rinmaydi */
+@media (min-width: 769px) {
+  .numpad-overlay { display: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════
    FUN MODAL  (fun-modal-*)
 ═══════════════════════════════════════════════════════════ */
 .fun-modal-backdrop {
