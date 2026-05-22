@@ -426,183 +426,313 @@ function SetupScreen({ onStart, customTopics, siteLang }) {
 
   return (
     <div className="qg-setup-wrap">
-      <div className="panel qg-setup-card">
-        {/* Header */}
-        <div className="panel-title" style={{ marginBottom: 0 }}>
-          <span style={{ background: "var(--gold)", borderRadius: "var(--radius-sm)", padding: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Trophy size={22} color="#fff" />
-          </span>
-          <div style={{ flex: 1 }}>
-            <h3 style={{ margin: 0 }}>{t.qg_title}</h3>
-            <p style={{ margin: "4px 0 0", fontSize: 14, fontWeight: 700, color: "var(--muted)" }}>
-              {step === 1 ? t.qg_step1 : t.qg_step2}
-            </p>
+      <div className="qg-setup-layout">
+
+        {/* ── Chap panel: info + steps + jamoa preview ── */}
+        <div className="qg-setup-left panel">
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <span style={{ background: "var(--gold)", borderRadius: "var(--radius-sm)", padding: 12, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <Trophy size={26} color="#fff" />
+            </span>
+            <div>
+              <h3 style={{ margin: 0, fontSize: 20 }}>{t.qg_title}</h3>
+              <p style={{ margin: "3px 0 0", fontSize: 13, color: "var(--muted)", fontWeight: 600 }}>
+                {lang === "ru" ? "Настройка игры" : "O'yin sozlamalari"}
+              </p>
+            </div>
+          </div>
+
+          {/* Steps indicator */}
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            {[{ n: 1, label: t.qg_step1 }, { n: 2, label: t.qg_step2 }].map(({ n, label }, i) => (
+              <div key={n}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0" }}>
+                  <div style={{
+                    width: 34, height: 34, borderRadius: "50%", flexShrink: 0,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontWeight: 900, fontSize: 14,
+                    background: step > n ? "#58cc02" : step === n ? "var(--blue)" : "var(--line)",
+                    color: step >= n ? "white" : "var(--muted)",
+                    border: `3px solid ${step > n ? "#46a302" : step === n ? "#1899d6" : "var(--line-dark)"}`,
+                    transition: "all 0.25s",
+                  }}>
+                    {step > n ? <Check size={16} /> : n}
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: 14, color: step >= n ? "var(--text)" : "var(--muted)" }}>{label}</div>
+                    {n === 1 && step > 1 && (
+                      <div style={{ fontSize: 12, color: "var(--muted)", fontWeight: 600, marginTop: 2 }}>
+                        {teamCount} {lang === "ru" ? "команды" : "jamoa"}
+                      </div>
+                    )}
+                    {n === 2 && selectedTopics.length > 0 && (
+                      <div style={{ fontSize: 12, color: "var(--blue)", fontWeight: 600, marginTop: 2 }}>
+                        {t.qg_selected(selectedTopics.length)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {i === 0 && (
+                  <div style={{ marginLeft: 16, width: 2, height: 18, background: step > 1 ? "#58cc02" : "var(--line)", borderRadius: 2 }} />
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Jamoa preview */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: "var(--muted)", textTransform: "uppercase", letterSpacing: 0.5 }}>
+              {t.qg_names_label}
+            </div>
+            {Array.from({ length: teamCount }, (_, i) => (
+              <div key={i} style={{
+                display: "flex", alignItems: "center", gap: 10, padding: "10px 14px",
+                background: `${TEAM_COLORS[i]}10`, borderRadius: 12,
+                border: `2px solid ${TEAM_COLORS[i]}25`,
+                borderLeft: `5px solid ${TEAM_COLORS[i]}`,
+              }}>
+                <span style={{ fontWeight: 800, fontSize: 15, color: TEAM_COLORS[i], flex: 1 }}>
+                  {teamNames[i] || DEFAULT_TEAM_NAMES[lang][i]}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Legend */}
+          <div style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: 6 }}>
+            <div style={{ background: "#fefce8", border: "1px solid #fde047", color: "#854d0e", borderRadius: 8, padding: "7px 12px", fontSize: 12, fontWeight: 700 }}>
+              {t.qg_mini_hint}
+            </div>
+            <div style={{ background: "#fff1f2", border: "1px solid #fda4af", color: "#991b1b", borderRadius: 8, padding: "7px 12px", fontSize: 12, fontWeight: 700 }}>
+              {t.qg_mystery_hint}
+            </div>
           </div>
         </div>
 
-        {step === 1 ? (
-          <>
-            <div className="qg-setup-section">
-              <label className="qg-setup-label">{t.qg_teams_label}</label>
-              <div className="qg-count-row">
-                {[2, 3, 4].map((n) => (
-                  <button key={n}
-                    className={`qg-count-btn ${teamCount === n ? "primary-button" : "secondary-button"}`}
-                    onClick={() => setTeamCount(n)}>
-                    <Users size={15} /> {n} {lang === "ru" ? "команды" : "jamoa"}
-                  </button>
-                ))}
-              </div>
-              <p style={{ margin: "2px 0 0", fontSize: 13, color: "var(--muted)", fontWeight: 600 }}>
-                {t.qg_per_level(teamCount)}
-              </p>
-            </div>
+        {/* ── O'ng panel: form ── */}
+        <div className="qg-setup-right panel">
+          <h4 style={{ margin: 0, fontSize: 17, fontWeight: 900, color: "var(--text)" }}>
+            {step === 1 ? t.qg_step1 : t.qg_step2}
+          </h4>
 
-            <div className="qg-setup-section">
-              <label className="qg-setup-label">{t.qg_names_label}</label>
-              <div className="qg-names-list">
-                {Array.from({ length: teamCount }, (_, i) => (
-                  <div key={i} className="qg-name-row">
-                    <span className="qg-color-dot" style={{ background: TEAM_COLORS[i] }} />
-                    <input className="control" style={{ flex: 1 }}
-                      value={teamNames[i]}
-                      onChange={(e) => { const u = [...teamNames]; u[i] = e.target.value; setTeamNames(u); }}
-                      placeholder={DEFAULT_TEAM_NAMES[lang][i]}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <button className="primary-button" style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }} onClick={() => setStep(2)}>
-              {t.qg_next_topics} <ChevronRight size={18} />
-            </button>
-          </>
-        ) : (
-          <>
-            <div className="qg-setup-section">
-              <label className="qg-setup-label">{t.qg_source_label}</label>
-              <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-                {[
-                  { val: "default", label: t.qg_source_default },
-                  { val: "custom",  label: t.qg_source_custom },
-                  { val: "all",     label: t.qg_source_all },
-                ].map(opt => (
-                  <button key={opt.val} type="button"
-                    onClick={() => { setSource(opt.val); setSelectedTopics([]); }}
-                    style={{
-                      padding: "7px 14px", borderRadius: "8px", fontWeight: 700, fontSize: "12px", cursor: "pointer",
-                      border: `2px solid ${source === opt.val ? "#7c3aed" : "#e2e8f0"}`,
-                      background: source === opt.val ? "#ede9fe" : "white",
-                      color: source === opt.val ? "#7c3aed" : "#64748b",
-                      transition: "all 0.15s",
-                    }}>{opt.label}</button>
-                ))}
-              </div>
-              {source === "custom" && customTopicsForLang.length === 0 && (
-                <p style={{ fontSize: "12px", color: "#f59e0b", fontWeight: 600, marginTop: "8px", background: "#fef9c3", border: "1px solid #fde68a", borderRadius: "8px", padding: "8px 12px" }}>
-                  {t.qg_no_custom}
-                </p>
-              )}
-            </div>
-
-            <div className="qg-setup-section">
-              <label className="qg-setup-label">
-                {t.qg_topics_label}
-                {selectedTopics.length > 0 && (
-                  <span style={{ marginLeft: 8, color: "var(--blue)", fontWeight: 800 }}>
-                    {t.qg_selected(selectedTopics.length)}
-                  </span>
-                )}
-              </label>
-              <div className="qg-topic-select-grid">
-                {availableTopics.map((topic) => {
-                  const active = selectedTopics.includes(topic.id);
-                  return (
-                    <button key={topic.id}
-                      className={`qg-topic-select-btn${active ? " selected" : ""}`}
-                      style={active ? { borderColor: topic.color, borderBottomColor: topic.colorDark } : {}}
-                      onClick={() => toggleTopic(topic.id)}>
-                      <span className="qgts-icon">{topic.icon}</span>
-                      <span className="qgts-name">{topic.name}</span>
-                      <span className="qgts-check" style={active ? { background: topic.color, borderColor: topic.colorDark } : {}}>
-                        {active && <Check size={13} color="#fff" />}
-                      </span>
+          {step === 1 ? (
+            <>
+              <div className="qg-setup-section">
+                <label className="qg-setup-label">{t.qg_teams_label}</label>
+                <div className="qg-count-row">
+                  {[2, 3, 4].map((n) => (
+                    <button key={n}
+                      className={`qg-count-btn ${teamCount === n ? "primary-button" : "secondary-button"}`}
+                      onClick={() => setTeamCount(n)}>
+                      <Users size={15} /> {n} {lang === "ru" ? "команды" : "jamoa"}
                     </button>
-                  );
-                })}
+                  ))}
+                </div>
+                <p style={{ margin: "2px 0 0", fontSize: 13, color: "var(--muted)", fontWeight: 600 }}>
+                  {t.qg_per_level(teamCount)}
+                </p>
               </div>
-            </div>
 
-            <div className="qg-legend">
-              <span className="qg-legend-item" style={{ background: "#fefce8", border: "1px solid #fde047", color: "#854d0e" }}>
-                {t.qg_mini_hint}
-              </span>
-              <span className="qg-legend-item" style={{ background: "#fff1f2", border: "1px solid #fda4af", color: "#991b1b" }}>
-                {t.qg_mystery_hint}
-              </span>
-            </div>
+              <div className="qg-setup-section" style={{ flex: 1 }}>
+                <label className="qg-setup-label">{t.qg_names_label}</label>
+                <div className="qg-names-list">
+                  {Array.from({ length: teamCount }, (_, i) => (
+                    <div key={i} className="qg-name-row">
+                      <span className="qg-color-dot" style={{ background: TEAM_COLORS[i] }} />
+                      <input className="control" style={{ flex: 1 }}
+                        value={teamNames[i]}
+                        onChange={(e) => { const u = [...teamNames]; u[i] = e.target.value; setTeamNames(u); }}
+                        placeholder={DEFAULT_TEAM_NAMES[lang][i]}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-            <div style={{ display: "flex", gap: 10 }}>
-              <button className="secondary-button" style={{ display: "flex", alignItems: "center", gap: 6 }} onClick={() => setStep(1)}>
-                <ArrowLeft size={16} /> {t.qg_back}
+              <button className="primary-button" style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }} onClick={() => setStep(2)}>
+                {t.qg_next_topics} <ChevronRight size={18} />
               </button>
-              <button className="primary-button"
-                style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
-                disabled={selectedTopics.length < 1}
-                onClick={handleStart}>
-                <Play size={18} /> {t.qg_start}
-              </button>
-            </div>
-          </>
-        )}
+            </>
+          ) : (
+            <>
+              <div className="qg-setup-section">
+                <label className="qg-setup-label">{t.qg_source_label}</label>
+                <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                  {[
+                    { val: "default", label: t.qg_source_default },
+                    { val: "custom",  label: t.qg_source_custom },
+                    { val: "all",     label: t.qg_source_all },
+                  ].map(opt => (
+                    <button key={opt.val} type="button"
+                      onClick={() => { setSource(opt.val); setSelectedTopics([]); }}
+                      style={{
+                        padding: "7px 14px", borderRadius: "8px", fontWeight: 700, fontSize: "12px", cursor: "pointer",
+                        border: `2px solid ${source === opt.val ? "#7c3aed" : "#e2e8f0"}`,
+                        background: source === opt.val ? "#ede9fe" : "white",
+                        color: source === opt.val ? "#7c3aed" : "#64748b",
+                        transition: "all 0.15s",
+                      }}>{opt.label}</button>
+                  ))}
+                </div>
+                {source === "custom" && customTopicsForLang.length === 0 && (
+                  <p style={{ fontSize: "12px", color: "#f59e0b", fontWeight: 600, marginTop: "8px", background: "#fef9c3", border: "1px solid #fde68a", borderRadius: "8px", padding: "8px 12px" }}>
+                    {t.qg_no_custom}
+                  </p>
+                )}
+              </div>
+
+              <div className="qg-setup-section" style={{ flex: 1 }}>
+                <label className="qg-setup-label">
+                  {t.qg_topics_label}
+                  {selectedTopics.length > 0 && (
+                    <span style={{ marginLeft: 8, color: "var(--blue)", fontWeight: 800 }}>
+                      {t.qg_selected(selectedTopics.length)}
+                    </span>
+                  )}
+                </label>
+                <div className="qg-topic-select-grid">
+                  {availableTopics.map((topic) => {
+                    const active = selectedTopics.includes(topic.id);
+                    return (
+                      <button key={topic.id}
+                        className={`qg-topic-select-btn${active ? " selected" : ""}`}
+                        style={active ? { borderColor: topic.color, borderBottomColor: topic.colorDark } : {}}
+                        onClick={() => toggleTopic(topic.id)}>
+                        <span className="qgts-icon">{topic.icon}</span>
+                        <span className="qgts-name">{topic.name}</span>
+                        <span className="qgts-check" style={active ? { background: topic.color, borderColor: topic.colorDark } : {}}>
+                          {active && <Check size={13} color="#fff" />}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: 10 }}>
+                <button className="secondary-button" style={{ display: "flex", alignItems: "center", gap: 6 }} onClick={() => setStep(1)}>
+                  <ArrowLeft size={16} /> {t.qg_back}
+                </button>
+                <button className="primary-button"
+                  style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+                  disabled={selectedTopics.length < 1}
+                  onClick={handleStart}>
+                  <Play size={18} /> {t.qg_start}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+
       </div>
     </div>
   );
 }
 
 // ─── END SCREEN ───────────────────────────────────────────────────────────────
-function EndScreen({ teams, onReset }) {
-  const { t } = useT();
+function EndScreen({ teams, stats, onReset }) {
+  const { t, lang } = useT();
   const sorted = [...teams].sort((a, b) => b.score - a.score);
+  const isRu = lang === "ru";
+
   return (
     <div className="qg-setup-wrap">
-      <div className="panel qg-setup-card">
-        <div className="panel-title" style={{ marginBottom: 0 }}>
-          <span style={{ background: "var(--gold)", borderRadius: "var(--radius-sm)", padding: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Trophy size={22} color="#fff" />
-          </span>
-          <div>
-            <h3 style={{ margin: 0 }}>{t.qg_end_title}</h3>
-            <p style={{ margin: "4px 0 0", fontSize: 14, fontWeight: 700, color: "var(--muted)" }}>{t.qg_end_sub}</p>
-          </div>
-        </div>
+      <div className="qg-setup-layout">
 
-        {sorted[0] && (
-          <div className="qg-winner-card" style={{ borderColor: sorted[0].color, borderBottomColor: sorted[0].color, background: `${sorted[0].color}14` }}>
-            {t.qg_winner(sorted[0].name, sorted[0].score)}
-          </div>
-        )}
-
-        <div className="qg-final-list">
-          {sorted.map((team, idx) => (
-            <div key={team.id} className="qg-final-row" style={{ borderColor: team.color, borderBottomColor: team.color }}>
-              <span className="qgfr-rank">{idx === 0 ? "🏆" : `${idx + 1}.`}</span>
-              <span className="qgfr-name" style={{ color: team.color }}>{team.name}</span>
-              <span className="qgfr-score">{team.score} {t.qg_score_unit}</span>
+        {/* ── Chap: natijalar ── */}
+        <div className="qg-setup-left panel">
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <span style={{ background: "var(--gold)", borderRadius: "var(--radius-sm)", padding: 12, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <Trophy size={26} color="#fff" />
+            </span>
+            <div>
+              <h3 style={{ margin: 0, fontSize: 20 }}>{t.qg_end_title}</h3>
+              <p style={{ margin: "3px 0 0", fontSize: 13, color: "var(--muted)", fontWeight: 600 }}>{t.qg_end_sub}</p>
             </div>
-          ))}
+          </div>
+
+          {sorted[0] && (
+            <div className="qg-winner-card" style={{ borderColor: sorted[0].color, borderBottomColor: sorted[0].color, background: `${sorted[0].color}14` }}>
+              {t.qg_winner(sorted[0].name, sorted[0].score)}
+            </div>
+          )}
+
+          <div className="qg-final-list" style={{ flex: 1 }}>
+            {sorted.map((team, idx) => (
+              <div key={team.id} className="qg-final-row" style={{ borderColor: team.color, borderBottomColor: team.color }}>
+                <span className="qgfr-rank">{idx === 0 ? "🏆" : `${idx + 1}.`}</span>
+                <span className="qgfr-name" style={{ color: team.color }}>{team.name}</span>
+                <span className="qgfr-score">{team.score} {t.qg_score_unit}</span>
+              </div>
+            ))}
+          </div>
+
+          <button className="primary-button" style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }} onClick={onReset}>
+            <RefreshCw size={16} /> {t.qg_restart}
+          </button>
         </div>
 
-        <button className="primary-button" style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }} onClick={onReset}>
-          <RefreshCw size={16} /> {t.qg_restart}
-        </button>
+        {/* ── O'ng: statistika ── */}
+        <div className="qg-setup-right panel">
+          <h4 style={{ margin: 0, fontSize: 17, fontWeight: 900 }}>
+            {isRu ? "Статистика команд" : "Jamoalar statistikasi"}
+          </h4>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {sorted.map((team, idx) => {
+              const s = stats[team.id] || { correct: 0, incorrect: 0, skipped: 0 };
+              const total = s.correct + s.incorrect + s.skipped;
+              const pct = total > 0 ? Math.round((s.correct / total) * 100) : 0;
+              return (
+                <div key={team.id} style={{
+                  border: `2px solid ${team.color}30`,
+                  borderLeft: `5px solid ${team.color}`,
+                  borderRadius: 14, padding: "14px 16px",
+                  background: `${team.color}08`,
+                  display: "flex", flexDirection: "column", gap: 10,
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 18 }}>{idx === 0 ? "🏆" : `${idx + 1}.`}</span>
+                    <span style={{ fontWeight: 900, fontSize: 16, color: team.color, flex: 1 }}>{team.name}</span>
+                    <span style={{ fontWeight: 900, fontSize: 15, color: "var(--text)" }}>{team.score} {t.qg_score_unit}</span>
+                  </div>
+
+                  {/* Progress bar */}
+                  <div style={{ height: 8, borderRadius: 99, background: "var(--line)", overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${pct}%`, background: team.color, borderRadius: 99, transition: "width 0.8s ease" }} />
+                  </div>
+
+                  {/* Counts */}
+                  <div style={{ display: "flex", gap: 10 }}>
+                    <div style={{ flex: 1, textAlign: "center", background: "#f0fdf4", border: "1.5px solid #86efac", borderRadius: 10, padding: "8px 4px" }}>
+                      <div style={{ fontSize: 22, fontWeight: 900, color: "#16a34a" }}>{s.correct}</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: "#16a34a" }}>✓ {isRu ? "Верно" : "To'g'ri"}</div>
+                    </div>
+                    <div style={{ flex: 1, textAlign: "center", background: "#fff1f2", border: "1.5px solid #fda4af", borderRadius: 10, padding: "8px 4px" }}>
+                      <div style={{ fontSize: 22, fontWeight: 900, color: "#dc2626" }}>{s.incorrect}</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: "#dc2626" }}>✗ {isRu ? "Неверно" : "Noto'g'ri"}</div>
+                    </div>
+                    <div style={{ flex: 1, textAlign: "center", background: "#f8fafc", border: "1.5px solid #e2e8f0", borderRadius: 10, padding: "8px 4px" }}>
+                      <div style={{ fontSize: 22, fontWeight: 900, color: "#64748b" }}>{s.skipped}</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b" }}>→ {isRu ? "Пропустил" : "O'tkazdi"}</div>
+                    </div>
+                    <div style={{ flex: 1, textAlign: "center", background: "#faf5ff", border: "1.5px solid #d8b4fe", borderRadius: 10, padding: "8px 4px" }}>
+                      <div style={{ fontSize: 22, fontWeight: 900, color: "#7c3aed" }}>{pct}%</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: "#7c3aed" }}>{isRu ? "Точность" : "Aniqlik"}</div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
       </div>
     </div>
   );
 }
 
-// ─── MAIN GAME ────────────────────────────────────────────────────────────────
+// ─── MAIN GAME ─────────────────────────────────────────────────────────────────
 export function QuizGamePage({ settings }) {
   const { t, lang: siteLang } = useT();
   const customTopics = (settings?.customTopics || []);
@@ -616,6 +746,7 @@ export function QuizGamePage({ settings }) {
   const [showAnswer, setShowAnswer]   = useState(false);
   const [resultEffect, setResultEffect] = useState(null);
   const [specialPhase, setSpecialPhase] = useState(false);
+  const [stats, setStats]   = useState({});
 
   const totalCells = POINT_VALUES.length * teamCount;
   const usedCells = useMemo(() => {
@@ -630,10 +761,13 @@ export function QuizGamePage({ settings }) {
     const ruPool = [...TOPICS_DATA_RU, ...customPool];
     const sel = selectedIds.map((id) => uzPool.find((tp) => tp.id === id)).filter(Boolean);
     const selRu = selectedIds.map((id) => ruPool.find((tp) => tp.id === id)).filter(Boolean);
+    const initStats = {};
+    newTeams.forEach(tm => { initStats[tm.id] = { correct: 0, incorrect: 0, skipped: 0 }; });
     setTeams(newTeams);
     setTeamCount(tc);
     setGameLang(lang || "uz");
     setBoard(initBoard(sel, selRu, tc));
+    setStats(initStats);
     setCurrentTurn(0);
     setPhase("game");
   }
@@ -656,6 +790,7 @@ export function QuizGamePage({ settings }) {
     const delta = earn + pen;
     const currentTeamId = teams[currentTurn]?.id;
     setTeams((prev) => prev.map((tm) => tm.id === currentTeamId ? { ...tm, score: tm.score + delta } : tm));
+    setStats((prev) => ({ ...prev, [currentTeamId]: { ...prev[currentTeamId], correct: (prev[currentTeamId]?.correct || 0) + (correct ? 1 : 0), incorrect: (prev[currentTeamId]?.incorrect || 0) + (!correct ? 1 : 0) } }));
     setResultEffect({ type: correct ? "correct" : "incorrect", delta });
     setTimeout(() => {
       setBoard((prev) => {
@@ -675,6 +810,8 @@ export function QuizGamePage({ settings }) {
       const updated = prev[activeCell.pts].map((c, i) => i === activeCell.slot ? { ...c, used: true } : c);
       return { ...prev, [activeCell.pts]: updated };
     });
+    const skipTeamId = teams[currentTurn]?.id;
+    setStats((prev) => ({ ...prev, [skipTeamId]: { ...prev[skipTeamId], skipped: (prev[skipTeamId]?.skipped || 0) + 1 } }));
     setCurrentTurn((tm) => (tm + 1) % teams.length);
     setActiveCell(null);
     setSpecialPhase(false);
@@ -683,7 +820,7 @@ export function QuizGamePage({ settings }) {
 
   function resetGame() {
     setPhase("setup");
-    setTeams([]); setBoard({});
+    setTeams([]); setBoard({}); setStats({});
     setCurrentTurn(0); setActiveCell(null);
     setShowAnswer(false); setResultEffect(null); setSpecialPhase(false);
   }
@@ -698,7 +835,7 @@ export function QuizGamePage({ settings }) {
   const activeCellData = activeCell ? board[activeCell.pts]?.[activeCell.slot] : null;
 
   if (phase === "setup") return <SetupScreen onStart={handleStart} customTopics={customTopics} siteLang={siteLang} />;
-  if (phase === "end")   return <EndScreen teams={teams} onReset={resetGame} />;
+  if (phase === "end")   return <EndScreen teams={teams} stats={stats} onReset={resetGame} />;
 
   const currentTeam = teams[currentTurn];
   const gt = QG_TEXTS[gameLang] || QG_TEXTS.uz;

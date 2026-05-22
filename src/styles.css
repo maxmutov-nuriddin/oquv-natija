@@ -1713,14 +1713,25 @@ button {
 
 /* ── Setup & End screens ── */
 .qg-setup-wrap {
+  padding: 4px 0 24px;
   display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 8px 0 32px;
+  flex-direction: column;
+  min-height: calc(100vh - 280px);
 }
-.qg-setup-card {
+.qg-setup-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 16px;
   width: 100%;
-  max-width: 520px;
+  flex: 1;
+  align-items: stretch;
+}
+.qg-setup-left {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.qg-setup-right {
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -1825,6 +1836,11 @@ button {
 .qgfr-score { font-size: 18px; font-weight: 900; color: var(--text); }
 
 /* ── Responsive ── */
+@media (max-width: 900px) {
+  .qg-setup-layout { grid-template-columns: 1fr; }
+  .qg-setup-left   { min-height: unset; }
+  .qg-setup-right  { min-height: unset; }
+}
 @media (max-width: 640px) {
   .qg-board              { gap: 4px; }
   .qg-cell               { min-height: 50px; padding: 8px 4px; }
