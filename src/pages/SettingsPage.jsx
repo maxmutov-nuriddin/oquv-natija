@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BarChart3, BookOpen, CheckCircle2, Clock3, Copy, ExternalLink, Eye, EyeOff, Loader2, Lock, Pencil, Send, Settings, Trash2, UserPlus, UserRound, X } from "lucide-react";
+import { BarChart3, BookOpen, CheckCircle2, Clock3, Copy, ExternalLink, Eye, EyeOff, Loader2, Lock, Pencil, RefreshCw, Send, Settings, Trash2, UserPlus, UserRound, X } from "lucide-react";
 import { useT } from "../i18n/index.jsx";
 import { cx } from "../lib/utils";
 import { PanelHeader } from "../components/ui/PanelHeader";
@@ -319,8 +319,35 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
     }
   }
 
+  async function hardRefresh() {
+    if ("caches" in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    }
+    window.location.reload();
+  }
+
   return (
     <div className="page-stack">
+      {/* Hard Refresh */}
+      <section className="panel" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px", padding: "16px 24px" }}>
+        <div>
+          <strong style={{ fontSize: "15px", fontWeight: 800 }}>Keshni tozalab qayta yuklash</strong>
+          <p style={{ margin: "2px 0 0", fontSize: "13px", color: "var(--muted)", fontWeight: 600 }}>
+            Cmd+Shift+R / Ctrl+Shift+R bilan bir xil
+          </p>
+        </div>
+        <button
+          type="button"
+          className="secondary-button"
+          onClick={hardRefresh}
+          style={{ flexShrink: 0, gap: "8px", display: "flex", alignItems: "center" }}
+        >
+          <RefreshCw size={16} />
+          Refresh
+        </button>
+      </section>
+
       {/* Coddy Exam */}
       <section className="panel">
         <PanelHeader icon={ExternalLink} title="CoddyExam" subtitle="Imtihon platformasi login ma'lumotlari" />
