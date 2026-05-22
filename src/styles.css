@@ -610,6 +610,7 @@ button {
 .leader-score { text-align: right; }
 .leader-score strong { font-size: 32px; font-weight: 900; color: var(--mint); display: block; }
 .leader-score span { font-size: 14px; font-weight: 800; color: var(--muted); text-transform: uppercase; display: block; }
+.leader-actions { display: flex; gap: 4px; flex-shrink: 0; }
 
 /* Empty States */
 .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 48px; border: 4px dashed var(--line-dark); border-radius: var(--radius); background: rgba(255,255,255,0.5); }
@@ -952,6 +953,32 @@ button {
   cursor: pointer;
 }
 
+/* Scroll to top button — mobile only */
+.scroll-to-top-btn {
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  right: 16px;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: white;
+  border: 2px solid var(--blue-dark);
+  border-bottom: 4px solid var(--blue-dark);
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 150;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  transition: transform 0.1s;
+}
+.scroll-to-top-btn:active { transform: translateY(3px); border-bottom-width: 1px; }
+
+@media (max-width: 768px) {
+  .scroll-to-top-btn { display: flex; }
+}
+
 /* Sidebar close button — hidden on desktop */
 .sidebar-close-btn {
   display: none;
@@ -1053,17 +1080,30 @@ button {
     top: 0;
     left: 0;
     height: 100vh;
-    width: 320px;
+    width: 300px;
     z-index: 200;
     transform: translateX(-100%);
     transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     overflow-y: auto;
+    padding: 16px;
   }
   .sidebar-open {
     transform: translateX(0) !important;
   }
   .sidebar-close-btn { display: flex; }
   .sidebar-overlay { display: block; }
+
+  .brand { padding-bottom: 14px; gap: 12px; }
+  .brand-logo-robo { width: 56px; height: 56px; }
+  .brand h1 { font-size: 20px; }
+  .brand p { font-size: 14px; margin-top: 4px; }
+
+  .nav-list { margin-top: 16px; gap: 4px; }
+  .nav-button { padding: 12px 14px; font-size: 15px; gap: 12px; }
+
+  .teacher-box { padding: 10px 12px; gap: 10px; }
+  .teacher-box strong { font-size: 15px; }
+  .app-footer { margin: 0 -16px -16px; }
 
   /* Main content */
   .main-content { padding: 16px; }
@@ -1136,6 +1176,7 @@ button {
     border-radius: var(--radius) var(--radius) var(--radius-sm) var(--radius-sm);
     max-height: 92vh;
     overflow-y: auto;
+    animation: modal-slide-up 0.28s cubic-bezier(0.22, 1, 0.36, 1);
   }
   .profile-modal-panel { max-width: 100%; align-self: flex-end; }
   .profile-body { padding: 20px 16px; }
@@ -1188,6 +1229,27 @@ button {
 
   /* Chart */
   .chart-box { height: 260px; }
+
+  /* Analytics modal — pastidan chiqadi */
+  .anl-overlay { align-items: flex-end; padding: 0; }
+  .anl-modal {
+    max-width: 100%;
+    max-height: 92vh;
+    border-radius: var(--radius) var(--radius) var(--radius-sm) var(--radius-sm);
+    animation: anl-slide-up 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .anl-modal-body { padding: 16px; }
+  .anl-modal-header { padding: 14px 16px; }
+}
+
+@keyframes anl-slide-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+@keyframes modal-slide-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
 }
 
 /* ── 480 px — phones ────────────────────────────────────────── */
@@ -1204,7 +1266,7 @@ button {
   .control-date, .control-select { flex: 1; min-width: 0; }
   .control { height: 44px; padding: 0 10px; }
 
-  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .stats-grid { grid-template-columns: 1fr; gap: 10px; }
   .stat-card { padding: 14px 12px; gap: 10px; }
   .stat-icon { width: 42px; height: 42px; }
   .stat-card p { font-size: 12px; }
@@ -1225,7 +1287,10 @@ button {
   .profile-name { font-size: 18px; }
   .profile-avatar { width: 56px; height: 56px; font-size: 20px; }
 
-  .leader-main { gap: 14px; }
+  .leader-row { flex-wrap: wrap; gap: 6px 8px; padding: 12px 14px; }
+  .leader-main { flex: 1 1 100%; min-width: 0; gap: 10px; }
+  .leader-score { flex: 1; text-align: left; }
+  .leader-actions { flex-shrink: 0; align-self: center; }
   .leader-rank { width: 44px; height: 44px; font-size: 15px; }
   .leader-row p { font-size: 12px; }
   .leader-score strong { font-size: 22px; }
@@ -1235,7 +1300,12 @@ button {
 
   .modal-backdrop { padding: 6px; }
 
-  .winner-panel { padding: 12px 14px; }
+  .winner-panel { padding: 12px 14px; flex-direction: column; }
+  .winner-list { grid-template-columns: 1fr 1fr; }
+  .anl-modal { max-height: 95vh; }
+
+  .summary-gift-row { flex-direction: column; align-items: flex-start; gap: 10px; padding: 14px 16px; }
+  .summary-gift-row .student-gifts { width: 100%; }
 
   .current-lesson { padding: 14px 16px; gap: 12px; }
   .current-lesson h3 { font-size: 19px; }
@@ -1243,6 +1313,7 @@ button {
 
   .timer-ring-wrap { width: 148px; height: 148px; }
   .timer-digits { font-size: 36px; }
+  .timer-custom-input { flex: 1; width: auto; }
 
   .chart-box { height: 220px; }
 
@@ -1299,7 +1370,8 @@ button {
   .group-actions { grid-template-columns: 1fr; gap: 10px; }
 
   .winner-panel { padding: 10px 12px; gap: 10px; }
-  .winner-list { gap: 8px; }
+  .winner-list { grid-template-columns: 1fr; gap: 8px; }
+  .summary-gift-row { padding: 12px; }
 
   .settings-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
   .settings-account-grid { grid-template-columns: 1fr; }
@@ -1327,7 +1399,7 @@ button {
   .brand h1 { font-size: 20px; }
   .nav-button { padding: 12px 14px; font-size: 14px; }
 
-  .leader-main { gap: 10px; }
+  .leader-main { gap: 8px; }
   .leader-score strong { font-size: 20px; }
 }
 
@@ -1908,6 +1980,24 @@ button {
   .qg-col-name           { font-size: 10px; }
   .qg-col-icon           { font-size: 16px; }
   .qg-question           { font-size: 17px; }
-  .qg-modal              { padding: 16px; gap: 12px; }
   .qg-topic-select-grid  { grid-template-columns: 1fr 1fr; }
+
+  .qg-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .qg-modal {
+    max-width: 100%;
+    max-height: 95vh;
+    border-radius: var(--radius) var(--radius) var(--radius-sm) var(--radius-sm);
+    border-bottom: 2px solid var(--line);
+    padding: 16px;
+    gap: 12px;
+    animation: qg-slide-up 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+@keyframes qg-slide-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
 }

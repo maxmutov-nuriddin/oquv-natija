@@ -4,10 +4,12 @@ import { X } from "lucide-react";
 
 export function Modal({ title, children, onClose }) {
   useEffect(() => {
-    const originalStyle = window.getComputedStyle(document.body).overflow;
+    const sw = window.innerWidth - document.documentElement.clientWidth;
     document.body.style.overflow = "hidden";
+    if (sw > 0) document.body.style.paddingRight = sw + "px";
     return () => {
-      document.body.style.overflow = originalStyle;
+      document.body.style.overflow = "";
+      document.body.style.paddingRight = "";
     };
   }, []);
 

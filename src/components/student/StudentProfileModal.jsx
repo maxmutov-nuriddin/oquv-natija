@@ -19,9 +19,13 @@ function periodFinal(data, settings) {
 export function StudentProfileModal({ student, records, settings, groups, date, onUpdateStudent, onClose }) {
   const { t } = useT();
   useEffect(() => {
-    const orig = document.body.style.overflow;
+    const sw = window.innerWidth - document.documentElement.clientWidth;
     document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = orig; };
+    if (sw > 0) document.body.style.paddingRight = sw + "px";
+    return () => {
+      document.body.style.overflow = "";
+      document.body.style.paddingRight = "";
+    };
   }, []);
 
   const studentRecords = records

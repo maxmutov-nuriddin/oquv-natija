@@ -294,7 +294,7 @@ export function GroupsPage({ groups, students, records, settings, date, addGroup
                           <strong>{student.coins}</strong>
                           <span>{t.groups_total_coin}</span>
                         </div>
-                        <div className="leader-actions" style={{ display: "flex", gap: "4px" }}>
+                        <div className="leader-actions">
                           <button className="secondary-icon-button" type="button" onClick={() => { setEditingStudent(student); setModal("edit-student"); }}>
                             <Settings size={16} />
                           </button>

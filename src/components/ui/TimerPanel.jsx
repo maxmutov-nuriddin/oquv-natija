@@ -126,7 +126,7 @@ export function TimerPanel() {
       <div className="timer-inner">
 
         <div className="timer-ring-wrap">
-          <svg width="180" height="180" viewBox="0 0 180 180" className={state.done ? "timer-ring-done" : isLow ? "timer-ring-low" : ""}>
+          <svg width="100%" height="100%" viewBox="0 0 180 180" className={state.done ? "timer-ring-done" : isLow ? "timer-ring-low" : ""}>
             <circle cx="90" cy="90" r={RADIUS} fill="none" stroke="#e2e8f0" strokeWidth="10" />
             <circle
               cx="90" cy="90" r={RADIUS}

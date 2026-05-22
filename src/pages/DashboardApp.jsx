@@ -11,6 +11,7 @@ import { StudentForm } from "../components/forms/StudentForm";
 import { ConfirmModal } from "../components/ui/ConfirmModal";
 import { Modal } from "../components/ui/Modal";
 import { LoadingState } from "../components/ui/LoadingState";
+import { ScrollToTopBtn } from "../components/ui/ScrollToTopBtn";
 
 const DashboardPage  = lazy(() => import("./DashboardPage").then(m => ({ default: m.DashboardPage })));
 const GroupsPage     = lazy(() => import("./GroupsPage").then(m => ({ default: m.GroupsPage })));
@@ -255,6 +256,7 @@ export function DashboardApp({ teacher, logout, updateProfile, changePassword, v
           onCancel={() => setDeleteConfirm(null)}
         />
       )}
+      <ScrollToTopBtn />
     </div>
   );
 }
