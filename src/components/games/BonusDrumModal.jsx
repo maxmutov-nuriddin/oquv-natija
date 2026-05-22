@@ -94,11 +94,11 @@ export function BonusDrumModal({ onReward, onClose }) {
   }
 
   return (
-    <div style={{ textAlign: "center", padding: "20px 0", position: "relative", fontFamily: "'Outfit', sans-serif" }}>
-      <div style={{ fontSize: "48px", marginBottom: "8px", textShadow: "0 4px 0px rgba(0,0,0,0.2)" }}>🎁</div>
+    <div className="bonus-drum" style={{ textAlign: "center", position: "relative", fontFamily: "'Outfit', sans-serif" }}>
+      <div style={{ fontSize: "40px", marginBottom: "6px", textShadow: "0 4px 0px rgba(0,0,0,0.2)" }}>🎁</div>
 
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "12px", marginBottom: "24px" }}>
-        <h3 style={{ fontSize: "28px", fontWeight: "900", color: "#1e293b", textTransform: "uppercase", letterSpacing: "1px", margin: 0 }}>Omad Barabani!</h3>
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
+        <h3 className="bonus-drum-title" style={{ fontWeight: "900", color: "#1e293b", textTransform: "uppercase", letterSpacing: "1px", margin: 0 }}>Omad Barabani!</h3>
 
         <div
           style={{ position: "relative", display: "inline-flex" }}
@@ -127,30 +127,29 @@ export function BonusDrumModal({ onReward, onClose }) {
         </div>
       </div>
 
-      <div style={{
-        position: "relative", width: "100%", height: "160px",
+      <div className="bonus-drum-track-wrap" style={{
+        position: "relative", width: "100%",
         background: "linear-gradient(180deg, #1e293b 0%, #0f172a 100%)", borderRadius: "24px", overflow: "hidden",
-        marginBottom: "32px", border: "4px solid #334155",
+        marginBottom: "20px", border: "4px solid #334155",
         boxShadow: "inset 0 10px 30px rgba(0,0,0,0.8), 0 8px 0px #0f172a, 0 12px 20px rgba(0,0,0,0.3)"
       }}>
         <div style={{ position: "absolute", left: "50%", top: "-4px", transform: "translateX(-50%)", zIndex: 10, width: 0, height: 0, borderLeft: "16px solid transparent", borderRight: "16px solid transparent", borderTop: "24px solid #ef4444", filter: "drop-shadow(0 4px 4px rgba(0,0,0,0.5))" }} />
         <div style={{ position: "absolute", left: "50%", bottom: "-4px", transform: "translateX(-50%)", zIndex: 10, width: 0, height: 0, borderLeft: "16px solid transparent", borderRight: "16px solid transparent", borderBottom: "24px solid #ef4444", filter: "drop-shadow(0 -4px 4px rgba(0,0,0,0.5))" }} />
 
-        <div ref={trackRef} style={{ display: "flex", gap: "16px", padding: "20px 0", willChange: "transform", transform: "translate3d(0, 0, 0)", alignItems: "center" }}>
+        <div ref={trackRef} className="drum-track" style={{ display: "flex", gap: "16px", willChange: "transform", transform: "translate3d(0, 0, 0)", alignItems: "center" }}>
           {trackItems.map((item, idx) => {
             const colors = itemColors[item] || itemColors[10];
             const isPenalty = item === PENALTY;
             return (
-              <div key={idx} style={{
-                flexShrink: 0, width: "144px", height: "110px", background: colors.bg,
-                border: `3px solid ${colors.border}`, borderRadius: "20px",
-                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                padding: "10px", color: colors.text, fontSize: "26px", fontWeight: "900", textAlign: "center",
-                boxShadow: `0 8px 0px ${colors.border}, inset 0 -4px 10px rgba(0,0,0,0.1)`, transform: "translateY(-4px)"
+              <div key={idx} className="drum-item" style={{
+                background: colors.bg,
+                border: `3px solid ${colors.border}`,
+                color: colors.text,
+                boxShadow: `0 8px 0px ${colors.border}, inset 0 -4px 10px rgba(0,0,0,0.1)`,
               }}>
                 {isPenalty
-                  ? <><span style={{ fontSize: "32px", marginBottom: "4px" }}>😈</span><span style={{ fontSize: "20px" }}>-0.5%</span></>
-                  : <><Coins size={32} style={{ color: colors.border, marginBottom: "8px", filter: "drop-shadow(0 2px 0px rgba(0,0,0,0.2))" }} /><span style={{ textShadow: "0 2px 0px rgba(255,255,255,0.4)" }}>{item}</span></>
+                  ? <><span className="drum-item-emoji">😈</span><span className="drum-item-sub">-0.5%</span></>
+                  : <><Coins className="drum-item-icon" style={{ color: colors.border, filter: "drop-shadow(0 2px 0px rgba(0,0,0,0.2))" }} /><span className="drum-item-val">{item}</span></>
                 }
               </div>
             );
@@ -160,13 +159,13 @@ export function BonusDrumModal({ onReward, onClose }) {
 
       {result ? (
         result === PENALTY ? (
-          <div style={{ fontSize: "20px", fontWeight: "900", color: "#ffffff", padding: "24px", background: "linear-gradient(135deg, #ef4444, #dc2626)", borderRadius: "20px", animation: "popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)", border: "3px solid #b91c1c", boxShadow: "0 8px 0px #b91c1c", transform: "translateY(-8px)" }}>
-            😈 OMADSIZ! 😈 <br /><br /> <span style={{ fontSize: "36px", textShadow: "0 4px 0px rgba(0,0,0,0.3)" }}>-0.5% COIN</span>
+          <div className="drum-result drum-result-bad">
+            😈 OMADSIZ! 😈 <br /><br /> <span className="drum-result-val">-0.5% COIN</span>
           </div>
         ) : (
-        <div style={{ fontSize: "20px", fontWeight: "900", color: "#ffffff", padding: "24px", background: "linear-gradient(135deg, #10b981, #059669)", borderRadius: "20px", animation: "popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)", border: "3px solid #047857", boxShadow: "0 8px 0px #047857", transform: "translateY(-8px)" }}>
-          🎉 TABRIKLAYMIZ! 🎉 <br /><br /> <span style={{ fontSize: "36px", textShadow: "0 4px 0px rgba(0,0,0,0.2)" }}>{result} COIN</span>
-        </div>
+          <div className="drum-result drum-result-good">
+            🎉 TABRIKLAYMIZ! 🎉 <br /><br /> <span className="drum-result-val">{result} COIN</span>
+          </div>
         )
       ) : (
         <button
@@ -174,7 +173,7 @@ export function BonusDrumModal({ onReward, onClose }) {
           onClick={handleStart}
           disabled={spinning}
           style={{
-            width: "100%", justifyContent: "center", padding: "18px", fontSize: "20px", fontWeight: "900",
+            width: "100%", justifyContent: "center", padding: "14px", fontSize: "17px", fontWeight: "900",
             background: spinning ? "#94a3b8" : "linear-gradient(135deg, #3b82f6, #2563eb)",
             border: spinning ? "none" : "3px solid #1d4ed8",
             boxShadow: spinning ? "none" : "0 6px 0px #1d4ed8",

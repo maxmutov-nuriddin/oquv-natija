@@ -168,19 +168,19 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
       <CurrentLessonBanner group={currentGroup} date={date} time={currentTime} />
 
       {selectedGroup && isLessonDay && !alreadySpun && (
-        <section className="panel" style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
-          <div style={{ display: "flex", gap: "10px" }}>
+        <section className="panel bonus-drum-section">
+          <div className="bonus-drum-row">
             <button
-              className="primary-button"
-              style={{ flex: 1, justifyContent: "center", padding: "16px", background: "linear-gradient(135deg, #eab308, #d97706)", fontSize: "16px", boxShadow: "0 4px 15px rgba(234, 179, 8, 0.4)", border: "none" }}
+              className="primary-button bonus-drum-trigger"
+              style={{ background: "linear-gradient(135deg, #eab308, #d97706)", boxShadow: "0 4px 15px rgba(234,179,8,0.4)", border: "none" }}
               onClick={() => setShowBonusDrum(true)}
             >
               <span style={{ fontSize: "20px" }}>🎰</span>
               <span>{t.dash_bonus_btn}</span>
             </button>
             <button
-              className="primary-button"
-              style={{ flexShrink: 0, justifyContent: "center", padding: "16px 20px", background: "linear-gradient(135deg, #8b5cf6, #6d28d9)", fontSize: "16px", boxShadow: "0 4px 15px rgba(109,40,217,0.35)", border: "none" }}
+              className="primary-button bonus-random-btn"
+              style={{ background: "linear-gradient(135deg, #8b5cf6, #6d28d9)", boxShadow: "0 4px 15px rgba(109,40,217,0.35)", border: "none" }}
               onClick={pickRandomStudent}
               disabled={picking || !groupStudents.length}
             >
