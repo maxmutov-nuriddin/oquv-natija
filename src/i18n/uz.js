@@ -316,7 +316,7 @@ export const uz = {
   // Analytics page
   analytics_open: "Natija",
   analytics_close: "Yopish",
-  analytics_students_sub: (n) => `${n} ta o'quvchi · oxirgi 30 kun o'rtachasi`,
+  analytics_students_sub: (n) => `${n} ta o'quvchi · joriy oy o'rtachasi`,
   analytics_danger_label: "Xavf zonasi",
   analytics_danger_sub: "Ball 50% dan past",
   analytics_danger_empty: "Xavfli o'quvchi yo'q",

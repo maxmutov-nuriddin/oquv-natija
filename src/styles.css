@@ -980,6 +980,64 @@ button {
   .student-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
+.anl-groups-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .anl-groups-grid { grid-template-columns: 1fr; }
+}
+
+/* Analytics side drawer */
+.anl-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 400;
+  animation: anl-fade-in 0.2s ease;
+}
+
+.anl-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(640px, 100vw);
+  background: var(--surface);
+  z-index: 401;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -8px 0 40px rgba(0, 0, 0, 0.18);
+  animation: anl-slide-in 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.anl-drawer-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 24px;
+  border-bottom: 2px solid var(--line);
+  flex-shrink: 0;
+}
+
+.anl-drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+@keyframes anl-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes anl-slide-in {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
 @media (max-width: 768px) {
   /* App shell: single column */
   .app-shell {

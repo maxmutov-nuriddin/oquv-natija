@@ -1,9 +1,8 @@
 import dayjs from "dayjs";
 import { useMemo, useState } from "react";
-import { AlertTriangle, ChevronDown, ChevronUp, TrendingDown, TrendingUp, Users } from "lucide-react";
+import { AlertTriangle, TrendingDown, TrendingUp, X } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import { groupAvgScore, isDeclineTrend, isRiseTrend, rankStudents } from "../lib/scoring";
-import { PanelHeader } from "../components/ui/PanelHeader";
 import { useT } from "../i18n/index.jsx";
 import { initials } from "../lib/utils";
 
@@ -15,22 +14,35 @@ function buildMonthlyData(studentIds, records, settings) {
   const attW = Number(settings.attendanceWeight || 0.3);
   const actW = Number(settings.activityWeight   || 0.3);
   const idSet = new Set(studentIds);
-  const byMonth = {};
+
+  // Group records by month per student
+  const byMonthStudent = {};
   records.forEach(r => {
     if (!idSet.has(r.studentId) || !r.date) return;
     if (!r.homework && !r.attendance && !r.activity) return;
     const m = r.date.slice(0, 7);
-    (byMonth[m] = byMonth[m] || []).push(r);
+    if (!byMonthStudent[m]) byMonthStudent[m] = {};
+    (byMonthStudent[m][r.studentId] = byMonthStudent[m][r.studentId] || []).push(r);
   });
-  return Object.keys(byMonth).sort().map(m => {
-    const recs = byMonth[m];
-    const n = recs.length;
-    const hw  = recs.reduce((s,r) => s + Number(r.homework   || 0), 0) / n;
-    const att = recs.reduce((s,r) => s + Number(r.attendance || 0), 0) / n;
-    const act = recs.reduce((s,r) => s + Number(r.activity   || 0), 0) / n;
+
+  return Object.keys(byMonthStudent).sort().map(m => {
+    const studentMap = byMonthStudent[m];
+    const allRecs = Object.values(studentMap).flat();
+    const uniqueDays = new Set(allRecs.map(r => r.date)).size;
+    const studentAverages = Object.values(studentMap).map(recs => {
+      const n = recs.length;
+      const hw  = recs.reduce((s,r) => s + Number(r.homework   || 0), 0) / n;
+      const att = recs.reduce((s,r) => s + Number(r.attendance || 0), 0) / n;
+      const act = recs.reduce((s,r) => s + Number(r.activity   || 0), 0) / n;
+      return { hw, att, act };
+    });
+    const ns = studentAverages.length;
+    const hw  = studentAverages.reduce((s,x) => s + x.hw,  0) / ns;
+    const att = studentAverages.reduce((s,x) => s + x.att, 0) / ns;
+    const act = studentAverages.reduce((s,x) => s + x.act, 0) / ns;
     const score = Math.min(100, Math.round(hw*hwW + att*attW + act*actW));
     const [y, mo] = m.split("-");
-    return { month: m, y, mo: Number(mo), score, hw: Math.round(hw), att: Math.round(att), act: Math.round(act), count: n };
+    return { month: m, y, mo: Number(mo), score, hw: Math.round(hw), att: Math.round(att), act: Math.round(act), count: uniqueDays };
   });
 }
 
@@ -294,7 +306,22 @@ export function AnalyticsPage({ groups, students, records, settings, date }) {
     return groups.map(g => {
       const gStudents = students.filter(s => s.group === g.name);
       const ranked    = rankStudents(gStudents, records, settings, date);
-      const avgScore  = groupAvgScore(gStudents, records, settings, 30, date) ?? 0;
+      const currentMonth = dayjs(date).format("YYYY-MM");
+      const studentMonthAvgs = gStudents.map(s => {
+        const recs = records.filter(r =>
+          r.studentId === s.id && r.date?.slice(0, 7) === currentMonth &&
+          (r.homework > 0 || r.attendance > 0 || r.activity > 0)
+        );
+        if (!recs.length) return null;
+        const n = recs.length;
+        const hw  = recs.reduce((sum, r) => sum + Number(r.homework   || 0), 0) / n;
+        const att = recs.reduce((sum, r) => sum + Number(r.attendance || 0), 0) / n;
+        const act = recs.reduce((sum, r) => sum + Number(r.activity   || 0), 0) / n;
+        return Math.min(100, hw * hwW + att * attW + act * actW);
+      }).filter(v => v !== null);
+      const avgScore = studentMonthAvgs.length
+        ? Math.round(studentMonthAvgs.reduce((s, v) => s + v, 0) / studentMonthAvgs.length)
+        : 0;
       const avgCoins  = ranked.length ? Math.round(ranked.reduce((s,st)=>s+st.coins,0)/ranked.length) : 0;
       let dangerCount = 0, declineCount = 0, riseCount = 0;
       let sumHw = 0, sumAtt = 0, sumAct = 0, activeCount = 0;
@@ -338,111 +365,179 @@ export function AnalyticsPage({ groups, students, records, settings, date }) {
     });
   }, [groups, students, records, settings, date]);
 
+  const TONE_COLOR  = { mint: "#58cc02", gold: "#e5b400", rose: "#ff4b4b" };
+  const TONE_DARK   = { mint: "#46a302", gold: "#b89000", rose: "#cc2222" };
+  const TONE_BG     = { mint: "#f0fdf4", gold: "#fefce8", rose: "#fff1f2" };
+  const TONE_BORDER = { mint: "#bbf7d0", gold: "#fde68a", rose: "#fecdd3" };
+  const TONE_TEXT   = { mint: "#166534", gold: "#854d0e", rose: "#9f1239" };
+  const METRIC = { hw: t.metric_hw, att: t.metric_att, act: t.metric_act };
+
+  const drawerGs = openGroup ? groupStats.find(gs => gs.group.id === openGroup) : null;
+  const drawerTone = drawerGs ? (drawerGs.avgScore >= 70 ? "mint" : drawerGs.avgScore >= 50 ? "gold" : "rose") : "mint";
+
   return (
-    <div className="page-stack">
-      {groupStats.map(gs => {
-        const isOpen = openGroup === gs.group.id;
-        const tone   = gs.avgScore >= 70 ? "mint" : gs.avgScore >= 50 ? "gold" : "rose";
-        const scoreColor = { mint: "var(--mint-dark)", gold: "var(--gold-dark)", rose: "var(--rose-dark)" }[tone];
-        const scoreBg    = { mint: "#e8ffd6",          gold: "#fff9e0",          rose: "#ffe5e5"          }[tone];
+    <>
+      <div className="anl-groups-grid">
+        {groupStats.map(gs => {
+          const isOpen = openGroup === gs.group.id;
+          const tone = gs.avgScore >= 70 ? "mint" : gs.avgScore >= 50 ? "gold" : "rose";
+          const tc = TONE_COLOR[tone], td = TONE_DARK[tone], tbg = TONE_BG[tone], tbr = TONE_BORDER[tone], txt = TONE_TEXT[tone];
+          const bn = gs.groupBottleneck;
+          const hwW  = Number(settings.homeworkWeight  || 0.4);
+          const attW = Number(settings.attendanceWeight || 0.3);
+          const actW = Number(settings.activityWeight   || 0.3);
 
-        return (
-          <section key={gs.group.id} className="panel" style={{ marginBottom: "16px" }}>
-            {/* Header */}
-            <PanelHeader
-              icon={Users}
-              title={gs.group.name}
-              subtitle={t.analytics_students_sub(gs.students.length)}
-              action={
-                <button
-                  type="button"
-                  className={isOpen ? "secondary-button" : "primary-button"}
-                  style={{ padding: "6px 16px", fontSize: "13px", display: "flex", alignItems: "center", gap: "5px" }}
-                  onClick={() => setOpenGroup(isOpen ? null : gs.group.id)}
-                >
-                  {isOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                  {isOpen ? t.analytics_close : t.analytics_open}
-                </button>
-              }
-            />
+          return (
+            <section key={gs.group.id} className="panel" style={{ padding: 0, overflow: "hidden", marginBottom: 0 }}>
 
-            {/* Score + progress */}
-            <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "14px" }}>
-              <div style={{ flex: 1, background: "var(--line)", borderRadius: "999px", height: "10px", overflow: "hidden" }}>
-                <div style={{
-                  width: `${gs.avgScore}%`, height: "100%", borderRadius: "999px",
-                  background: { mint: "var(--mint)", gold: "var(--gold)", rose: "var(--rose)" }[tone],
-                  transition: "width 0.5s"
-                }} />
-              </div>
-              <span style={{ fontSize: "20px", fontWeight: 900, color: scoreColor, background: scoreBg, padding: "2px 14px", borderRadius: "999px", flexShrink: 0 }}>
-                {gs.avgScore}%
-              </span>
-            </div>
+              {/* ── Top accent bar ── */}
+              <div style={{ height: 5, background: `linear-gradient(90deg, ${tc}, ${td})` }} />
 
-            {/* Group bottleneck */}
-            {gs.groupBottleneck && (() => {
-              const METRIC = { hw: t.metric_hw, att: t.metric_att, act: t.metric_act };
-              const bn = gs.groupBottleneck;
-              const isWeak = bn.val < 50;
-              return (
-                <div style={{
-                  display: "flex", alignItems: "center", gap: "8px",
-                  background: isWeak ? "#fff5f5" : "#fff9e0",
-                  border: `1px solid ${isWeak ? "var(--rose)" : "var(--gold)"}`,
-                  borderRadius: "10px", padding: "6px 12px", marginBottom: "12px",
-                  fontSize: "13px", fontWeight: 800,
-                  color: isWeak ? "var(--rose-dark)" : "#92400e"
-                }}>
-                  <span>{isWeak ? "⚠️" : "📌"}</span>
-                  <span>{t.analytics_bottleneck}: {METRIC[bn.key]} — {bn.val}%</span>
-                  <span style={{ marginLeft: "auto", fontSize: "11px", fontWeight: 600, color: "var(--muted)" }}>
-                    📚{bn.hw}% · ✅{bn.att}% · ⚡{bn.act}%
-                  </span>
+              <div style={{ padding: "20px 24px" }}>
+
+                {/* ── Header row ── */}
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 16 }}>
+                  {/* Score circle */}
+                  <div style={{
+                    width: 64, height: 64, borderRadius: "50%", flexShrink: 0,
+                    background: tbg, border: `4px solid ${tbr}`,
+                    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                  }}>
+                    <span style={{ fontSize: 18, fontWeight: 900, color: tc, lineHeight: 1 }}>{gs.avgScore}</span>
+                    <span style={{ fontSize: 9, fontWeight: 800, color: txt, opacity: 0.8 }}>%</span>
+                  </div>
+
+                  {/* Group info */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 900, fontSize: 18, color: "var(--text)", marginBottom: 2 }}>{gs.group.name}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "var(--muted)", marginBottom: 8 }}>
+                      {t.analytics_students_sub(gs.students.length)}
+                    </div>
+                    {/* Status badges */}
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                      {gs.dangerCount > 0 && (
+                        <span style={{ fontSize: 11, fontWeight: 800, padding: "2px 9px", borderRadius: 999, background: "#ffe5e5", color: "var(--rose-dark)", border: "1.5px solid #fca5a5" }}>
+                          {t.analytics_danger_badge(gs.dangerCount)}
+                        </span>
+                      )}
+                      {gs.declineCount > 0 && (
+                        <span style={{ fontSize: 11, fontWeight: 800, padding: "2px 9px", borderRadius: 999, background: "#ffedd5", color: "#c2410c", border: "1.5px solid #fdba74" }}>
+                          {t.analytics_decline_badge(gs.declineCount)}
+                        </span>
+                      )}
+                      {gs.riseCount > 0 && (
+                        <span style={{ fontSize: 11, fontWeight: 800, padding: "2px 9px", borderRadius: 999, background: "#e8ffd6", color: "var(--mint-dark)", border: "1.5px solid #86efac" }}>
+                          {t.analytics_rise_badge(gs.riseCount)}
+                        </span>
+                      )}
+                      {gs.dangerCount === 0 && gs.declineCount === 0 && (
+                        <span style={{ fontSize: 11, fontWeight: 800, padding: "2px 9px", borderRadius: 999, background: "#e8ffd6", color: "var(--mint-dark)", border: "1.5px solid #86efac" }}>
+                          {t.analytics_all_good}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Open button */}
+                  <button
+                    type="button"
+                    className={isOpen ? "secondary-button" : "primary-button"}
+                    style={{ padding: "8px 16px", fontSize: 13, flexShrink: 0 }}
+                    onClick={() => setOpenGroup(isOpen ? null : gs.group.id)}
+                  >
+                    {isOpen ? t.analytics_close : t.analytics_open}
+                  </button>
                 </div>
-              );
-            })()}
 
-            {/* Status badges */}
-            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-              {gs.dangerCount > 0 && (
-                <span style={{ fontSize: "12px", fontWeight: 800, padding: "3px 10px", borderRadius: "999px", background: "#ffe5e5", color: "var(--rose-dark)", border: "1px solid var(--rose)" }}>
-                  {t.analytics_danger_badge(gs.dangerCount)}
-                </span>
-              )}
-              {gs.declineCount > 0 && (
-                <span style={{ fontSize: "12px", fontWeight: 800, padding: "3px 10px", borderRadius: "999px", background: "#ffedd5", color: "#c2410c", border: "1px solid #f97316" }}>
-                  {t.analytics_decline_badge(gs.declineCount)}
-                </span>
-              )}
-              {gs.riseCount > 0 && (
-                <span style={{ fontSize: "12px", fontWeight: 800, padding: "3px 10px", borderRadius: "999px", background: "#e8ffd6", color: "var(--mint-dark)", border: "1px solid var(--mint)" }}>
-                  {t.analytics_rise_badge(gs.riseCount)}
-                </span>
-              )}
-              {gs.dangerCount === 0 && gs.declineCount === 0 && (
-                <span style={{ fontSize: "12px", fontWeight: 800, padding: "3px 10px", borderRadius: "999px", background: "#e8ffd6", color: "var(--mint-dark)", border: "1px solid var(--mint)" }}>
-                  {t.analytics_all_good}
-                </span>
-              )}
+                {/* ── Metrics grid ── */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+                  {[
+                    { key: "hw",  icon: "📚", label: t.metric_hw,  val: bn?.hw  ?? 0, weight: hwW  },
+                    { key: "att", icon: "✅", label: t.metric_att, val: bn?.att ?? 0, weight: attW },
+                    { key: "act", icon: "⚡", label: t.metric_act, val: bn?.act ?? 0, weight: actW },
+                  ].map(m => {
+                    const mColor = m.val >= 70 ? "#58cc02" : m.val >= 50 ? "#e5b400" : "#ff4b4b";
+                    const mBg    = m.val >= 70 ? "#f0fdf4" : m.val >= 50 ? "#fefce8" : "#fff1f2";
+                    const mBd    = m.val >= 70 ? "#bbf7d0" : m.val >= 50 ? "#fde68a" : "#fecdd3";
+                    return (
+                      <div key={m.key} style={{ background: mBg, border: `1.5px solid ${mBd}`, borderRadius: 12, padding: "10px 12px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)" }}>{m.icon} {m.label}</span>
+                          <span style={{ fontSize: 15, fontWeight: 900, color: mColor }}>{m.val}%</span>
+                        </div>
+                        <div style={{ height: 6, background: "var(--line)", borderRadius: 99, overflow: "hidden" }}>
+                          <div style={{ width: `${m.val}%`, height: "100%", background: mColor, borderRadius: 99 }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* ── Bottleneck ── */}
+                {bn && (() => {
+                  const isWeak = bn.val < 50;
+                  return (
+                    <div style={{
+                      display: "flex", alignItems: "center", gap: 8, marginTop: 12,
+                      background: isWeak ? "#fff5f5" : "#fffbeb",
+                      border: `1px solid ${isWeak ? "#fca5a5" : "#fde68a"}`,
+                      borderRadius: 10, padding: "7px 12px",
+                      fontSize: 12, fontWeight: 800,
+                      color: isWeak ? "var(--rose-dark)" : "#92400e",
+                    }}>
+                      <span>{isWeak ? "⚠️" : "📌"}</span>
+                      <span>{t.analytics_bottleneck}: {METRIC[bn.key]} — {bn.val}%</span>
+                    </div>
+                  );
+                })()}
+              </div>
+            </section>
+          );
+        })}
+      </div>
+
+      {/* ── Side drawer ── */}
+      {drawerGs && (
+        <>
+          <div className="anl-overlay" onClick={() => setOpenGroup(null)} />
+          <div className="anl-drawer">
+            {/* Drawer header */}
+            <div
+              className="anl-drawer-header"
+              style={{ borderTop: `4px solid ${TONE_COLOR[drawerTone]}` }}
+            >
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 900, fontSize: 18, color: "var(--text)" }}>
+                  {drawerGs.group.name}
+                </div>
+                <div style={{ fontSize: 13, color: "var(--muted)", fontWeight: 600 }}>
+                  {t.analytics_students_sub(drawerGs.students.length)}
+                </div>
+              </div>
+              <button
+                type="button"
+                className="secondary-button"
+                style={{ padding: "8px 10px", flexShrink: 0 }}
+                onClick={() => setOpenGroup(null)}
+              >
+                <X size={16} />
+              </button>
             </div>
 
-            {/* Detail */}
-            {isOpen && (
-              <div style={{ marginTop: "24px", paddingTop: "24px", borderTop: "2px solid var(--line)" }}>
-                <GroupHistoryChart
-                  studentIds={gs.studentIds}
-                  records={records}
-                  settings={settings}
-                  tone={tone}
-                  groupId={gs.group.id}
-                />
-                <GroupDetail gs={gs} records={records} settings={settings} date={date} />
-              </div>
-            )}
-          </section>
-        );
-      })}
-    </div>
+            {/* Drawer body */}
+            <div className="anl-drawer-body">
+              <GroupHistoryChart
+                studentIds={drawerGs.studentIds}
+                records={records}
+                settings={settings}
+                tone={drawerTone}
+                groupId={drawerGs.group.id}
+              />
+              <GroupDetail gs={drawerGs} records={records} settings={settings} date={date} />
+            </div>
+          </div>
+        </>
+      )}
+    </>
   );
 }

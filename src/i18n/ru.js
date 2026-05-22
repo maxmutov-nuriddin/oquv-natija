@@ -316,7 +316,7 @@ export const ru = {
   // Analytics page
   analytics_open: "Результаты",
   analytics_close: "Закрыть",
-  analytics_students_sub: (n) => `${n} учеников · среднее за 30 дней`,
+  analytics_students_sub: (n) => `${n} учеников · среднее за текущий месяц`,
   analytics_danger_label: "Зона риска",
   analytics_danger_sub: "Балл ниже 50%",
   analytics_danger_empty: "Опасных учеников нет",
