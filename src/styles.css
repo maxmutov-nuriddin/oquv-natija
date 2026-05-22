@@ -88,16 +88,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background-color: var(--bg);
-  background-image: radial-gradient(#d1d5db 2px, transparent 2px);
-  background-size: 32px 32px;
-}
-
 button, input, select {
   font: inherit;
   transition: all 0.1s ease;
@@ -126,7 +116,6 @@ button {
   padding: 24px;
   color: #ffffff;
   border-right: 4px solid var(--blue-dark);
-  will-change: transform;
 }
 
 .brand {
@@ -251,7 +240,7 @@ button {
 .live-dot-online { background: var(--mint); }
 
 /* Main Content */
-.main-content { padding: 32px; min-width: 0; }
+.main-content { padding: 32px; min-width: 0; contain: layout style; }
 .app-footer { margin: 0 -24px -24px; padding: 6px 0; text-align: center; font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.75); }
 
 .topbar {
@@ -373,13 +362,13 @@ button {
 
 /* Student Cards */
 .student-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
-.student-card { padding: 16px; display: flex; flex-direction: column; gap: 10px; transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, opacity 0.15s; min-width: 0; position: relative; }
-.student-card:active { transform: translateY(4px); border-bottom-width: 2px; margin-bottom: 4px; }
-.student-card:focus-within { border-color: var(--blue); border-bottom-color: var(--blue-dark); box-shadow: 0 0 0 4px rgba(37,99,235,0.25), 0 8px 32px rgba(37,99,235,0.18); transform: translateY(-3px) scale(1.01); background: #f0f6ff; z-index: 2; position: relative; }
+.student-card { padding: 16px; display: flex; flex-direction: column; gap: 10px; transition: border-color 0.15s, opacity 0.15s; min-width: 0; position: relative; }
+.student-card:active { transform: translateY(2px); border-bottom-width: 2px; margin-bottom: 2px; }
+.student-card:focus-within { border-color: var(--blue); border-bottom-color: var(--blue-dark); background: #f0f6ff; z-index: 2; position: relative; }
 .student-grid:has(.student-card:focus-within) .student-card:not(:focus-within) { opacity: 0.45; }
-.student-card-top { border-color: var(--gold); border-bottom-color: var(--gold-dark); background: #fffcf0; box-shadow: 0 0 0 3px rgba(245,158,11,0.15), 0 4px 16px rgba(245,158,11,0.12); }
-.student-card-warning { border-color: #f59e0b; border-bottom-color: #d97706; border-left: 5px solid #f59e0b; background: #fef3c7; box-shadow: 0 0 0 3px rgba(245,158,11,0.18), 0 4px 16px rgba(245,158,11,0.15); }
-.student-card-danger  { border-color: #ef4444; border-bottom-color: #b91c1c; border-left: 5px solid #ef4444; background: #fee2e2; box-shadow: 0 0 0 3px rgba(239,68,68,0.2), 0 4px 16px rgba(239,68,68,0.18); }
+.student-card-top     { border-color: var(--gold); border-bottom-color: var(--gold-dark); background: #fffcf0; }
+.student-card-warning { border-color: #f59e0b; border-bottom-color: #d97706; border-left: 5px solid #f59e0b; background: #fef3c7; }
+.student-card-danger  { border-color: #ef4444; border-bottom-color: #b91c1c; border-left: 5px solid #ef4444; background: #fee2e2; }
 
 .student-head { display: flex; justify-content: space-between; align-items: center; }
 .student-person { display: flex; gap: 16px; align-items: center; overflow: hidden; min-width: 0; flex: 1; }
