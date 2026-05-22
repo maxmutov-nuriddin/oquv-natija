@@ -77,6 +77,11 @@
 
 * {
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
@@ -86,6 +91,7 @@ body {
   color: var(--text);
   font-family: 'Outfit', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
 }
 
 button, input, select {
@@ -95,6 +101,11 @@ button, input, select {
 
 button {
   cursor: pointer;
+  touch-action: manipulation;
+}
+
+input, select, textarea {
+  touch-action: manipulation;
 }
 
 /* Layout */
@@ -1106,7 +1117,24 @@ button {
   .app-footer { margin: 0 -16px -16px; }
 
   /* Main content */
-  .main-content { padding: 16px; }
+  .main-content {
+    padding: 16px;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* iOS input zoom prevention — font-size < 16px triggers zoom */
+  input, select, textarea { font-size: 16px !important; }
+
+  /* Safe area — modal pastida home indicator uchun */
+  .modal-panel { padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .anl-modal { padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .qg-modal { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+  /* Scroll to top btn — home indicator uchun yuqoriga ko'tarish */
+  .scroll-to-top-btn {
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  }
 
   /* Hamburger visible */
   .mobile-menu-btn { display: flex; }
@@ -1401,6 +1429,18 @@ button {
 
   .leader-main { gap: 8px; }
   .leader-score strong { font-size: 20px; }
+}
+
+/* Touch qurilmalarda hover yopishib qolmasligi uchun */
+@media (hover: none) and (pointer: coarse) {
+  .nav-button:hover { background: transparent; }
+  .gift-tag:hover { transform: none; filter: none; }
+  .panel:hover, .stat-card:hover, .group-card:hover, .student-card:hover {
+    transform: none;
+    box-shadow: var(--shadow);
+  }
+  .timer-preset-btn:hover { background: #f8fafc; }
+  .primary-button:hover, .secondary-button:hover { filter: none; }
 }
 
 
