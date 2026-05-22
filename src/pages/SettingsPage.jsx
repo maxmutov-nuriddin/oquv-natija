@@ -807,6 +807,7 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
                         <span style={{ fontSize: "12px", fontWeight: 700, color: "#64748b", whiteSpace: "nowrap" }}>{field.label}</span>
                         <input
                           type="number"
+                          inputMode="numeric"
                           min={field.min} max={field.max} step={field.step}
                           value={draft[field.key] ?? (field.key === "titleEagleThreshold" ? 95 : field.key === "titleMachineThreshold" ? 85 : field.key === "titleMachineMinLessons" ? 3 : 5)}
                           onChange={e => setDraft(d => ({ ...d, [field.key]: Number(e.target.value) }))}

@@ -47,7 +47,7 @@ export function BuyGiftModal({ groups, students, onBuy, initialGroup }) {
       </label>
       <label>
         <span>Soni</span>
-        <input type="number" min="1" value={form.count} onChange={(e) => update("count", parseInt(e.target.value) || 1)} />
+        <input type="number" inputMode="numeric" min="1" value={form.count} onChange={(e) => update("count", parseInt(e.target.value) || 1)} />
       </label>
       <button className="primary-button" type="submit">
         <CheckCircle2 size={18} />

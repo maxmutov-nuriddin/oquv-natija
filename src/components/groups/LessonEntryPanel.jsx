@@ -184,6 +184,7 @@ export function LessonEntryPanel({ group, students, records, date, currentTime, 
                     <input
                       key={field.key}
                       type="number"
+                      inputMode="numeric"
                       min="0"
                       max="100"
                       step="1"

@@ -70,7 +70,7 @@ export function StudentForm({ groups, initialData, onSubmit, selectedGroup, onSa
         {scoreFields.map((field) => (
           <label key={field.key}>
             <span>{field.short}</span>
-            <input type="number" min="0" max="100" value={numberInputValue(form[field.key])} onChange={(event) => update(field.key, parsePercentInput(event.target.value))} />
+            <input type="number" inputMode="numeric" min="0" max="100" value={numberInputValue(form[field.key])} onChange={(event) => update(field.key, parsePercentInput(event.target.value))} />
           </label>
         ))}
       </div>

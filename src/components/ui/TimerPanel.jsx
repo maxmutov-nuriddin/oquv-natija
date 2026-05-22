@@ -172,7 +172,7 @@ export function TimerPanel() {
 
           <div className="timer-custom-row">
             <input
-              type="number" min="1" max="99" placeholder={t.timer_minutes}
+              type="number" inputMode="numeric" min="1" max="99" placeholder={t.timer_minutes}
               className="timer-custom-input"
               value={custom}
               onChange={e => setCustom(e.target.value)}

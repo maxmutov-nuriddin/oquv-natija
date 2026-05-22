@@ -209,6 +209,7 @@ export function StudentCard({ student, onDelete, onEdit, onProfile, index, date,
               <input
                 key={`${student.id}-${field.key}`}
                 type="number"
+                inputMode="numeric"
                 min="0"
                 max="100"
                 step="1"
