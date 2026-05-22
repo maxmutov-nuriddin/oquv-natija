@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { AlertTriangle, TrendingDown, TrendingUp, X } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import { groupAvgScore, isDeclineTrend, isRiseTrend, rankStudents } from "../lib/scoring";
@@ -373,6 +374,15 @@ export function AnalyticsPage({ groups, students, records, settings, date }) {
   const METRIC = { hw: t.metric_hw, att: t.metric_att, act: t.metric_act };
 
   const drawerGs = openGroup ? groupStats.find(gs => gs.group.id === openGroup) : null;
+
+  useEffect(() => {
+    if (drawerGs) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [drawerGs]);
   const drawerTone = drawerGs ? (drawerGs.avgScore >= 70 ? "mint" : drawerGs.avgScore >= 50 ? "gold" : "rose") : "mint";
 
   return (
@@ -496,14 +506,12 @@ export function AnalyticsPage({ groups, students, records, settings, date }) {
         })}
       </div>
 
-      {/* ── Side drawer ── */}
-      {drawerGs && (
-        <>
-          <div className="anl-overlay" onClick={() => setOpenGroup(null)} />
-          <div className="anl-drawer">
-            {/* Drawer header */}
+      {/* ── Modal (portal → body) ── */}
+      {drawerGs && createPortal(
+        <div className="anl-overlay" onClick={() => setOpenGroup(null)}>
+          <div className="anl-modal" onClick={e => e.stopPropagation()}>
             <div
-              className="anl-drawer-header"
+              className="anl-modal-header"
               style={{ borderTop: `4px solid ${TONE_COLOR[drawerTone]}` }}
             >
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -523,9 +531,7 @@ export function AnalyticsPage({ groups, students, records, settings, date }) {
                 <X size={16} />
               </button>
             </div>
-
-            {/* Drawer body */}
-            <div className="anl-drawer-body">
+            <div className="anl-modal-body">
               <GroupHistoryChart
                 studentIds={drawerGs.studentIds}
                 records={records}
@@ -536,7 +542,8 @@ export function AnalyticsPage({ groups, students, records, settings, date }) {
               <GroupDetail gs={drawerGs} records={records} settings={settings} date={date} />
             </div>
           </div>
-        </>
+        </div>,
+        document.body
       )}
     </>
   );
