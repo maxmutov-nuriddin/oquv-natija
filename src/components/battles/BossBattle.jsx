@@ -6,8 +6,11 @@ import { BATTLE_BOSS_PRESETS, BATTLE_HP_OPTIONS, BATTLE_REWARD_OPTIONS } from ".
 import { ConfirmModal } from "../ui/ConfirmModal";
 
 
+const LESSON_COUNT = 3; // haftadagi darslar soni
+
 const BOSS_INFO = `• "🎲 Random Boss" bosilganda tasodifiy boss, HP va mukofot tanlanadi
-• Har dars kuni guruh o'rtacha bali = bossga zarar
+• Har dars: guruh o'rtacha bali / 100 × (maxHP ÷ ${LESSON_COUNT}) = zarar
+• ${LESSON_COUNT} darsda hammasi 100% bo'lsa — boss mag'lub!
 • HP nolga tushsa — boss mag'lub, har o'quvchiga mukofot coin
 • Hafta tugagach boss avtomatik yangilanadi`;
 
@@ -25,14 +28,15 @@ function calcDamage(boss, groupStudents, records, settings) {
   );
   const byDate = {};
   for (const r of recs) (byDate[r.date] = byDate[r.date] || []).push(r);
+  const damagePerLesson = boss.maxHp / LESSON_COUNT;
   let total = 0;
   for (const dayRecs of Object.values(byDate)) {
     const avg = dayRecs.reduce((s, r) =>
       s + Math.min(100, Math.round((r.homework||0)*hw + (r.attendance||0)*att + (r.activity||0)*act)), 0
     ) / dayRecs.length;
-    total += Math.round(avg);
+    total += (avg / 100) * damagePerLesson;
   }
-  return Math.min(boss.maxHp, total);
+  return Math.min(boss.maxHp, Math.round(total));
 }
 
 export function BossBattle({ group, groupStudents, records, settings, date, updateGroup, updateStudent }) {
@@ -130,7 +134,7 @@ export function BossBattle({ group, groupStudents, records, settings, date, upda
           <div style={{ marginBottom: "14px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", fontWeight: 800, marginBottom: "6px" }}>
               <span style={{ color: "var(--rose)" }}>❤️ {currentHp.toLocaleString()} / {boss.maxHp.toLocaleString()} HP</span>
-              <span style={{ color: "var(--muted)" }}>⚔️ {damage} zarar</span>
+              <span style={{ color: "var(--muted)" }}>⚔️ {damage.toLocaleString()} / {boss.maxHp.toLocaleString()}</span>
             </div>
             <div className="progress-track" style={{ height: "10px" }}>
               <i style={{ display: "block", height: "100%", width: `${hpPct}%`, background: hpColor, borderRadius: "999px", transition: "width 0.5s ease" }} />
