@@ -27,7 +27,7 @@ function getGroupActivityStatus(score) {
   return             { key: "weak",    color: "#dc2626", bg: "#fee2e2", border: "#fca5a5" };
 }
 
-export function GroupsPage({ groups, students, records, settings, date, addGroup, updateGroup, deleteGroup, addStudent, updateStudent, deleteStudent, selectedGroup, setDate }) {
+export function GroupsPage({ groups, students, records, settings, date, addGroup, updateGroup, deleteGroup, addStudent, updateStudent, updateRecord, deleteStudent, selectedGroup, setDate }) {
   const { t } = useT();
   const [activeGroup, setActiveGroup] = useState(groups[0]?.name || "");
   const activeGroupStudents = useMemo(() => students.filter(s => s.group === activeGroup), [students, activeGroup]);
@@ -370,6 +370,12 @@ export function GroupsPage({ groups, students, records, settings, date, addGroup
                                   setModal("gift-coin");
                                   return;
                                 }
+                                if (g.id === "coin_boost_2x") {
+                                  const todayRec = records.find(r => r.studentId === s.id && r.date === date);
+                                  if (todayRec) updateRecord(`${s.id}-${date}`, { coinsEarned: (Number(todayRec.coinsEarned) || 0) * 2 });
+                                  updateStudent(s.id, { gifts: (s.gifts || []).map(item => item.id === "coin_boost_2x" ? { ...item, count: Math.max(0, Number(item.count || 0) - 1) } : item).filter(item => item.count > 0) });
+                                  return;
+                                }
                                 const currentGifts = s.gifts || [];
                                 const nextGifts = currentGifts.map(item => {
                                   const currentCount = Number(item.count || 0);
@@ -398,6 +404,11 @@ export function GroupsPage({ groups, students, records, settings, date, addGroup
                                 } else if (vp.id === "gift_coin") {
                                   setActiveGiftCoin({ studentId: s.id, type: vp.source, vipPerk: vp });
                                   setModal("gift-coin");
+                                } else if (vp.id === "coin_boost_2x") {
+                                  const todayRec = records.find(r => r.studentId === s.id && r.date === date);
+                                  if (todayRec) updateRecord(`${s.id}-${date}`, { coinsEarned: (Number(todayRec.coinsEarned) || 0) * 2 });
+                                  const perkKey = `${vp.source}_${getPeriodKeyForSource(vp.source)}_${vp.id}`;
+                                  updateStudent(s.id, { usedVipPerks: { ...(s.usedVipPerks || {}), [perkKey]: (s.usedVipPerks?.[perkKey] || 0) + 1 } });
                                 } else {
                                   const perkKey = `${vp.source}_${getPeriodKeyForSource(vp.source)}_${vp.id}`;
                                   const usedVipPerks = { ...(s.usedVipPerks || {}) };

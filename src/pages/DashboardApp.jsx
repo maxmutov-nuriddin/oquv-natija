@@ -12,6 +12,7 @@ import { ConfirmModal } from "../components/ui/ConfirmModal";
 import { Modal } from "../components/ui/Modal";
 import { LoadingState } from "../components/ui/LoadingState";
 import { ScrollToTopBtn } from "../components/ui/ScrollToTopBtn";
+import { ProjectorView } from "../components/senior/ProjectorView";
 
 const DashboardPage  = lazy(() => import("./DashboardPage").then(m => ({ default: m.DashboardPage })));
 const GroupsPage     = lazy(() => import("./GroupsPage").then(m => ({ default: m.GroupsPage })));
@@ -22,7 +23,7 @@ const QuizGamePage   = lazy(() => import("./QuizGamePage").then(m => ({ default:
 
 export function DashboardApp({ teacher, logout, updateProfile, changePassword, verifyPassword, register, restoreDataFromUid }) {
   const { t } = useT();
-  const { students, groups, records, settings, loading, error, isDemo, addGroup, updateGroup, deleteGroup, addStudent, updateStudent, saveLessonRecords, deleteStudent, saveSettings } =
+  const { students, groups, records, settings, loading, error, isDemo, addGroup, updateGroup, deleteGroup, addStudent, updateStudent, saveLessonRecords, updateRecord, deleteStudent, saveSettings } =
     useDashboardData();
   const [activePage, setActivePage] = useState("dashboard");
   const [date, setDate] = useState(dayjs().format("YYYY-MM-DD"));
@@ -41,6 +42,7 @@ export function DashboardApp({ teacher, logout, updateProfile, changePassword, v
   const [editingStudent, setEditingStudent] = useState(null);
   const [lessonLocked, setLessonLocked] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [projector, setProjector] = useState(null);
 
   useEffect(() => { setLessonLocked(false); }, [selectedGroup, date]);
 
@@ -191,10 +193,12 @@ export function DashboardApp({ teacher, logout, updateProfile, changePassword, v
                   onEditStudent={setEditingStudent}
                   onDeleteStudent={handleDeleteStudent}
                   saveLessonRecords={saveLessonRecords}
+                  updateRecord={updateRecord}
                   updateStudent={updateStudent}
                   updateGroup={updateGroup}
                   isLessonLocked={lessonLocked}
                   onUnlock={() => setLessonLocked(false)}
+                  onShowProjector={setProjector}
                 />
               )}
               {activePage === "groups" && (
@@ -209,6 +213,7 @@ export function DashboardApp({ teacher, logout, updateProfile, changePassword, v
                   deleteGroup={deleteGroup}
                   addStudent={addStudent}
                   updateStudent={updateStudent}
+                  updateRecord={updateRecord}
                   deleteStudent={handleDeleteStudent}
                   selectedGroup={selectedGroup}
                   setDate={setDate}
@@ -242,6 +247,15 @@ export function DashboardApp({ teacher, logout, updateProfile, changePassword, v
           )}
         </main>
       </div>
+
+      {projector && (
+        <ProjectorView
+          ranked={projector.ranked}
+          selectedGroup={projector.selectedGroup}
+          date={projector.date}
+          onClose={() => setProjector(null)}
+        />
+      )}
 
       {editingStudent && (
         <Modal title={t.app_edit_student} onClose={() => setEditingStudent(null)}>

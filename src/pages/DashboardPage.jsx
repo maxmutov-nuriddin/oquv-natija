@@ -23,13 +23,12 @@ import { EmptyState } from "../components/ui/EmptyState";
 import { FunModal } from "../components/ui/FunModal";
 import { PanelHeader } from "../components/ui/PanelHeader";
 import { StatCard } from "../components/ui/StatCard";
-import { ProjectorView } from "../components/senior/ProjectorView";
 import { ClanPanel } from "../components/senior/ClanPanel";
 import { BossBattle } from "../components/battles/BossBattle";
 import { GroupMatch } from "../components/battles/GroupMatch";
 import { ClanBattle } from "../components/battles/ClanBattle";
 
-export function DashboardPage({ groups, students, records, settings, selectedGroup, currentGroup, currentTime, date, onEditStudent, onDeleteStudent, saveLessonRecords, updateStudent, updateGroup, isLessonLocked = false, onUnlock }) {
+export function DashboardPage({ groups, students, records, settings, selectedGroup, currentGroup, currentTime, date, onEditStudent, onDeleteStudent, saveLessonRecords, updateRecord, updateStudent, updateGroup, isLessonLocked = false, onUnlock, onShowProjector }) {
   const monthlyWinner = useMemo(() => getPeriodLeader(students.filter(s => s.group === selectedGroup), records, settings, getPreviousMonthRange(date)), [students, selectedGroup, records, settings, date]);
   const weeklyWinner = useMemo(() => {
     const candidates = students.filter(s => s.group === selectedGroup && s.id !== monthlyWinner?.id);
@@ -92,7 +91,6 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
     return result;
   }, [isSenior, ranked, records, settings, date]);
   const { t } = useT();
-  const [showProjector, setShowProjector] = useState(false);
   const [showBonusDrum, setShowBonusDrum] = useState(false);
   const [profileStudent, setProfileStudent] = useState(null);
   const [showComic, setShowComic] = useState(false);
@@ -282,7 +280,7 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
               background: "linear-gradient(135deg, #0f172a, #1e293b)",
               fontSize: "15px", border: "none", boxShadow: "0 4px 20px rgba(15,23,42,0.4)",
             }}
-            onClick={() => setShowProjector(true)}
+            onClick={() => onShowProjector?.({ ranked, selectedGroup, date })}
           >
             <Monitor size={18} />
             <span>📺 Proyektor Reytingi</span>
@@ -341,15 +339,6 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
           </>
         );
       })()}
-
-      {showProjector && (
-        <ProjectorView
-          ranked={ranked}
-          selectedGroup={selectedGroup}
-          date={date}
-          onClose={() => setShowProjector(false)}
-        />
-      )}
 
       {decliningStudents.length > 0 && (
         <section style={{
@@ -498,6 +487,12 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
                               if (g.id === "block_friend") { setActiveBlockFriend({ studentId: s.id, giftItem: g }); setGiftModal("block-friend"); return; }
                               if (g.id === "mystery_box" || g.id === "mistiriy_box") { setActiveMystery({ studentId: s.id, type: "shop", mysteryType: `shop_${tier}`, giftItem: g }); setGiftModal("mystery-box"); return; }
                               if (g.id === "gift_coin") { setActiveGiftCoin({ studentId: s.id, type: "shop", giftItem: g }); setGiftModal("gift-coin"); return; }
+                              if (g.id === "coin_boost_2x") {
+                                const todayRec = todayGroupRecords.find(r => r.studentId === s.id);
+                                if (todayRec) updateRecord(`${s.id}-${date}`, { coinsEarned: (Number(todayRec.coinsEarned) || 0) * 2 });
+                                updateStudent(s.id, { gifts: (s.gifts || []).map(item => item.id === "coin_boost_2x" ? { ...item, count: Math.max(0, Number(item.count || 0) - 1) } : item).filter(item => item.count > 0) });
+                                return;
+                              }
                               const nextGifts = (s.gifts || []).map(item => item.id === g.id ? { ...item, count: Math.max(0, Number(item.count || 0) - 1) } : item).filter(item => item.count > 0);
                               updateStudent(s.id, { gifts: nextGifts });
                             }}>
@@ -521,6 +516,12 @@ export function DashboardPage({ groups, students, records, settings, selectedGro
                               if (!isLessonActive || sIsBlocked) return;
                               if (vp.id === "mystery_box") { setActiveMystery({ studentId: s.id, type: vp.source, mysteryType: `${tier}_${vp.source}`, vipPerk: vp }); setGiftModal("mystery-box"); }
                               else if (vp.id === "gift_coin") { setActiveGiftCoin({ studentId: s.id, type: vp.source, vipPerk: vp }); setGiftModal("gift-coin"); }
+                              else if (vp.id === "coin_boost_2x") {
+                                const todayRec = todayGroupRecords.find(r => r.studentId === s.id);
+                                if (todayRec) updateRecord(`${s.id}-${date}`, { coinsEarned: (Number(todayRec.coinsEarned) || 0) * 2 });
+                                const perkKey = `${vp.source}_${getPeriodKeyForSource(vp.source)}_${vp.id}`;
+                                updateStudent(s.id, { usedVipPerks: { ...(s.usedVipPerks || {}), [perkKey]: (s.usedVipPerks?.[perkKey] || 0) + 1 } });
+                              }
                               else {
                                 const perkKey = `${vp.source}_${getPeriodKeyForSource(vp.source)}_${vp.id}`;
                                 updateStudent(s.id, { usedVipPerks: { ...(s.usedVipPerks || {}), [perkKey]: (s.usedVipPerks?.[perkKey] || 0) + 1 } });
