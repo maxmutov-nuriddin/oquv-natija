@@ -143,6 +143,9 @@ export const uz = {
   profile_good: "Yaxshi",
   profile_recent: "Oxirgi darslar",
   profile_no_history: "Hali dars tarixi yo'q",
+  profile_warnings_title: "Ogohlantirishlar",
+  profile_score_penalty: (n) => `Ball jarima: −${n}%`,
+  profile_reset_penalty: "Tiklash",
 
   // Groups page
   groups_title: "Guruhlar",

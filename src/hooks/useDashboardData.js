@@ -22,11 +22,16 @@ function mapDocs(snapshot) {
 export function useDashboardData() {
   const [data, setData] = useState(initialData);
   const recordsRef = useRef([]);
+  const studentsRef = useRef([]);
   const uidRef = useRef(null);
 
   useEffect(() => {
     recordsRef.current = data.records;
   }, [data.records]);
+
+  useEffect(() => {
+    studentsRef.current = data.students;
+  }, [data.students]);
 
   useEffect(() => {
     if (!hasFirebaseConfig || !db) return undefined;
@@ -403,30 +408,35 @@ export function useDashboardData() {
         }
       },
       async updateStudent(studentId, values) {
+        const student = studentsRef.current.find(s => s.id === studentId);
+        const oldGroup = student?.group;
+        const newGroup = values.group;
+        const finalValues = (newGroup && oldGroup && newGroup !== oldGroup)
+          ? { ...values, currentGroupSince: dayjs().format("YYYY-MM-DD") }
+          : values;
+
         setData((current) => {
-          const student = current.students.find(s => s.id === studentId);
-          const oldGroup = student?.group;
-          const newGroup = values.group || oldGroup;
+          const resolvedNewGroup = finalValues.group || oldGroup;
 
           let nextGroups = current.groups;
-          if (oldGroup !== newGroup) {
+          if (oldGroup !== resolvedNewGroup) {
             nextGroups = current.groups.map(g => {
               if (g.name === oldGroup) return { ...g, studentsCount: Math.max(0, (g.studentsCount || 0) - 1) };
-              if (g.name === newGroup) return { ...g, studentsCount: (g.studentsCount || 0) + 1 };
+              if (g.name === resolvedNewGroup) return { ...g, studentsCount: (g.studentsCount || 0) + 1 };
               return g;
             });
           }
 
           return {
             ...current,
-            students: current.students.map((s) => (s.id === studentId ? { ...s, ...values } : s)),
+            students: current.students.map((s) => (s.id === studentId ? { ...s, ...finalValues } : s)),
             groups: nextGroups
           };
         });
 
         if (hasFirebaseConfig && db) {
           await ensureAdminSession();
-          await updateDoc(userDoc("students", studentId), values);
+          await updateDoc(userDoc("students", studentId), finalValues);
         }
       }
     };

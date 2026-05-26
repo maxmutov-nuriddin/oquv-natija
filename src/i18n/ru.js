@@ -143,6 +143,9 @@ export const ru = {
   profile_good: "Хорошо",
   profile_recent: "Последние уроки",
   profile_no_history: "История уроков пуста",
+  profile_warnings_title: "Предупреждения",
+  profile_score_penalty: (n) => `Штраф баллов: −${n}%`,
+  profile_reset_penalty: "Сбросить",
 
   // Groups page
   groups_title: "Группы",

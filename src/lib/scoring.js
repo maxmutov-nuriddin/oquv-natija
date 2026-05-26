@@ -67,11 +67,11 @@ export function getPeriodLeader(students, records, settings, range) {
   if (!students || !students.length) return null;
 
   const results = students.map((student) => {
-    const periodRecords = getRecordsInRange(
-      records.filter((record) => record.studentId === student.id),
-      range.start,
-      range.end
-    );
+    let studentRecords = records.filter((record) => record.studentId === student.id);
+    if (student.currentGroupSince) {
+      studentRecords = studentRecords.filter(r => r.date >= student.currentGroupSince);
+    }
+    const periodRecords = getRecordsInRange(studentRecords, range.start, range.end);
     const coins = periodRecords.reduce((sum, record) => {
       const earned = Number(record.coinsEarned);
       const val = !isNaN(earned) ? earned : calculateCoins(record, settings);

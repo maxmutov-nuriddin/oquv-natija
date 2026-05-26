@@ -289,17 +289,17 @@ export function StudentProfileModal({ student, records, settings, groups, date, 
           {/* ── Homework warnings ─────────────────────────────── */}
           {(student.scorePenalty > 0 || zeroCount >= 2) && (
             <div className="profile-section" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              <h4 className="profile-section-title">⚠️ Ogohlantirishlar</h4>
+              <h4 className="profile-section-title">⚠️ {t.profile_warnings_title}</h4>
 
               {student.scorePenalty > 0 && (
                 <div style={{ background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: "10px", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
-                  <span style={{ fontSize: "14px", fontWeight: 700, color: "#b91c1c" }}>Ball jarima: −{student.scorePenalty}%</span>
+                  <span style={{ fontSize: "14px", fontWeight: 700, color: "#b91c1c" }}>{t.profile_score_penalty(student.scorePenalty)}</span>
                   <button
                     type="button"
                     style={{ fontSize: "12px", fontWeight: 800, padding: "6px 14px", border: "1px solid #fca5a5", borderRadius: "8px", background: "white", color: "#b91c1c", cursor: "pointer", flexShrink: 0 }}
                     onClick={() => onUpdateStudent?.(student.id, { scorePenalty: 0 })}
                   >
-                    Tiklash
+                    {t.profile_reset_penalty}
                   </button>
                 </div>
               )}
