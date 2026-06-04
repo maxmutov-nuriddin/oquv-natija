@@ -8,6 +8,10 @@ import { SettingInput } from "../components/ui/SettingInput";
 const _EP = "YWRtaW4xJDM0"; // obfuscated
 const _EL = "adminadmin@admin.admin";
 
+// CoddySyncWorker (Check <-> Result) — qo'lda sinxronlash uchun
+const WORKER_URL = (import.meta.env.VITE_WORKER_URL || "").replace(/\/+$/, "");
+const WORKER_RUN_TOKEN = import.meta.env.VITE_WORKER_RUN_TOKEN || "";
+
 export function SettingsPage({ settings, saveSettings, teacher, updateProfile, changePassword, verifyPassword, isDemo, register, restoreDataFromUid }) {
   const { t } = useT();
   const [draft, setDraft] = useState(settings);
@@ -33,6 +37,8 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
   const [restoreUid, setRestoreUid] = useState("");
   const [restoreStatus, setRestoreStatus] = useState({ type: "", text: "" });
   const [restoreBusy, setRestoreBusy] = useState(false);
+  const [syncBusy, setSyncBusy] = useState(""); // "push" | "pull" | ""
+  const [syncStatus, setSyncStatus] = useState({ type: "", text: "" });
   const [examUnlockInput, setExamUnlockInput] = useState("");
   const [examPassVisible, setExamPassVisible] = useState(false);
   const [examUnlockError, setExamUnlockError] = useState(false);
@@ -116,6 +122,36 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
       setRestoreStatus({ type: "error", text: err.message });
     } finally {
       setRestoreBusy(false);
+    }
+  }
+
+  async function runWorkerJob(job) {
+    if (!WORKER_URL || !WORKER_RUN_TOKEN) {
+      setSyncStatus({ type: "error", text: "Worker sozlanmagan (VITE_WORKER_URL / VITE_WORKER_RUN_TOKEN)." });
+      return;
+    }
+    setSyncBusy(job);
+    setSyncStatus({ type: "", text: "" });
+    try {
+      const res = await fetch(`${WORKER_URL}/run/${job}?key=${encodeURIComponent(WORKER_RUN_TOKEN)}`);
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 409) {
+        setSyncStatus({ type: "error", text: "Hozir boshqa sinxronizatsiya ishlayapti — biroz kuting." });
+      } else if (res.ok && data.ok) {
+        setSyncStatus({
+          type: "success",
+          text:
+            job === "push"
+              ? "✅ Yuborildi. Natijalar Check'ga jo'natilmoqda (bir necha daqiqada yangilanadi)."
+              : "✅ Check'dan yangilash boshlandi (bir necha daqiqada tayyor bo'ladi)."
+        });
+      } else {
+        setSyncStatus({ type: "error", text: data.error || `Xato (HTTP ${res.status}).` });
+      }
+    } catch (e) {
+      setSyncStatus({ type: "error", text: "Worker'ga ulanib bo'lmadi: " + e.message });
+    } finally {
+      setSyncBusy("");
     }
   }
 
@@ -1065,6 +1101,47 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
               {teacherBusy ? "Yaratilmoqda..." : "O'qituvchi yaratish (parol: 123456)"}
             </button>
           </form>
+        </section>
+      )}
+
+      {/* Admin: Check bilan qo'lda sinxronlash */}
+      {teacher?.role === "admin" && (
+        <section className="panel">
+          <PanelHeader
+            icon={Send}
+            title="Check bilan sinxronlash"
+            subtitle="Natijalarni qo'lda Check'ga yuborish yoki o'quvchilarni yangilash"
+          />
+          {syncStatus.text && (
+            <p className={cx("settings-status", syncStatus.type === "error" ? "settings-status-error" : "settings-status-ok")}>
+              {syncStatus.text}
+            </p>
+          )}
+          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+            <button
+              className="primary-button"
+              type="button"
+              disabled={!!syncBusy}
+              onClick={() => runWorkerJob("push")}
+              style={{ justifyContent: "center" }}
+            >
+              {syncBusy === "push" ? <Loader2 size={16} className="spinner" /> : <Send size={16} />}
+              {syncBusy === "push" ? "Yuborilmoqda..." : "Natijalarni Check'ga yuborish"}
+            </button>
+            <button
+              className="secondary-button"
+              type="button"
+              disabled={!!syncBusy}
+              onClick={() => runWorkerJob("pull")}
+              style={{ justifyContent: "center" }}
+            >
+              {syncBusy === "pull" ? <Loader2 size={16} className="spinner" /> : <RefreshCw size={16} />}
+              {syncBusy === "pull" ? "Yangilanmoqda..." : "Check'dan o'quvchilarni yangilash"}
+            </button>
+          </div>
+          <p style={{ fontSize: "12px", color: "#64748b", marginTop: "10px" }}>
+            Yuborish faqat shu hafta baholangan o'quvchilarga status qo'yadi — belgilanmaganlarga tegmaydi.
+          </p>
         </section>
       )}
 
