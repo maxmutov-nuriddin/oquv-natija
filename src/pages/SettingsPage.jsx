@@ -43,6 +43,7 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
   const [syncStatus, setSyncStatus] = useState({ type: "", text: "" });
   const [autoPush, setAutoPush] = useState(true); // avtomatik haftalik yuborish (default yoqilgan)
   const [autoPushBusy, setAutoPushBusy] = useState(false);
+  const [tab, setTab] = useState("tizim"); // sozlamalar tab: tizim | baholash | kontent | profil
   const [examUnlockInput, setExamUnlockInput] = useState("");
   const [examPassVisible, setExamPassVisible] = useState(false);
   const [examUnlockError, setExamUnlockError] = useState(false);
@@ -403,7 +404,32 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
 
   return (
     <div className="page-stack">
+      {/* Sozlamalar tablari */}
+      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "2px" }}>
+        {[
+          { id: "tizim", label: "⚙️ Tizim" },
+          { id: "baholash", label: "🏆 Baholash" },
+          { id: "kontent", label: "📚 Kontent" },
+          { id: "profil", label: "👤 Profil" }
+        ].map((tb) => (
+          <button
+            key={tb.id}
+            type="button"
+            onClick={() => setTab(tb.id)}
+            style={{
+              padding: "9px 16px", borderRadius: "999px", border: "none", cursor: "pointer",
+              fontWeight: 700, fontSize: "14px", transition: "background .15s",
+              background: tab === tb.id ? "#2563eb" : "#e2e8f0",
+              color: tab === tb.id ? "#fff" : "#475569"
+            }}
+          >
+            {tb.label}
+          </button>
+        ))}
+      </div>
+
       {/* Hard Refresh */}
+      {tab === "profil" && (
       <section className="panel" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px", padding: "16px 24px" }}>
         <div>
           <strong style={{ fontSize: "15px", fontWeight: 800 }}>Keshni tozalab qayta yuklash</strong>
@@ -421,7 +447,9 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
           Refresh
         </button>
       </section>
+      )}
 
+      {tab === "kontent" && (<>
       {/* Coddy Exam */}
       <section className="panel">
         <PanelHeader icon={ExternalLink} title="CoddyExam" subtitle="Imtihon platformasi login ma'lumotlari" />
@@ -755,6 +783,9 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
         )}
       </section>
 
+      </>)}
+
+      {tab === "baholash" && (<>
       {/* Scoring */}
       <section className="panel">
         <PanelHeader icon={BarChart3} title={t.settings_reward_title} subtitle={t.settings_reward_sub} />
@@ -1022,6 +1053,9 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
         </p>
       </section>
 
+      </>)}
+
+      {tab === "tizim" && (<>
       {/* Telegram */}
       <section className="panel">
         <PanelHeader icon={Send} title={t.tg_title} subtitle={t.tg_sub} />
@@ -1266,7 +1300,10 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
         </form>
       </section>
 
+      </>)}
+
       {/* Account */}
+      {tab === "profil" && (
       <section className="panel">
         <PanelHeader icon={UserRound} title={t.settings_profile_title} subtitle={t.settings_profile_sub} />
         <div className="settings-account-grid">
@@ -1350,6 +1387,7 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
           </div>
         </div>
       </section>
+      )}
 
       {/* Status */}
       <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "14px 18px", background: isDemo ? "#fef9c3" : "#f0fdf4", border: `2px solid ${isDemo ? "#fde047" : "#bbf7d0"}`, borderRadius: "14px" }}>
