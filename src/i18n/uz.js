@@ -35,7 +35,7 @@ export const uz = {
   auth_phone: "Telefon raqam",
   auth_password: "Parol",
   auth_name_placeholder: "Masalan: Nuriddin",
-  auth_password_placeholder: "Kamida 6 ta belgi",
+  auth_password_placeholder: "Kamida 4 ta belgi",
   auth_checking: "Tekshirilmoqda...",
   auth_reset: "Parolni tiklash",
   auth_login: "Kirish",

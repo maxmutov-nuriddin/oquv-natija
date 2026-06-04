@@ -35,7 +35,7 @@ export const ru = {
   auth_phone: "Номер телефона",
   auth_password: "Пароль",
   auth_name_placeholder: "Напр.: Иван",
-  auth_password_placeholder: "Минимум 6 символов",
+  auth_password_placeholder: "Минимум 4 символа",
   auth_checking: "Проверка...",
   auth_reset: "Сбросить пароль",
   auth_login: "Войти",

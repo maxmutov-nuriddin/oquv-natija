@@ -102,7 +102,7 @@ export function AuthPage({ login, normalizePhone, resetPassword }) {
                 <div style={{ position: "relative" }}>
                   <input
                     type={showPassword ? "text" : "password"}
-                    minLength="6"
+                    minLength="4"
                     value={form.password}
                     onChange={(event) => update("password", event.target.value)}
                     placeholder={t.auth_password_placeholder}
