@@ -1,11 +1,12 @@
-import { Activity, Award, BookOpenCheck, BarChart2, CheckCircle2, LayoutDashboard, Settings, ShieldX, Star, Trophy, Users, Gamepad2 } from "lucide-react";
+import { Activity, Award, BookOpenCheck, BarChart2, CheckCircle2, LayoutDashboard, MessageCircle, Settings, ShieldX, Star, Trophy, Users, Gamepad2 } from "lucide-react";
 
 export const navItems = [
   { id: "dashboard",  label: "Bosh sahifa", icon: LayoutDashboard },
   { id: "groups",     label: "Guruhlar",    icon: Users },
   { id: "analytics",  label: "Tahlil",      icon: BarChart2 },
   { id: "game",       label: "Quiz O'yin",  icon: Gamepad2 },
-{ id: "privileges", label: "Privelegiya", icon: Star },
+  { id: "privileges", label: "Privelegiya", icon: Star },
+  { id: "appeals",    label: "Murojaatlar", icon: MessageCircle, href: "https://t.me/coddycheckbot" },
   { id: "settings",   label: "Sozlamalar",  icon: Settings }
 ];
 

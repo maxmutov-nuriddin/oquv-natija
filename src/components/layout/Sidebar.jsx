@@ -52,15 +52,29 @@ export function Sidebar({ activePage, setActivePage, teacher, logout, isOpen, on
       <nav className="nav-list" aria-label="Dashboard navigation">
         {navItems.map((item) => {
           const Icon = item.icon;
+          const label = t[`nav_${item.id}`] || item.label;
           return (
             <div key={item.id} style={{ position: "relative" }} className="nav-item-wrapper">
-              <button
-                className={cx("nav-button", activePage === item.id && "nav-button-active")}
-                onClick={() => setActivePage(item.id)}
-              >
-                <Icon size={18} />
-                <span>{t[`nav_${item.id}`] || item.label}</span>
-              </button>
+              {item.href ? (
+                <a
+                  href={item.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="nav-button"
+                  style={{ textDecoration: "none" }}
+                >
+                  <Icon size={18} />
+                  <span>{label}</span>
+                </a>
+              ) : (
+                <button
+                  className={cx("nav-button", activePage === item.id && "nav-button-active")}
+                  onClick={() => setActivePage(item.id)}
+                >
+                  <Icon size={18} />
+                  <span>{label}</span>
+                </button>
+              )}
             </div>
           );
         })}

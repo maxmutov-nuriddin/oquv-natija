@@ -9,6 +9,7 @@ export const uz = {
   nav_analytics:  "Tahlil",
   nav_privileges: "Privelegiya",
   nav_game:       "Quiz O'yin",
+  nav_appeals:    "Murojaatlar",
   nav_settings:   "Sozlamalar",
 
   // Sidebar
