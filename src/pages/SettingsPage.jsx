@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { BarChart3, BookOpen, CheckCircle2, Clock3, Copy, ExternalLink, Eye, EyeOff, Loader2, Lock, Pencil, RefreshCw, Send, Settings, Trash2, UserPlus, UserRound, X } from "lucide-react";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { db } from "../firebase";
 import { useT } from "../i18n/index.jsx";
 import { cx } from "../lib/utils";
 import { PanelHeader } from "../components/ui/PanelHeader";
@@ -39,6 +41,8 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
   const [restoreBusy, setRestoreBusy] = useState(false);
   const [syncBusy, setSyncBusy] = useState(""); // "push" | "pull" | ""
   const [syncStatus, setSyncStatus] = useState({ type: "", text: "" });
+  const [autoPush, setAutoPush] = useState(true); // avtomatik haftalik yuborish (default yoqilgan)
+  const [autoPushBusy, setAutoPushBusy] = useState(false);
   const [examUnlockInput, setExamUnlockInput] = useState("");
   const [examPassVisible, setExamPassVisible] = useState(false);
   const [examUnlockError, setExamUnlockError] = useState(false);
@@ -122,6 +126,38 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
       setRestoreStatus({ type: "error", text: err.message });
     } finally {
       setRestoreBusy(false);
+    }
+  }
+
+  // teachers/{uid}.autoPushEnabled ni yuklash (default yoqilgan)
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      if (!db || !teacher?.uid) return;
+      try {
+        const snap = await getDoc(doc(db, "teachers", teacher.uid));
+        const val = snap.exists() ? snap.data().autoPushEnabled : undefined;
+        if (active) setAutoPush(val !== false);
+      } catch {
+        /* indamaymiz — default yoqilgan qoladi */
+      }
+    })();
+    return () => { active = false; };
+  }, [teacher?.uid]);
+
+  async function toggleAutoPush() {
+    if (!db || !teacher?.uid) return;
+    const next = !autoPush;
+    setAutoPush(next);
+    setAutoPushBusy(true);
+    try {
+      await setDoc(doc(db, "teachers", teacher.uid), { autoPushEnabled: next }, { merge: true });
+      setSyncStatus({ type: "success", text: next ? "Avtomatik yuborish yoqildi." : "Avtomatik yuborish o'chirildi (faqat qo'lda)." });
+    } catch (e) {
+      setAutoPush(!next); // qaytaramiz
+      setSyncStatus({ type: "error", text: "Saqlashda xato: " + e.message });
+    } finally {
+      setAutoPushBusy(false);
     }
   }
 
@@ -1118,6 +1154,43 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
             {syncStatus.text}
           </p>
         )}
+
+        {/* Avtomatik yuborish toggle */}
+        <div
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            gap: "12px", padding: "12px 14px", marginBottom: "14px",
+            background: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0"
+          }}
+        >
+          <div>
+            <div style={{ fontWeight: 600, fontSize: "14px" }}>Avtomatik yuborish (har hafta)</div>
+            <div style={{ fontSize: "12px", color: "#64748b" }}>
+              Yoqilgan bo'lsa har dushanba avto yuboriladi. O'chirilsa — faqat qo'lda.
+            </div>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={autoPush}
+            disabled={autoPushBusy}
+            onClick={toggleAutoPush}
+            style={{
+              flexShrink: 0, width: "52px", height: "30px", borderRadius: "999px", border: "none",
+              cursor: autoPushBusy ? "wait" : "pointer", position: "relative",
+              background: autoPush ? "#22c55e" : "#cbd5e1", transition: "background .2s"
+            }}
+          >
+            <span
+              style={{
+                position: "absolute", top: "3px", left: autoPush ? "25px" : "3px",
+                width: "24px", height: "24px", borderRadius: "50%", background: "#fff",
+                transition: "left .2s", boxShadow: "0 1px 3px rgba(0,0,0,.2)"
+              }}
+            />
+          </button>
+        </div>
+
         <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
           {/* Har bir o'qituvchi: O'Z natijasini yuboradi (teacher.uid) */}
           <button
