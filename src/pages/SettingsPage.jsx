@@ -125,7 +125,7 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
     }
   }
 
-  async function runWorkerJob(job) {
+  async function runWorkerJob(job, uid) {
     if (!WORKER_URL || !WORKER_RUN_TOKEN) {
       setSyncStatus({ type: "error", text: "Worker sozlanmagan (VITE_WORKER_URL / VITE_WORKER_RUN_TOKEN)." });
       return;
@@ -133,7 +133,9 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
     setSyncBusy(job);
     setSyncStatus({ type: "", text: "" });
     try {
-      const res = await fetch(`${WORKER_URL}/run/${job}?key=${encodeURIComponent(WORKER_RUN_TOKEN)}`);
+      // uid berilsa — faqat shu o'qituvchining natijasi yuboriladi (mentor o'zi bossa)
+      const uidParam = uid ? `&uid=${encodeURIComponent(uid)}` : "";
+      const res = await fetch(`${WORKER_URL}/run/${job}?key=${encodeURIComponent(WORKER_RUN_TOKEN)}${uidParam}`);
       const data = await res.json().catch(() => ({}));
       if (res.status === 409) {
         setSyncStatus({ type: "error", text: "Hozir boshqa sinxronizatsiya ishlayapti — biroz kuting." });
@@ -1104,46 +1106,61 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
         </section>
       )}
 
-      {/* Admin: Check bilan qo'lda sinxronlash */}
-      {teacher?.role === "admin" && (
-        <section className="panel">
-          <PanelHeader
-            icon={Send}
-            title="Check bilan sinxronlash"
-            subtitle="Natijalarni qo'lda Check'ga yuborish yoki o'quvchilarni yangilash"
-          />
-          {syncStatus.text && (
-            <p className={cx("settings-status", syncStatus.type === "error" ? "settings-status-error" : "settings-status-ok")}>
-              {syncStatus.text}
-            </p>
-          )}
-          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-            <button
-              className="primary-button"
-              type="button"
-              disabled={!!syncBusy}
-              onClick={() => runWorkerJob("push")}
-              style={{ justifyContent: "center" }}
-            >
-              {syncBusy === "push" ? <Loader2 size={16} className="spinner" /> : <Send size={16} />}
-              {syncBusy === "push" ? "Yuborilmoqda..." : "Natijalarni Check'ga yuborish"}
-            </button>
-            <button
-              className="secondary-button"
-              type="button"
-              disabled={!!syncBusy}
-              onClick={() => runWorkerJob("pull")}
-              style={{ justifyContent: "center" }}
-            >
-              {syncBusy === "pull" ? <Loader2 size={16} className="spinner" /> : <RefreshCw size={16} />}
-              {syncBusy === "pull" ? "Yangilanmoqda..." : "Check'dan o'quvchilarni yangilash"}
-            </button>
-          </div>
-          <p style={{ fontSize: "12px", color: "#64748b", marginTop: "10px" }}>
-            Yuborish faqat shu hafta baholangan o'quvchilarga status qo'yadi — belgilanmaganlarga tegmaydi.
+      {/* Check bilan sinxronlash — har bir o'qituvchi o'z natijasini yubora oladi */}
+      <section className="panel">
+        <PanelHeader
+          icon={Send}
+          title="Check bilan sinxronlash"
+          subtitle="Haftalik natijalarni qo'lda Check'ga yuborish"
+        />
+        {syncStatus.text && (
+          <p className={cx("settings-status", syncStatus.type === "error" ? "settings-status-error" : "settings-status-ok")}>
+            {syncStatus.text}
           </p>
-        </section>
-      )}
+        )}
+        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+          {/* Har bir o'qituvchi: O'Z natijasini yuboradi (teacher.uid) */}
+          <button
+            className="primary-button"
+            type="button"
+            disabled={!!syncBusy}
+            onClick={() => runWorkerJob("push", teacher?.uid)}
+            style={{ justifyContent: "center" }}
+          >
+            {syncBusy === "push" ? <Loader2 size={16} className="spinner" /> : <Send size={16} />}
+            {syncBusy === "push" ? "Yuborilmoqda..." : "Natijalarni Check'ga yuborish"}
+          </button>
+
+          {/* Admin: hamma mentorni yuborish + Check'dan yangilash */}
+          {teacher?.role === "admin" && (
+            <>
+              <button
+                className="secondary-button"
+                type="button"
+                disabled={!!syncBusy}
+                onClick={() => runWorkerJob("push")}
+                style={{ justifyContent: "center" }}
+              >
+                <Send size={16} />
+                Hamma mentorni yuborish
+              </button>
+              <button
+                className="secondary-button"
+                type="button"
+                disabled={!!syncBusy}
+                onClick={() => runWorkerJob("pull")}
+                style={{ justifyContent: "center" }}
+              >
+                {syncBusy === "pull" ? <Loader2 size={16} className="spinner" /> : <RefreshCw size={16} />}
+                {syncBusy === "pull" ? "Yangilanmoqda..." : "Check'dan o'quvchilarni yangilash"}
+              </button>
+            </>
+          )}
+        </div>
+        <p style={{ fontSize: "12px", color: "#64748b", marginTop: "10px" }}>
+          Yuborish faqat shu hafta baholangan o'quvchilarga status qo'yadi — belgilanmaganlarga tegmaydi.
+        </p>
+      </section>
 
       {/* Ma'lumotlarni tiklash */}
       <section className="panel" style={{ border: "2px solid #fca5a5" }}>
