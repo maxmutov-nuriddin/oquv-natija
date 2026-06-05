@@ -111,7 +111,7 @@ export function DashboardApp({ teacher, logout, updateProfile, changePassword, v
   function handleDeleteStudent(student) {
     setDeleteConfirm({
       message: t.app_delete_confirm(student.name),
-      onOk: async () => { await deleteStudent(student.id); setDeleteConfirm(null); },
+      onOk: () => { setDeleteConfirm(null); deleteStudent(student.id); },
     });
   }
 
