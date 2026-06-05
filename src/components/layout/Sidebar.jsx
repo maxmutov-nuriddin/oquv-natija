@@ -131,7 +131,7 @@ export function Sidebar({ activePage, setActivePage, teacher, logout, isOpen, on
       </div>
 
       <footer className="app-footer">
-        Created by <a href="https://mvnuriddin.netlify.app" target="_blank" rel="noreferrer" style={{ color: "inherit", fontWeight: 700, textDecoration: "none" }}>mv_nuriddin</a> &nbsp;·&nbsp; 2025
+        Created by <a href="https://mvnuriddin.uz" target="_blank" rel="noreferrer" style={{ color: "inherit", fontWeight: 700, textDecoration: "none" }}>mv_nuriddin</a> &nbsp;·&nbsp; 2025
       </footer>
     </aside>
   );
