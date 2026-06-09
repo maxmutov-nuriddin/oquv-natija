@@ -3,12 +3,14 @@ import { createUserWithEmailAndPassword, EmailAuthProvider, onAuthStateChanged, 
 import { collection, doc, getDoc, getDocs, serverTimestamp, setDoc, writeBatch } from "firebase/firestore";
 import { auth, db, hasFirebaseConfig, secondaryAuth, secondaryDb } from "../firebase";
 
+const RESULT_EMAIL_DOMAIN = import.meta.env.VITE_RESULT_EMAIL_DOMAIN || "oquv-natija.local";
+
 function normalizePhone(phone) {
   return String(phone || "").replace(/\D/g, "").slice(0, 9);
 }
 
 function phoneToEmail(phone) {
-  return `${normalizePhone(phone)}@oquv-natija.local`;
+  return `${normalizePhone(phone)}@${RESULT_EMAIL_DOMAIN}`;
 }
 
 function uzPhoneIsValid(phone) {
