@@ -4,6 +4,16 @@ import { collection, doc, getDoc, getDocs, serverTimestamp, setDoc, writeBatch }
 import { auth, db, hasFirebaseConfig, secondaryAuth, secondaryDb } from "../firebase";
 
 const RESULT_EMAIL_DOMAIN = import.meta.env.VITE_RESULT_EMAIL_DOMAIN || "oquv-natija.local";
+const RESULT_EMAIL_DOMAINS = Array.from(
+  new Set([
+    ...String(import.meta.env.VITE_RESULT_EMAIL_DOMAINS || "")
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean),
+    RESULT_EMAIL_DOMAIN,
+    "oquv-natija.local",
+  ])
+);
 
 function normalizePhone(phone) {
   return String(phone || "").replace(/\D/g, "").slice(0, 9);
@@ -11,6 +21,11 @@ function normalizePhone(phone) {
 
 function phoneToEmail(phone) {
   return `${normalizePhone(phone)}@${RESULT_EMAIL_DOMAIN}`;
+}
+
+function phoneToEmails(phone) {
+  const cleanPhone = normalizePhone(phone);
+  return RESULT_EMAIL_DOMAINS.map((domain) => `${cleanPhone}@${domain}`);
 }
 
 function uzPhoneIsValid(phone) {
@@ -95,8 +110,19 @@ export function useTeacherAuth() {
         if (!uzPhoneIsValid(cleanPhone)) throw new Error("Raqam 9 ta raqam bo'lishi kerak. Masalan: 901234567");
 
         try {
-          const result = await signInWithEmailAndPassword(auth, phoneToEmail(cleanPhone), password);
-          return result.user;
+          let lastError = null;
+          for (const email of phoneToEmails(cleanPhone)) {
+            try {
+              const result = await signInWithEmailAndPassword(auth, email, password);
+              return result.user;
+            } catch (error) {
+              lastError = error;
+              if (error?.code && error.code !== "auth/invalid-credential" && error.code !== "auth/invalid-login-credentials") {
+                throw error;
+              }
+            }
+          }
+          throw lastError || new Error("Raqam yoki parol noto'g'ri.");
         } catch (error) {
           throw new Error(messageForError(error));
         }
