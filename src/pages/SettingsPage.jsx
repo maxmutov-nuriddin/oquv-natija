@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { BarChart3, BookOpen, CheckCircle2, Clock3, Copy, ExternalLink, Eye, EyeOff, Loader2, Lock, Pencil, RefreshCw, Send, Settings, Trash2, UserPlus, UserRound, X } from "lucide-react";
 import { doc, getDoc, setDoc } from "firebase/firestore";
-import { db } from "../firebase";
+import { auth, db } from "../firebase";
 import { useT } from "../i18n/index.jsx";
 import { cx } from "../lib/utils";
 import { PanelHeader } from "../components/ui/PanelHeader";
@@ -11,8 +11,8 @@ const _EP = "YWRtaW4xJDM0"; // obfuscated
 const _EL = "adminadmin@admin.admin";
 
 // CoddySyncWorker (Check <-> Result) — qo'lda sinxronlash uchun
+// Ruxsat: Firebase ID token (worker o'zi tekshiradi: teacher — faqat o'z push'i, admin — hammasi)
 const WORKER_URL = (import.meta.env.VITE_WORKER_URL || "").replace(/\/+$/, "");
-const WORKER_RUN_TOKEN = import.meta.env.VITE_WORKER_RUN_TOKEN || "";
 
 export function SettingsPage({ settings, saveSettings, teacher, updateProfile, changePassword, verifyPassword, isDemo, register, restoreDataFromUid }) {
   const { t } = useT();
@@ -163,16 +163,23 @@ export function SettingsPage({ settings, saveSettings, teacher, updateProfile, c
   }
 
   async function runWorkerJob(job, uid) {
-    if (!WORKER_URL || !WORKER_RUN_TOKEN) {
-      setSyncStatus({ type: "error", text: "Worker sozlanmagan (VITE_WORKER_URL / VITE_WORKER_RUN_TOKEN)." });
+    if (!WORKER_URL) {
+      setSyncStatus({ type: "error", text: "Worker sozlanmagan (VITE_WORKER_URL)." });
+      return;
+    }
+    if (!auth?.currentUser) {
+      setSyncStatus({ type: "error", text: "Tizimga kirmagansiz." });
       return;
     }
     setSyncBusy(job);
     setSyncStatus({ type: "", text: "" });
     try {
+      const idToken = await auth.currentUser.getIdToken();
       // uid berilsa — faqat shu o'qituvchining natijasi yuboriladi (mentor o'zi bossa)
-      const uidParam = uid ? `&uid=${encodeURIComponent(uid)}` : "";
-      const res = await fetch(`${WORKER_URL}/run/${job}?key=${encodeURIComponent(WORKER_RUN_TOKEN)}${uidParam}`);
+      const uidParam = uid ? `?uid=${encodeURIComponent(uid)}` : "";
+      const res = await fetch(`${WORKER_URL}/run/${job}${uidParam}`, {
+        headers: { Authorization: `Bearer ${idToken}` }
+      });
       const data = await res.json().catch(() => ({}));
       if (res.status === 409) {
         setSyncStatus({ type: "error", text: "Hozir boshqa sinxronizatsiya ishlayapti — biroz kuting." });

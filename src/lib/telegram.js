@@ -3,6 +3,14 @@ import { calculateCoins } from "./scoring";
 
 const introSentFor = new Set(); // prevents double-send within same session
 
+// parse_mode: "HTML" — ism/guruh nomidagi < > & xabarni buzmasin va teg sifatida ishlamasin
+export function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 export async function sendIntroMessage({ group, settings }) {
   const token  = String(settings?.telegramBotToken || "").trim();
   const chatId = String(group?.telegramChatId      || "").trim();
@@ -13,7 +21,7 @@ export async function sendIntroMessage({ group, settings }) {
   introSentFor.add(key);
   setTimeout(() => introSentFor.delete(key), 10000); // allow re-link after 10s
 
-  const name = group.name || "";
+  const name = escapeHtml(group.name);
   const text =
     `🤖 <b>O'quv Natija</b> boti ulandi! | <b>Учебные результаты</b> подключён!\n\n` +
     `📚 <b>${name}</b> guruhiga har dars tugagach natijalar avtomatik yuboriladi.\n` +
@@ -82,10 +90,10 @@ export async function sendLessonReport({ group, students, date, settings }) {
 
   const dateStr = dayjs(date).format("DD.MM.YYYY");
 
-  let text = `📚 <b>${group.name}</b> — ${dateStr} dars natijasi\n${LINE}\n`;
+  let text = `📚 <b>${escapeHtml(group.name)}</b> — ${dateStr} dars natijasi\n${LINE}\n`;
 
   attended.forEach(s => {
-    text += `\n${scoreEmoji(s.score)} <b>${s.name}</b>\n`;
+    text += `\n${scoreEmoji(s.score)} <b>${escapeHtml(s.name)}</b>\n`;
     text += `   📝 Uy vazifa: <b>${s.hw}%</b>\n`;
     text += `   📊 Sinf vazifa: <b>${s.att}%</b>\n`;
     text += `   ⚡ Aktivlik: <b>${s.act}%</b>\n`;
@@ -100,7 +108,7 @@ export async function sendLessonReport({ group, students, date, settings }) {
   if (absent.length) {
     text += `\n😔 <b>Kelmagan o'quvchilar:</b>\n`;
     absent.forEach(s => {
-      text += `👻 ${s.name}\n`;
+      text += `👻 ${escapeHtml(s.name)}\n`;
     });
     text += `${LINE}\n`;
   }
@@ -123,10 +131,10 @@ export async function sendHomeworkWarning({ group, students, settings }) {
   const chatId = String(group?.telegramChatId      || "").trim();
   if (!token || !chatId || !students.length) return;
 
-  let text = `🚨 <b>${group.name}</b> — Uy vazifasi ogohlantirishi\n${LINE}\n\n`;
+  let text = `🚨 <b>${escapeHtml(group.name)}</b> — Uy vazifasi ogohlantirishi\n${LINE}\n\n`;
   text += `Quyidagi o'quvchilar <b>3 marta va undan ko'p</b> uy vazifasini bajarmadi:\n\n`;
   students.forEach(s => {
-    text += `❌ <b>${s.name}</b> — <b>${s.missCount}</b> marta\n`;
+    text += `❌ <b>${escapeHtml(s.name)}</b> — <b>${s.missCount}</b> marta\n`;
   });
   text += `\n${LINE}\n⚠️ Iltimos, diqqat qiling!`;
 
